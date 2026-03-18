@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="45.86659240722642 -431.5714797973632 1355.6194763183596 1348.001191638765" width="1355.6194763183596" height="1348.001191638765">
+<style>
+  text { font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
+  .table-name { font-weight: bold; font-size: 20px; }
+  .table-fields { font-size: 20px; }
+</style>
+<defs>
+  <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0, 10 3.5, 0 7" fill="#1e1e1e"/>
+  </marker>
+</defs>
+<rect x="45.86659240722642" y="-431.5714797973632" width="1355.6194763183596" height="1348.001191638765" fill="white"/>
+<rect x="497.90486653645837" y="-381.5714797973632" width="184" height="168.00000762939453" rx="8" ry="8" fill="white" stroke="#1e1e1e" stroke-width="2"/>
+<rect x="208.34281921386707" y="-185.37960161481598" width="189.71436564127603" height="252.76189422607425" rx="8" ry="8" fill="white" stroke="#1e1e1e" stroke-width="2"/>
+<rect x="760.7240041097003" y="-86.33202979678202" width="184" height="125.14287567138678" rx="8" ry="8" fill="white" stroke="#1e1e1e" stroke-width="2"/>
+<rect x="180.72385152181005" y="130.8109399704706" width="237.3333333333334" height="229.90481313069665" rx="8" ry="8" fill="white" stroke="#1e1e1e" stroke-width="2"/>
+<rect x="155.0095876057943" y="407.9536299932569" width="275.4285786946615" height="207.04775746663418" rx="8" ry="8" fill="white" stroke="#1e1e1e" stroke-width="2"/>
+<rect x="536.9143422444662" y="138.4300093877884" width="184" height="168.00000762939453" rx="8" ry="8" fill="white" stroke="#1e1e1e" stroke-width="2"/>
+<rect x="509.2950693766277" y="506.04918053036636" width="224.00005086263033" height="168.95225779215488" rx="8" ry="8" fill="white" stroke="#1e1e1e" stroke-width="2"/>
+<rect x="516.9141387939453" y="695.572750273205" width="251.61922200520817" height="170.85696156819682" rx="8" ry="8" fill="white" stroke="#1e1e1e" stroke-width="2"/>
+<rect x="1050.247624715169" y="-87.28425452822745" width="220.19049072265628" height="168.00000762939453" rx="8" ry="8" fill="white" stroke="#1e1e1e" stroke-width="2"/>
+<rect x="1025.4860687255862" y="171.76308840797054" width="283.9999999999998" height="168.00000762939453" rx="8" ry="8" fill="white" stroke="#1e1e1e" stroke-width="2"/>
+<rect x="815.9620412190753" y="408.9060836065383" width="184" height="168.00000762939453" rx="8" ry="8" fill="white" stroke="#1e1e1e" stroke-width="2"/>
+<rect x="137.86659240722642" y="646.0491296677362" width="324.0001017252604" height="119.42873891194654" rx="8" ry="8" fill="white" stroke="#1e1e1e" stroke-width="2"/>
+<path d="M 404.1 -99.5 L 448.0 -99.5 L 448.0 -318.5 L 491.9 -318.5" fill="none" stroke="#1e1e1e" stroke-width="2" marker-end="url(#arrowhead)"/>
+<path d="M 404.1 -77.6 L 579.4 -77.6 L 579.4 -30.9 L 754.7 -30.9" fill="none" stroke="#1e1e1e" stroke-width="2" marker-end="url(#arrowhead)"/>
+<path d="M 174.7 210.0 L 138.7 210.0 L 138.7 -122.3 L 202.3 -122.3" fill="none" stroke="#1e1e1e" stroke-width="2" marker-end="url(#arrowhead)"/>
+<path d="M 424.1 232.9 L 477.5 232.9 L 477.5 195.8 L 530.9 195.8" fill="none" stroke="#1e1e1e" stroke-width="2" marker-end="url(#arrowhead)"/>
+<path d="M 950.7 -7.1 L 986.7 -7.1 L 986.7 -322.3 L 687.9 -322.3" fill="none" stroke="#1e1e1e" stroke-width="2" marker-end="url(#arrowhead)"/>
+<path d="M 736.1 221.0 L 736.1 -124.4 L 404.1 -124.4" fill="none" stroke="#e03131" stroke-width="2" marker-end="url(#arrowhead)"/>
+<path d="M 1315.5 255.7 L 1351.5 255.7 L 1351.5 -37.7 L 1276.4 -37.7" fill="none" stroke="#1e1e1e" stroke-width="2" marker-end="url(#arrowhead)"/>
+<path d="M 1019.5 238.3 L 745.4 238.3 L 745.4 -121.7 L 417.4 -121.7" fill="none" stroke="#2f9e44" stroke-width="2" marker-end="url(#arrowhead)"/>
+<path d="M 810.0 530.3 L 768.4 530.3 L 768.4 191.6 L 726.9 191.6" fill="none" stroke="#1e1e1e" stroke-width="2" marker-end="url(#arrowhead)"/>
+<path d="M 774.5 765.0 L 810.5 765.0 L 810.5 571.6 L 739.3 571.6" fill="none" stroke="#1e1e1e" stroke-width="2" marker-end="url(#arrowhead)"/>
+<path d="M 131.9 705.7 L 95.9 705.7 L 95.9 -120.4 L 202.3 -120.4" fill="none" stroke="#2f9e44" stroke-width="2" marker-end="url(#arrowhead)"/>
+<path d="M 467.9 734.3 L 503.9 734.3 L 503.9 641.7 L 474.3 641.7 L 474.3 578.3 L 514.3 578.3" fill="none" stroke="#1e1e1e" stroke-width="2" marker-end="url(#arrowhead)"/>
+<path d="M 436.4 481.0 L 472.4 481.0 L 472.4 183.6 L 424.1 183.6" fill="none" stroke="#1e1e1e" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="559.3904673258464" y="-352.09393801007934" class="table-name" fill="#1e1e1e">USER</text>
+<text x="515.5808563232422" y="-313.04623903547" class="table-fields" fill="#1e1e1e">user_id PK</text>
+<text x="515.5808563232422" y="-288.04623903547" class="table-fields" fill="#1e1e1e">username</text>
+<text x="515.5808563232422" y="-263.04623903547" class="table-fields" fill="#1e1e1e">password</text>
+<text x="515.5808563232422" y="-238.04623903547002" class="table-fields" fill="#1e1e1e">role</text>
+<text x="803.2001800537109" y="-59.71288027082153" class="table-name" fill="#1e1e1e">TRAINER</text>
+<text x="260.97676849365223" y="-156.97474143618615" class="table-name" fill="#1e1e1e">CLIENT</text>
+<text x="220.3428192138672" y="-115.9035235813684" class="table-fields" fill="#1e1e1e">client_id PK</text>
+<text x="220.3428192138672" y="-90.9035235813684" class="table-fields" fill="#1e1e1e">user_id FK</text>
+<text x="220.3428192138672" y="-65.9035235813684" class="table-fields" fill="#1e1e1e">trainer_id FK</text>
+<text x="220.3428192138672" y="-40.903523581368404" class="table-fields" fill="#1e1e1e">weight</text>
+<text x="220.3428192138672" y="-15.903523581368404" class="table-fields" fill="#1e1e1e">height</text>
+<text x="771.7713470458987" y="-23.52259299868615" class="table-fields" fill="#1e1e1e">trainer_id PK</text>
+<text x="771.7713470458987" y="1.4774070013138498" class="table-fields" fill="#1e1e1e">user_id FK</text>
+<text x="214.62865702311194" y="163.14417539324091" class="table-name" fill="#1e1e1e">WORKOUT_LOG</text>
+<text x="196.53346252441406" y="192.6679994492306" class="table-fields" fill="#1e1e1e">workout_log_id PK</text>
+<text x="196.53346252441406" y="217.6679994492306" class="table-fields" fill="#1e1e1e">client_id FK</text>
+<text x="196.53346252441406" y="242.6679994492306" class="table-fields" fill="#1e1e1e">workout_id FK</text>
+<text x="196.53346252441406" y="267.6679994492306" class="table-fields" fill="#1e1e1e">date</text>
+<text x="196.53346252441406" y="292.6679994492306" class="table-fields" fill="#1e1e1e">total_duration</text>
+<text x="196.53346252441406" y="317.6679994492306" class="table-fields" fill="#1e1e1e">calories_burned</text>
+<text x="196.53346252441406" y="342.6679994492306" class="table-fields" fill="#1e1e1e">rating</text>
+<text x="176.41634114583326" y="436.358541034517" class="table-name" fill="#1e1e1e">WORKOUT_LOG_SETS</text>
+<text x="163.19997660319007" y="468.8583375839962" class="table-fields" fill="#1e1e1e">workout_log_sets_id PK</text>
+<text x="163.19997660319007" y="493.8583375839962" class="table-fields" fill="#1e1e1e">workout_log_id FK</text>
+<text x="163.19997660319007" y="518.8583375839962" class="table-fields" fill="#1e1e1e">exercise_name</text>
+<text x="163.19997660319007" y="543.8583375839962" class="table-fields" fill="#1e1e1e">sets</text>
+<text x="163.19997660319007" y="568.8583375839962" class="table-fields" fill="#1e1e1e">reps</text>
+<text x="163.19997660319007" y="593.8583375839962" class="table-fields" fill="#1e1e1e">weight</text>
+<text x="156.07905069986987" y="676.3586173284626" class="table-name" fill="#1e1e1e">CLIENT_NUTRITION_PLAN</text>
+<text x="178.4381154378257" y="717.6679740179155" class="table-fields" fill="#1e1e1e">client_id FK</text>
+<text x="178.4381154378257" y="742.6679740179155" class="table-fields" fill="#1e1e1e">nutrition_plan_id FK</text>
+<text x="526.8924153645835" y="541.1203259059364" class="table-name" fill="#1e1e1e">NUTRITION_PLAN</text>
+<text x="520.3429718017579" y="582.4304455348425" class="table-fields" fill="#1e1e1e">nutrition_plan_id PK</text>
+<text x="520.3429718017579" y="607.4304455348425" class="table-fields" fill="#1e1e1e">start_date</text>
+<text x="520.3429718017579" y="632.4304455348425" class="table-fields" fill="#1e1e1e">end_date</text>
+<text x="617.4858652750653" y="722.430038633801" class="table-name" fill="#1e1e1e">MEAL</text>
+<text x="529.8667449951174" y="752.9060111272905" class="table-fields" fill="#1e1e1e">meal_id PK</text>
+<text x="529.8667449951174" y="777.9060111272905" class="table-fields" fill="#1e1e1e">nutrition_plan_id FK</text>
+<text x="529.8667449951174" y="802.9060111272905" class="table-fields" fill="#1e1e1e">name</text>
+<text x="529.8667449951174" y="827.9060111272905" class="table-fields" fill="#1e1e1e">ingredients</text>
+<text x="529.8667449951174" y="852.9060111272905" class="table-fields" fill="#1e1e1e">instructions</text>
+<text x="860.342717488607" y="438.6203259059364" class="table-name" fill="#1e1e1e">EXERCISE</text>
+<text x="823.1999766031903" y="485.2870434352333" class="table-fields" fill="#1e1e1e">exercise_id PK</text>
+<text x="823.1999766031903" y="510.2870434352333" class="table-fields" fill="#1e1e1e">name</text>
+<text x="823.1999766031903" y="535.2870434352333" class="table-fields" fill="#1e1e1e">workout_id FK</text>
+<text x="823.1999766031903" y="560.2870434352333" class="table-fields" fill="#1e1e1e">muscle_group</text>
+<text x="575.5809580485028" y="170.04895546322803" class="table-name" fill="#1e1e1e">WORKOUT</text>
+<text x="552.7238006591798" y="201.47748329525928" class="table-fields" fill="#1e1e1e">workout_id PK</text>
+<text x="552.7238006591798" y="226.47748329525928" class="table-fields" fill="#1e1e1e">client_id FK</text>
+<text x="552.7238006591798" y="251.47748329525928" class="table-fields" fill="#1e1e1e">name</text>
+<text x="552.7238006591798" y="276.4774832952593" class="table-fields" fill="#1e1e1e">type</text>
+<text x="1081.2951711018884" y="-59.474919455391785" class="table-name" fill="#1e1e1e">ACHIEVEMENT</text>
+<text x="1061.2952728271487" y="-28.04634076073029" class="table-fields" fill="#1e1e1e">achievement_id PK</text>
+<text x="1061.2952728271487" y="-3.0463407607302884" class="table-fields" fill="#1e1e1e">title</text>
+<text x="1061.2952728271487" y="21.95365923926971" class="table-fields" fill="#1e1e1e">description</text>
+<text x="1061.2952728271487" y="46.95365923926971" class="table-fields" fill="#1e1e1e">unlocked</text>
+<text x="1049.2899525960288" y="203.02508054460822" class="table-name" fill="#1e1e1e">CLIENT_ACHIEVEMENT</text>
+<text x="1036.533208211263" y="245.2869925726029" class="table-fields" fill="#1e1e1e">client_id FK</text>
+<text x="1036.533208211263" y="270.2869925726029" class="table-fields" fill="#1e1e1e">achievement_id FK</text>
+</svg>
