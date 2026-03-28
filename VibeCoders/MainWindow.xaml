@@ -13,7 +13,21 @@
         <MicaBackdrop />
     </Window.SystemBackdrop>
 
-    <Grid>
-        <TextBlock Text="Welcome to Our App"/>
-    </Grid>
+    <NavigationView
+        x:Name="NavView"
+        IsBackButtonVisible="Collapsed"
+        IsSettingsVisible="False"
+        PaneDisplayMode="LeftCompact"
+        SelectionChanged="NavView_SelectionChanged">
+
+        <NavigationView.MenuItems>
+            <NavigationViewItem Content="Dashboard" Tag="Dashboard">
+                <NavigationViewItem.Icon>
+                    <SymbolIcon Symbol="Home" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+        </NavigationView.MenuItems>
+
+        <Frame x:Name="ContentFrame" />
+    </NavigationView>
 </Window>
