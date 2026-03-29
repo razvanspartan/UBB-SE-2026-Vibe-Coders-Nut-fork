@@ -1,59 +1,50 @@
+﻿using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Data;
+using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Navigation;
+using Microsoft.UI.Xaml.Shapes;
 using System;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.UI.Xaml;
-using VibeCoders.Services;
-using VibeCoders.ViewModels;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.ApplicationModel;
+using Windows.ApplicationModel.Activation;
+using Windows.Foundation;
+using Windows.Foundation.Collections;
 
-namespace VibeCoders;
+// To learn more about WinUI, the WinUI project structure,
+// and more about our project templates, see: http://aka.ms/winui-project-info.
 
-public partial class App : Application
+namespace VibeCoders
 {
-    private static IServiceProvider? _services;
-    private Window? _window;
-
-    public App()
-    {
-        InitializeComponent();
-    }
-
-    protected override void OnLaunched(LaunchActivatedEventArgs args)
-    {
-        var services = new ServiceCollection();
-        ConfigureServices(services);
-        _services = services.BuildServiceProvider();
-
-        var navService = (NavigationService)_services.GetRequiredService<INavigationService>();
-        _window = new MainWindow(navService);
-        _window.Activate();
-
-        navService.NavigateToClientDashboard(requestRefresh: true);
-    }
-
     /// <summary>
-    /// Resolves a service from the DI container. Used by pages that cannot
-    /// receive constructor injection (WinUI page activation).
+    /// Provides application-specific behavior to supplement the default Application class.
     /// </summary>
-    public static T GetService<T>() where T : notnull
+    public partial class App : Application
     {
-        if (_services is null)
+        private Window? _window;
+
+        /// <summary>
+        /// Initializes the singleton application object.  This is the first line of authored code
+        /// executed, and as such is the logical equivalent of main() or WinMain().
+        /// </summary>
+        public App()
         {
-            throw new InvalidOperationException(
-                "Service provider is not initialized. Ensure OnLaunched has run.");
+            InitializeComponent();
         }
 
-        return _services.GetRequiredService<T>();
-    }
-
-    private static void ConfigureServices(IServiceCollection services)
-    {
-        var dbPath = DatabasePaths.GetAnalyticsDatabasePath();
-
-        services.AddSingleton<IUserSession, UserSession>();
-        services.AddSingleton<IWorkoutAnalyticsStore>(
-            new SqlWorkoutAnalyticsStore(dbPath));
-        services.AddSingleton<IAnalyticsDashboardRefreshBus, AnalyticsDashboardRefreshBus>();
-        services.AddSingleton<IWorkoutDataForwarder, WorkoutDataForwarder>();
-        services.AddSingleton<INavigationService, NavigationService>();
-        services.AddTransient<ClientDashboardViewModel>();
+        /// <summary>
+        /// Invoked when the application is launched.
+        /// </summary>
+        /// <param name="args">Details about the launch request and process.</param>
+        protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
+        {
+            _window = new MainWindow();
+            _window.Activate();
+        }
     }
 }

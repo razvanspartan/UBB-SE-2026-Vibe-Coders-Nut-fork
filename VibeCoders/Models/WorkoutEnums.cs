@@ -6,7 +6,21 @@ using System.Threading.Tasks;
 
 namespace VibeCoders.Models
 {
-    internal class WorkoutEnums
+    public enum WorkoutType
     {
+        CUSTOM,
+        PREBUILT,
+        TRAINER_ASSIGNED
+    }
+
+    public enum MuscleGroup
+    {
+        CHEST,
+        BACK,
+        LEGS,
+        SHOULDERS,
+        ARMS,
+        CORE,
+        CARDIO
     }
 }
