@@ -11,4 +11,5 @@ public sealed class WorkoutLog
     public TimeSpan Duration { get; set; }
     public int SourceTemplateId { get; set; }
     public List<LoggedExercise> Exercises { get; set; } = new();
+    public int TotalCaloriesBurned { get; set; }
 }

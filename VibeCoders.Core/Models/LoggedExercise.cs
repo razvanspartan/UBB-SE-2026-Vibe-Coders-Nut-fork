@@ -10,4 +10,5 @@ public sealed class LoggedExercise
     public int WorkoutLogId { get; set; }
     public float Met { get; set; }
     public List<LoggedSet> Sets { get; set; } = new();
+    public int ExerciseCaloriesBurned { get; set; }
 }
