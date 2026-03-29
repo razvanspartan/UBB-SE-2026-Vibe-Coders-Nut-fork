@@ -26,6 +26,11 @@
                     <SymbolIcon Symbol="Home" />
                 </NavigationViewItem.Icon>
             </NavigationViewItem>
+            <NavigationViewItem Content="Calendar" Tag="Calendar">
+                <NavigationViewItem.Icon>
+                    <SymbolIcon Symbol="Calendar" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
         </NavigationView.MenuItems>
 
         <Frame x:Name="ContentFrame" />

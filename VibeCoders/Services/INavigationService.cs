@@ -11,4 +11,9 @@ public interface INavigationService
     /// its data after navigation completes.
     /// </summary>
     void NavigateToClientDashboard(bool requestRefresh);
+
+    /// <summary>
+    /// Navigates to the calendar integration page.
+    /// </summary>
+    void NavigateToCalendarIntegration();
 }

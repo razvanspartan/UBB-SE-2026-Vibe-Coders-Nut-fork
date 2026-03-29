@@ -24,6 +24,10 @@ public sealed partial class MainWindow : Window
             {
                 _navigationService.NavigateToClientDashboard(requestRefresh: true);
             }
+            else if (tag == "Calendar")
+            {
+                _navigationService.NavigateToCalendarIntegration();
+            }
         }
     }
 }

@@ -37,4 +37,15 @@ public sealed class NavigationService : INavigationService
             _refreshBus.RequestRefresh();
         }
     }
+
+    /// <inheritdoc />
+    public void NavigateToCalendarIntegration()
+    {
+        if (_frame is null)
+        {
+            return;
+        }
+
+        _frame.Navigate(typeof(Views.CalendarIntegrationPage));
+    }
 }
