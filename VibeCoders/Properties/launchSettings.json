@@ -1,10 +1,10 @@
 {
   "profiles": {
-    "VibeCoders (Package)": {
-      "commandName": "MsixPackage"
-    },
     "VibeCoders (Unpackaged)": {
       "commandName": "Project"
+    },
+    "VibeCoders (Package)": {
+      "commandName": "MsixPackage"
     }
   }
 }
