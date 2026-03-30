@@ -12,4 +12,5 @@ public sealed class WorkoutHistoryRow
     public DateTime LogDate { get; init; }
 
     public int DurationSeconds { get; init; }
+    public int TotalCaloriesBurned { get; init; }
 }

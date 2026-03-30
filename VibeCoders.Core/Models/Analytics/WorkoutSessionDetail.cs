@@ -12,7 +12,18 @@ public sealed class WorkoutSessionDetail
     public string WorkoutName { get; init; } = string.Empty;
     public DateTime LogDate { get; init; }
     public int DurationSeconds { get; init; }
+    public int TotalCaloriesBurned { get; init; }
     public IReadOnlyList<WorkoutSetRow> Sets { get; init; } = Array.Empty<WorkoutSetRow>();
+    public IReadOnlyList<ExerciseCalorieInfo> ExerciseCalories { get; init; } = Array.Empty<ExerciseCalorieInfo>();
+}
+
+/// <summary>
+/// Calorie information for a specific exercise in the workout session.
+/// </summary>
+public sealed class ExerciseCalorieInfo
+{
+    public string ExerciseName { get; init; } = string.Empty;
+    public int CaloriesBurned { get; init; }
 }
 
 /// <summary>
