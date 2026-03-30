@@ -43,7 +43,8 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
                     log_date              DATE NOT NULL,
                     duration_seconds      INT NOT NULL CHECK (duration_seconds >= 0),
                     source_template_id    INT NOT NULL DEFAULT 0,
-                    total_calories_burned INT NOT NULL DEFAULT 0
+                    total_calories_burned INT NOT NULL DEFAULT 0,
+                    intensity_tag         VARCHAR(20) NOT NULL DEFAULT ''
                 );", conn))
             {
                 await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
@@ -62,9 +63,9 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
             await using (var cmd = new SqlCommand(@"
                 IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='workout_log_exercises' AND xtype='U')
                 CREATE TABLE workout_log_exercises (
-                    id             INT PRIMARY KEY IDENTITY(1,1),
-                    workout_log_id INT NOT NULL,
-                    exercise_name  VARCHAR(100) NOT NULL,
+                    id              INT PRIMARY KEY IDENTITY(1,1),
+                    workout_log_id  INT NOT NULL,
+                    exercise_name   VARCHAR(100) NOT NULL,
                     calories_burned INT NOT NULL DEFAULT 0,
                     FOREIGN KEY (workout_log_id)
                         REFERENCES workout_log(id) ON DELETE CASCADE
@@ -115,6 +116,11 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
                 "total_calories_burned INT NOT NULL DEFAULT 0",
                 cancellationToken).ConfigureAwait(false);
 
+            await AddColumnIfMissingAsync(conn,
+                "workout_log", "intensity_tag",
+                "intensity_tag VARCHAR(20) NOT NULL DEFAULT ''",
+                cancellationToken).ConfigureAwait(false);
+
             _initialized = true;
         }
         finally
@@ -141,9 +147,9 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
             int logId;
             await using (var insertLog = new SqlCommand(@"
                 INSERT INTO workout_log
-                    (user_id, workout_name, log_date, duration_seconds, source_template_id, total_calories_burned)
+                    (user_id, workout_name, log_date, duration_seconds, source_template_id, total_calories_burned, intensity_tag)
                 VALUES
-                    (@uid, @name, @date, @dur, @tmpl, @cal);
+                    (@uid, @name, @date, @dur, @tmpl, @cal, @intensity);
                 SELECT SCOPE_IDENTITY();", conn, tx))
             {
                 insertLog.Parameters.AddWithValue("@uid", userId);
@@ -153,6 +159,7 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
                 insertLog.Parameters.AddWithValue("@dur", (int)log.Duration.TotalSeconds);
                 insertLog.Parameters.AddWithValue("@tmpl", log.SourceTemplateId);
                 insertLog.Parameters.AddWithValue("@cal", log.TotalCaloriesBurned);
+                insertLog.Parameters.AddWithValue("@intensity", log.IntensityTag);
 
                 logId = Convert.ToInt32(
                     await insertLog.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false),
@@ -315,7 +322,7 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
             "@uid", userId, cancellationToken).ConfigureAwait(false);
 
         await using var cmd = new SqlCommand(@"
-            SELECT id, workout_name, log_date, duration_seconds, total_calories_burned
+            SELECT id, workout_name, log_date, duration_seconds, total_calories_burned, intensity_tag
             FROM workout_log
             WHERE user_id = @uid
             ORDER BY log_date DESC, id DESC
@@ -335,7 +342,8 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
                 WorkoutName = reader.GetString(1),
                 LogDate = reader.GetDateTime(2),
                 DurationSeconds = reader.GetInt32(3),
-                TotalCaloriesBurned = reader.GetInt32(4)
+                TotalCaloriesBurned = reader.GetInt32(4),
+                IntensityTag = reader.GetString(5)
             });
         }
 
@@ -361,9 +369,10 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
         DateTime logDate;
         int duration;
         int totalCalories;
+        string intensityTag;
 
         await using (var head = new SqlCommand(@"
-            SELECT workout_name, log_date, duration_seconds, total_calories_burned
+            SELECT workout_name, log_date, duration_seconds, total_calories_burned, intensity_tag
             FROM workout_log
             WHERE id = @id AND user_id = @uid;", conn))
         {
@@ -377,6 +386,7 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
             logDate = r.GetDateTime(1);
             duration = r.GetInt32(2);
             totalCalories = r.GetInt32(3);
+            intensityTag = r.GetString(4);
         }
 
         var exerciseCalories = new List<ExerciseCalorieInfo>();
@@ -426,6 +436,7 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
             LogDate = logDate,
             DurationSeconds = duration,
             TotalCaloriesBurned = totalCalories,
+            IntensityTag = intensityTag,
             Sets = sets,
             ExerciseCalories = exerciseCalories
         };

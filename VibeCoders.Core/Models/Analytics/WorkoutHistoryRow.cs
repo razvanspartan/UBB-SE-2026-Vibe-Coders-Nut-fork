@@ -13,4 +13,5 @@ public sealed class WorkoutHistoryRow
 
     public int DurationSeconds { get; init; }
     public int TotalCaloriesBurned { get; init; }
+    public string IntensityTag { get; init; } = string.Empty;
 }

@@ -30,6 +30,7 @@ public sealed partial class WorkoutHistoryItemViewModel : ObservableObject
         DurationLine = ActiveTimeFormatter.ToHourMinuteSecond(
             TimeSpan.FromSeconds(row.DurationSeconds));
         TotalCaloriesBurned = row.TotalCaloriesBurned;
+        IntensityTag = row.IntensityTag;
     }
 
     public int WorkoutLogId { get; }
@@ -37,6 +38,7 @@ public sealed partial class WorkoutHistoryItemViewModel : ObservableObject
     public string DateLine { get; }
     public string DurationLine { get; }
     public int TotalCaloriesBurned { get; }
+    public string IntensityTag { get; }
 
     public ObservableCollection<WorkoutSetRow> Sets { get; } = new();
     public ObservableCollection<ExerciseCalorieInfo> ExerciseCalories { get; } = new();
