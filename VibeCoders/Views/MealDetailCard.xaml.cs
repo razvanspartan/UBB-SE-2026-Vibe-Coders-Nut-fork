@@ -1,8 +1,8 @@
-﻿using System.Windows.Controls;
+using Microsoft.UI.Xaml.Controls;
 
 namespace VibeCoders.Views
 {
-    public partial class MealDetailCard : UserControl
+    public sealed partial class MealDetailCard : UserControl
     {
         public MealDetailCard()
         {

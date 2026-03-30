@@ -1,4 +1,4 @@
-﻿using Microsoft.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using VibeCoders.Models;
 
 namespace VibeCoders.Services
@@ -69,7 +69,7 @@ namespace VibeCoders.Services
         /// Loads a single TemplateExercise by primary key.
         /// Returns null if not found.
         /// </summary>
-        public TemplateExercise GetTemplateExercise(int templateExerciseId)
+        public TemplateExercise? GetTemplateExercise(int templateExerciseId)
         {
             const string sql = @"
                 SELECT

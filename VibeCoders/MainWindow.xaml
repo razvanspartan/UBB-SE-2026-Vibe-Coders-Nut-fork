@@ -9,10 +9,6 @@
     mc:Ignorable="d"
     Title="VibeCoders">
 
-    <Window.SystemBackdrop>
-        <MicaBackdrop />
-    </Window.SystemBackdrop>
-
     <NavigationView
         x:Name="NavView"
         IsBackButtonVisible="Collapsed"
@@ -21,7 +17,7 @@
         SelectionChanged="NavView_SelectionChanged">
 
         <NavigationView.MenuItems>
-            <NavigationViewItem Content="Dashboard" Tag="Dashboard">
+            <NavigationViewItem Content="Dashboard" Tag="Dashboard" IsSelected="True">
                 <NavigationViewItem.Icon>
                     <SymbolIcon Symbol="Home" />
                 </NavigationViewItem.Icon>
@@ -29,6 +25,11 @@
             <NavigationViewItem Content="Calendar" Tag="Calendar">
                 <NavigationViewItem.Icon>
                     <SymbolIcon Symbol="Calendar" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItem Content="Rank" Tag="Rank">
+                <NavigationViewItem.Icon>
+                    <SymbolIcon Symbol="Favorite" />
                 </NavigationViewItem.Icon>
             </NavigationViewItem>
         </NavigationView.MenuItems>

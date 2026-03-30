@@ -22,6 +22,11 @@ public interface IWorkoutAnalyticsStore
     /// <summary>Returns aggregated KPIs for the dashboard summary cards.</summary>
     Task<DashboardSummary> GetDashboardSummaryAsync(long userId, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Returns the sum of <c>duration_seconds</c> for all workout logs owned by the user (lifetime total active time).
+    /// </summary>
+    Task<TimeSpan> GetTotalActiveTimeAsync(long userId, CancellationToken cancellationToken = default);
+
     /// <summary>Returns four ISO-week buckets covering the last four weeks.</summary>
     Task<IReadOnlyList<ConsistencyWeekBucket>> GetConsistencyLastFourWeeksAsync(long userId, CancellationToken cancellationToken = default);
 

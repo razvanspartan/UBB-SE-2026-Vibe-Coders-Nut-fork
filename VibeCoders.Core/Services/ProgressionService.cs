@@ -1,4 +1,4 @@
-﻿using VibeCoders.Models;
+using VibeCoders.Models;
 using VibeCoders.Utils;
 
 namespace VibeCoders.Services
@@ -49,9 +49,9 @@ namespace VibeCoders.Services
             if (notification == null) return;
 
             int templateExerciseId = notification.RelatedId;
-            TemplateExercise template = _storage.GetTemplateExercise(templateExerciseId);
+            TemplateExercise? template = _storage.GetTemplateExercise(templateExerciseId);
 
-            if (template == null) return;
+            if (template is null) return;
 
             double deloadedWeight = ProgressionUtils.CalculateDeload(template.TargetWeight);
 
@@ -77,9 +77,9 @@ namespace VibeCoders.Services
             if (exercise.Sets == null || exercise.Sets.Count == 0) return;
 
             int templateId = exercise.ParentTemplateExerciseId;
-            TemplateExercise template = _storage.GetTemplateExercise(templateId);
+            TemplateExercise? template = _storage.GetTemplateExercise(templateId);
 
-            if (template == null) return;
+            if (template is null) return;
 
             bool plateauDetected = CheckForPlateau(exercise, template, out double avgRatio);
 

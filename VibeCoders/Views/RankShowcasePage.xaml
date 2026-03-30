@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="VibeCoders.Views.RankShowcasePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="using:VibeCoders.Models"
+    mc:Ignorable="d"
+    Loaded="Page_Loaded">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Padding="20,20,28,32" Spacing="24">
+            <!-- Page chrome: title + manual refresh (useful after DB or workout changes). -->
+            <Grid>
+                <TextBlock
+                    Text="Rank showcase"
+                    Style="{StaticResource TitleTextBlockStyle}"
+                    VerticalAlignment="Center" />
+                <Button
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Style="{StaticResource AccentButtonStyle}"
+                    Command="{x:Bind ViewModel.RefreshCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <SymbolIcon Symbol="Refresh" />
+                        <TextBlock Text="Refresh" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+            <!-- Level / rank / lifetime time from analytics + LevelingTierEvaluator. -->
+            <Border
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="24">
+                <StackPanel Spacing="4">
+                    <TextBlock
+                        Text="Level"
+                        Style="{StaticResource CaptionTextBlockStyle}"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <TextBlock
+                        Text="{x:Bind ViewModel.DisplayLevel, Mode=OneWay}"
+                        Style="{StaticResource TitleLargeTextBlockStyle}" />
+                    <TextBlock
+                        Text="Rank"
+                        Style="{StaticResource CaptionTextBlockStyle}"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Margin="0,12,0,0" />
+                    <TextBlock
+                        Text="{x:Bind ViewModel.RankTitle, Mode=OneWay}"
+                        Style="{StaticResource TitleTextBlockStyle}" />
+                    <TextBlock
+                        Text="Lifetime active time"
+                        Style="{StaticResource CaptionTextBlockStyle}"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Margin="0,12,0,0" />
+                    <TextBlock
+                        Text="{x:Bind ViewModel.TotalActiveTimeDisplay, Mode=OneWay}"
+                        Style="{StaticResource BodyStrongTextBlockStyle}" />
+                </StackPanel>
+            </Border>
+
+            <!-- Full catalog: locked rows stay visible per showcase requirements. -->
+            <StackPanel Spacing="4">
+                <TextBlock
+                    Text="Achievements"
+                    Style="{StaticResource SubtitleTextBlockStyle}" />
+                <TextBlock
+                    Text="Locked goals stay listed so you can see what is next."
+                    Style="{StaticResource CaptionTextBlockStyle}"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+
+            <!-- Shown only while LoadAsync runs on the UI thread. -->
+            <ProgressRing
+                Width="24"
+                Height="24"
+                HorizontalAlignment="Left"
+                IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}"
+                Visibility="{x:Bind ViewModel.IsLoading, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
+
+            <!-- One card per AchievementShowcaseItem; StatusLine is Unlocked vs Locked. -->
+            <ItemsControl ItemsSource="{x:Bind ViewModel.ShowcaseAchievements, Mode=OneWay}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="models:AchievementShowcaseItem">
+                        <Border
+                            Margin="0,0,0,8"
+                            Padding="16"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="6">
+                            <StackPanel Spacing="6">
+                                <TextBlock
+                                    Text="{x:Bind Title}"
+                                    Style="{StaticResource BodyStrongTextBlockStyle}" />
+                                <TextBlock
+                                    Text="{x:Bind Description}"
+                                    Style="{StaticResource BodyTextBlockStyle}"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    TextWrapping="Wrap" />
+                                <TextBlock
+                                    Text="{x:Bind StatusLine}"
+                                    Style="{StaticResource CaptionTextBlockStyle}"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

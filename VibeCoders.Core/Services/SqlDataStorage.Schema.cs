@@ -1,8 +1,8 @@
-﻿using Microsoft.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 
 namespace VibeCoders.Services
 {
-    public partial class SqlDataStorage
+    public partial class SqlDataStorage : IDataStorage
     {
         /// <summary>
         /// Creates all tables required by the workout tracking and progression
@@ -91,6 +91,29 @@ namespace VibeCoders.Services
                     date_created    DATETIME NOT NULL,
                     is_read         BIT NOT NULL DEFAULT 0,
                     FOREIGN KEY (client_id) REFERENCES CLIENT(client_id)
+                );";
+            cmd.ExecuteNonQuery();
+
+            // ── ACHIEVEMENT ───────────────────────────────────────────────────
+            cmd.CommandText = @"
+                IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='ACHIEVEMENT' AND xtype='U')
+                CREATE TABLE ACHIEVEMENT (
+                    achievement_id  INT PRIMARY KEY IDENTITY(1,1),
+                    title           VARCHAR(100) NOT NULL,
+                    description     VARCHAR(250) NOT NULL
+                );";
+            cmd.ExecuteNonQuery();
+
+            // ── CLIENT_ACHIEVEMENT ────────────────────────────────────────────
+            cmd.CommandText = @"
+                IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='CLIENT_ACHIEVEMENT' AND xtype='U')
+                CREATE TABLE CLIENT_ACHIEVEMENT (
+                    client_id       INT NOT NULL,
+                    achievement_id  INT NOT NULL,
+                    unlocked        BIT NOT NULL DEFAULT 0,
+                    CONSTRAINT PK_CLIENT_ACHIEVEMENT PRIMARY KEY (client_id, achievement_id),
+                    FOREIGN KEY (client_id) REFERENCES CLIENT(client_id),
+                    FOREIGN KEY (achievement_id) REFERENCES ACHIEVEMENT(achievement_id)
                 );";
             cmd.ExecuteNonQuery();
         }

@@ -1,4 +1,4 @@
-﻿using Microsoft.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 
 namespace VibeCoders.Services
 {
@@ -94,6 +94,39 @@ namespace VibeCoders.Services
                 exerciseCmd.Parameters.AddWithValue("@Weight", weight);
                 exerciseCmd.ExecuteNonQuery();
             }
+        }
+
+        /// <summary>
+        /// Inserts baseline achievement definitions when <c>ACHIEVEMENT</c> is empty.
+        /// Safe to call on every startup.
+        /// </summary>
+        public void SeedAchievementCatalog()
+        {
+            using var conn = new SqlConnection(_connectionString);
+            conn.Open();
+
+            using (var check = new SqlCommand("SELECT COUNT(1) FROM ACHIEVEMENT;", conn))
+            {
+                var count = (int)check.ExecuteScalar();
+                if (count > 0)
+                {
+                    return;
+                }
+            }
+
+            void Insert(string title, string description)
+            {
+                using var cmd = new SqlCommand(
+                    "INSERT INTO ACHIEVEMENT (title, description) VALUES (@Title, @Description);",
+                    conn);
+                cmd.Parameters.AddWithValue("@Title", title);
+                cmd.Parameters.AddWithValue("@Description", description);
+                cmd.ExecuteNonQuery();
+            }
+
+            Insert("First Steps", "Complete your first workout.");
+            Insert("Week Warrior", "Log workouts on five different days.");
+            Insert("Dedicated", "Reach 50 hours of total active time.");
         }
     }
 }

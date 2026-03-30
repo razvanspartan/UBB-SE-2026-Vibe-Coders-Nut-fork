@@ -238,6 +238,7 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
             "@end", today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
             cancellationToken).ConfigureAwait(false);
 
+        // SQL Server: TOP 1 for the most frequent workout name.
         string? preferred = null;
         await using (var prefCmd = new SqlCommand(@"
             SELECT TOP 1 workout_name
@@ -260,6 +261,24 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
             TotalActiveTimeLastSevenDays = TimeSpan.FromSeconds(activeSeconds),
             PreferredWorkoutName = preferred
         };
+    }
+
+    /// <inheritdoc />
+    public async Task<TimeSpan> GetTotalActiveTimeAsync(
+        long userId, CancellationToken cancellationToken = default)
+    {
+        await EnsureCreatedAsync(cancellationToken).ConfigureAwait(false);
+
+        await using var conn = new SqlConnection(_connectionString);
+        await conn.OpenAsync(cancellationToken).ConfigureAwait(false);
+
+        var totalSeconds = await ScalarLongAsync(conn, @"
+            SELECT ISNULL(SUM(CAST(duration_seconds AS BIGINT)), 0)
+            FROM workout_log
+            WHERE user_id = @uid;",
+            "@uid", userId, cancellationToken).ConfigureAwait(false);
+
+        return TimeSpan.FromSeconds(totalSeconds);
     }
 
     // ?? Consistency ??????????????????????????????????????????????????????????
@@ -321,6 +340,7 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
             "SELECT COUNT(*) FROM workout_log WHERE user_id = @uid;",
             "@uid", userId, cancellationToken).ConfigureAwait(false);
 
+        // SQL Server paging: OFFSET/FETCH.
         await using var cmd = new SqlCommand(@"
             SELECT id, workout_name, log_date, duration_seconds, total_calories_burned, intensity_tag
             FROM workout_log

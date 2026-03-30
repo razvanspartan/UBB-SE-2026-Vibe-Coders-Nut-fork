@@ -10,7 +10,8 @@
     <PublishProfile>win-$(Platform).pubxml</PublishProfile>
     <UseWinUI>true</UseWinUI>
     <WindowsPackageType>None</WindowsPackageType>
-    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <!-- Self-contained copies WinUI stack DLLs (e.g. CoreMessagingXP) that can fault on Windows 10; use the installed Windows App Runtime 1.x instead. -->
+    <WindowsAppSDKSelfContained>false</WindowsAppSDKSelfContained>
     <WinUISDKReferences>false</WinUISDKReferences>
     <EnableMsixTooling>false</EnableMsixTooling>
     <Nullable>enable</Nullable>
@@ -51,6 +52,9 @@
   </ItemGroup>
   <ItemGroup>
     <Page Update="Views\TrainerDashboardView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Views\RankShowcasePage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>

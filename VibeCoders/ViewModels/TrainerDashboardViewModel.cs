@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -18,7 +18,7 @@ namespace VibeCoders.ViewModels
         public ObservableCollection<WorkoutLog> SelectedClientLogs { get; set; } = new ObservableCollection<WorkoutLog>();
 
         private Client? _selectedClient;
-        public Client SelectedClient
+        public Client? SelectedClient
         {
             get => _selectedClient;
             set
