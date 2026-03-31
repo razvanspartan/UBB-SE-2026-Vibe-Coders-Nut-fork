@@ -16,50 +16,84 @@
         </TransitionCollection>
     </Page.Transitions>
 
-    <Grid>
+    <Grid RowDefinitions="Auto,*">
+
+        <!-- ═══════════════════════════════════════════════════════
+             TOP BAR — Timer + Finish button (always visible, fixed)
+             ═══════════════════════════════════════════════════════ -->
+        <Border
+            Grid.Row="0"
+            Background="{ThemeResource LayerFillColorDefaultBrush}"
+            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+            BorderThickness="0,0,0,1"
+            Padding="24,20">
+            <Grid ColumnDefinitions="*,Auto">
+
+                <!-- Timer block -->
+                <StackPanel Spacing="4" VerticalAlignment="Center">
+                    <TextBlock
+                        Text="WORKOUT TIME"
+                        Style="{StaticResource CaptionTextBlockStyle}"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        CharacterSpacing="100" />
+                    <TextBlock
+                        x:Name="WorkoutTimerDisplay"
+                        Text="00:00:00"
+                        FontSize="52"
+                        FontWeight="Bold"
+                        FontFamily="Consolas"
+                        Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                        CharacterSpacing="20" />
+                    <!-- Active workout name, shown once a template is selected -->
+                    <TextBlock
+                        Text="{x:Bind ViewModel.SelectedTemplate.Name, Mode=OneWay}"
+                        Style="{StaticResource CaptionTextBlockStyle}"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Visibility="{x:Bind ViewModel.IsWorkoutStarted, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
+                </StackPanel>
+
+                <!-- Finish Workout button -->
+                <Button
+                    Grid.Column="1"
+                    Style="{StaticResource AccentButtonStyle}"
+                    VerticalAlignment="Center"
+                    Command="{x:Bind ViewModel.FinishWorkoutCommand}"
+                    CommandParameter="{x:Bind ClientId}"
+                    IsEnabled="{x:Bind ViewModel.IsWorkoutStarted, Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <ProgressRing
+                            IsActive="{x:Bind ViewModel.IsFinishing, Mode=OneWay}"
+                            Visibility="{x:Bind ViewModel.IsFinishing, Mode=OneWay, Converter={StaticResource BoolToVisibility}}"
+                            Width="16" Height="16" />
+                        <FontIcon Glyph="&#xE73E;" FontSize="14" />
+                        <TextBlock Text="Finish Workout" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- ═══════════════════════════════════════════════════════
+             SCROLLABLE BODY
+             ═══════════════════════════════════════════════════════ -->
         <ScrollViewer
+            Grid.Row="1"
             VerticalScrollBarVisibility="Auto"
-            HorizontalScrollBarVisibility="Disabled"
-            HorizontalContentAlignment="Left"
-            VerticalContentAlignment="Top">
-            <StackPanel
-                Padding="20,20,28,32"
-                Spacing="28"
-                HorizontalAlignment="Stretch">
+            HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Padding="24,24,28,40" Spacing="24">
                 <StackPanel.ChildrenTransitions>
                     <TransitionCollection>
                         <EntranceThemeTransition IsStaggeringEnabled="True" />
                     </TransitionCollection>
                 </StackPanel.ChildrenTransitions>
 
-                <!-- Header -->
-                <Grid>
-                    <TextBlock
-                        Text="Active Workout"
-                        Style="{StaticResource TitleTextBlockStyle}"
-                        VerticalAlignment="Center" />
-                    <Button
-                        HorizontalAlignment="Right"
-                        VerticalAlignment="Center"
-                        Style="{StaticResource AccentButtonStyle}"
-                        Command="{x:Bind ViewModel.FinishWorkoutCommand}"
-                        CommandParameter="{x:Bind ClientId}"
-                        IsEnabled="{x:Bind ViewModel.IsWorkoutStarted, Mode=OneWay}">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <FontIcon Glyph="&#xE73E;" FontSize="14" />
-                            <TextBlock Text="Finish Workout" />
-                        </StackPanel>
-                    </Button>
-                </Grid>
-
-                <!-- Error message -->
+                <!-- Error bar -->
                 <InfoBar
                     IsOpen="{x:Bind ViewModel.ErrorMessage, Mode=OneWay, Converter={StaticResource StringToBool}}"
                     Severity="Error"
                     Title="Error"
                     Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}" />
 
-                <!-- Available Workouts Dropdown (#68 collapsed container) -->
+                <!-- ── Workout Selector ─────────────────────────────── -->
                 <Border
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
@@ -76,7 +110,6 @@
                                 Visibility="{x:Bind ViewModel.IsLoadingWorkouts, Mode=OneWay, Converter={StaticResource BoolToVisibility}}"
                                 Width="20" Height="20" />
                         </Grid>
-
                         <ComboBox
                             PlaceholderText="Select a workout to begin..."
                             ItemsSource="{x:Bind ViewModel.AvailableWorkouts, Mode=OneWay}"
@@ -95,14 +128,12 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Active Exercise List -->
+                <!-- ── Exercise List ───────────────────────────────── -->
                 <ItemsRepeater
                     ItemsSource="{x:Bind ViewModel.ExerciseRows, Mode=OneWay}"
                     Visibility="{x:Bind ViewModel.IsWorkoutStarted, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
                     <ItemsRepeater.ItemTemplate>
                         <DataTemplate x:DataType="vm:ActiveExerciseViewModel">
-
-                            <!-- Exercise Card (#68 collapsed container layout) -->
                             <Expander
                                 IsExpanded="True"
                                 HorizontalAlignment="Stretch"
@@ -112,7 +143,6 @@
                                 CornerRadius="8"
                                 Margin="0,0,0,12">
 
-                                <!-- Expand/Collapse Header (#69) -->
                                 <Expander.Header>
                                     <Grid ColumnDefinitions="*,Auto" Padding="0,8">
                                         <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
@@ -128,51 +158,39 @@
                                                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                                 VerticalAlignment="Center" />
                                         </StackPanel>
-
-                                        <!-- System Adjusted Badge (#70) -->
                                         <Border
                                             Grid.Column="1"
                                             Background="{ThemeResource SystemFillColorCautionBackgroundBrush}"
                                             BorderBrush="{ThemeResource SystemFillColorCautionBrush}"
-                                            BorderThickness="1"
-                                            CornerRadius="4"
-                                            Padding="8,4"
+                                            BorderThickness="1" CornerRadius="4" Padding="8,4"
                                             Visibility="{x:Bind IsSystemAdjusted, Mode=OneWay, Converter={StaticResource BoolToVisibility}}"
                                             VerticalAlignment="Center">
                                             <ToolTipService.ToolTip>
-                                                <!-- Tooltip UI for progression math (#71) -->
                                                 <ToolTip>
                                                     <StackPanel Spacing="4" MaxWidth="300">
-                                                        <TextBlock
-                                                            Text="System Adjusted"
-                                                            Style="{StaticResource BodyStrongTextBlockStyle}" />
-                                                        <TextBlock
-                                                            Text="{x:Bind AdjustmentNote, Mode=OneWay}"
-                                                            Style="{StaticResource CaptionTextBlockStyle}"
-                                                            TextWrapping="Wrap" />
+                                                        <TextBlock Text="System Adjusted" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                                                        <TextBlock Text="{x:Bind AdjustmentNote, Mode=OneWay}"
+                                                                   Style="{StaticResource CaptionTextBlockStyle}"
+                                                                   TextWrapping="Wrap" />
                                                     </StackPanel>
                                                 </ToolTip>
                                             </ToolTipService.ToolTip>
                                             <StackPanel Orientation="Horizontal" Spacing="6">
                                                 <FontIcon Glyph="&#xE7BA;" FontSize="12"
                                                           Foreground="{ThemeResource SystemFillColorCautionBrush}" />
-                                                <TextBlock
-                                                    Text="System Adjusted"
-                                                    Style="{StaticResource CaptionTextBlockStyle}"
-                                                    Foreground="{ThemeResource SystemFillColorCautionBrush}" />
+                                                <TextBlock Text="System Adjusted"
+                                                           Style="{StaticResource CaptionTextBlockStyle}"
+                                                           Foreground="{ThemeResource SystemFillColorCautionBrush}" />
                                             </StackPanel>
                                         </Border>
                                     </Grid>
                                 </Expander.Header>
 
-                                <!-- Set Rows (#72) -->
                                 <Expander.Content>
                                     <StackPanel Spacing="4" Padding="0,8,0,12">
-
                                         <!-- Column headers -->
                                         <Grid ColumnDefinitions="32,*,120,120,Auto" Padding="0,0,0,8">
-                                            <TextBlock Text="#"
-                                                       Style="{StaticResource CaptionTextBlockStyle}"
+                                            <TextBlock Text="#" Style="{StaticResource CaptionTextBlockStyle}"
                                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                                        HorizontalAlignment="Center" />
                                             <TextBlock Grid.Column="1" Text="Exercise"
@@ -191,25 +209,12 @@
                                         <ItemsRepeater ItemsSource="{x:Bind Sets, Mode=OneWay}">
                                             <ItemsRepeater.ItemTemplate>
                                                 <DataTemplate x:DataType="vm:ActiveSetViewModel">
-
-                                                    <!-- Set Row (#72) -->
-                                                    <Border
-                                                        CornerRadius="4"
-                                                        Padding="0,6"
-                                                        Margin="0,2">
-                                                        <Border.Background>
-                                                            <SolidColorBrush
-                                                                Color="{ThemeResource SubtleFillColorTransparent}" />
-                                                        </Border.Background>
+                                                    <Border CornerRadius="4" Padding="0,6" Margin="0,2">
                                                         <Grid ColumnDefinitions="32,*,120,120,Auto" ColumnSpacing="8">
-
-                                                            <!-- Set index -->
                                                             <Border
                                                                 Background="{ThemeResource AccentFillColorDefaultBrush}"
-                                                                CornerRadius="12"
-                                                                Width="24" Height="24"
-                                                                HorizontalAlignment="Center"
-                                                                VerticalAlignment="Center">
+                                                                CornerRadius="12" Width="24" Height="24"
+                                                                HorizontalAlignment="Center" VerticalAlignment="Center">
                                                                 <TextBlock
                                                                     Text="{x:Bind SetIndex}"
                                                                     Style="{StaticResource CaptionTextBlockStyle}"
@@ -217,12 +222,9 @@
                                                                     HorizontalAlignment="Center"
                                                                     VerticalAlignment="Center" />
                                                             </Border>
-
-                                                            <!-- Target info -->
                                                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                                <TextBlock
-                                                                    Style="{StaticResource CaptionTextBlockStyle}"
-                                                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}">
+                                                                <TextBlock Style="{StaticResource CaptionTextBlockStyle}"
+                                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}">
                                                                     <Run Text="Target: " />
                                                                     <Run Text="{x:Bind TargetReps}" />
                                                                     <Run Text=" reps @ " />
@@ -230,31 +232,22 @@
                                                                     <Run Text=" kg" />
                                                                 </TextBlock>
                                                             </StackPanel>
-
-                                                            <!-- Actual Reps input -->
                                                             <NumberBox
                                                                 Grid.Column="2"
                                                                 Value="{x:Bind ActualRepsValue, Mode=TwoWay}"
-                                                                Minimum="0"
-                                                                Maximum="999"
+                                                                Minimum="0" Maximum="999"
                                                                 SpinButtonPlacementMode="Compact"
                                                                 PlaceholderText="Reps"
                                                                 IsEnabled="{x:Bind IsCompleted, Mode=OneWay, Converter={StaticResource BoolNegate}}"
                                                                 HorizontalAlignment="Stretch" />
-
-                                                            <!-- Actual Weight input -->
                                                             <NumberBox
                                                                 Grid.Column="3"
                                                                 Value="{x:Bind ActualWeightValue, Mode=TwoWay}"
-                                                                Minimum="0"
-                                                                Maximum="9999"
-                                                                SmallChange="0.5"
+                                                                Minimum="0" Maximum="9999" SmallChange="0.5"
                                                                 SpinButtonPlacementMode="Compact"
                                                                 PlaceholderText="kg"
                                                                 IsEnabled="{x:Bind IsCompleted, Mode=OneWay, Converter={StaticResource BoolNegate}}"
                                                                 HorizontalAlignment="Stretch" />
-
-                                                            <!-- Done button / completed check -->
                                                             <Button
                                                                 Grid.Column="4"
                                                                 VerticalAlignment="Center"
@@ -263,71 +256,46 @@
                                                             </Button>
                                                             <FontIcon
                                                                 Grid.Column="4"
-                                                                Glyph="&#xE73E;"
-                                                                FontSize="16"
+                                                                Glyph="&#xE73E;" FontSize="16"
                                                                 Foreground="{ThemeResource SystemFillColorSuccessBrush}"
                                                                 VerticalAlignment="Center"
                                                                 Visibility="{x:Bind IsCompleted, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
                                                         </Grid>
                                                     </Border>
-
                                                 </DataTemplate>
                                             </ItemsRepeater.ItemTemplate>
                                         </ItemsRepeater>
                                     </StackPanel>
                                 </Expander.Content>
                             </Expander>
-
                         </DataTemplate>
                     </ItemsRepeater.ItemTemplate>
                 </ItemsRepeater>
 
-                <!-- Notifications Section (#73) -->
+                <!-- ── Notifications ───────────────────────────────── -->
                 <StackPanel
                     Spacing="12"
                     Visibility="{x:Bind ViewModel.IsWorkoutStarted, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
-                    <TextBlock
-                        Text="Notifications"
-                        Style="{StaticResource SubtitleTextBlockStyle}" />
-
+                    <TextBlock Text="Notifications" Style="{StaticResource SubtitleTextBlockStyle}" />
                     <ItemsRepeater ItemsSource="{x:Bind ViewModel.Notifications, Mode=OneWay}">
                         <ItemsRepeater.ItemTemplate>
                             <DataTemplate x:DataType="models:Notification">
-
-                                <!-- Notification List Item (#73) -->
                                 <Border
                                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                                    BorderThickness="1"
-                                    CornerRadius="8"
-                                    Padding="16"
-                                    Margin="0,0,0,8">
+                                    BorderThickness="1" CornerRadius="8" Padding="16" Margin="0,0,0,8">
                                     <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="16">
-
-                                        <!-- Notification icon -->
-                                        <FontIcon
-                                            Glyph="&#xE7BA;"
-                                            FontSize="24"
-                                            Foreground="{ThemeResource SystemFillColorCautionBrush}"
-                                            VerticalAlignment="Center" />
-
-                                        <!-- Title + message -->
+                                        <FontIcon Glyph="&#xE7BA;" FontSize="24"
+                                                  Foreground="{ThemeResource SystemFillColorCautionBrush}"
+                                                  VerticalAlignment="Center" />
                                         <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
-                                            <TextBlock
-                                                Text="{x:Bind Title}"
-                                                Style="{StaticResource BodyStrongTextBlockStyle}" />
-                                            <TextBlock
-                                                Text="{x:Bind Message}"
-                                                Style="{StaticResource CaptionTextBlockStyle}"
-                                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                                TextWrapping="Wrap" />
+                                            <TextBlock Text="{x:Bind Title}" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                                            <TextBlock Text="{x:Bind Message}"
+                                                       Style="{StaticResource CaptionTextBlockStyle}"
+                                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                       TextWrapping="Wrap" />
                                         </StackPanel>
-
-                                        <!-- Confirm Deload button (#73) -->
-                                        <Button
-                                            Grid.Column="2"
-                                            Style="{StaticResource AccentButtonStyle}"
-                                            VerticalAlignment="Center">
+                                        <Button Grid.Column="2" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center">
                                             <StackPanel Orientation="Horizontal" Spacing="8">
                                                 <FontIcon Glyph="&#xE74D;" FontSize="12" />
                                                 <TextBlock Text="Confirm Deload" />
@@ -335,31 +303,13 @@
                                         </Button>
                                     </Grid>
                                 </Border>
-
                             </DataTemplate>
                         </ItemsRepeater.ItemTemplate>
                     </ItemsRepeater>
                 </StackPanel>
 
-                <!-- Finish button at bottom -->
-                <Button
-                    Style="{StaticResource AccentButtonStyle}"
-                    HorizontalAlignment="Stretch"
-                    Command="{x:Bind ViewModel.FinishWorkoutCommand}"
-                    CommandParameter="{x:Bind ClientId}"
-                    IsEnabled="{x:Bind ViewModel.IsWorkoutStarted, Mode=OneWay}"
-                    Visibility="{x:Bind ViewModel.IsWorkoutStarted, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <ProgressRing
-                            IsActive="{x:Bind ViewModel.IsFinishing, Mode=OneWay}"
-                            Visibility="{x:Bind ViewModel.IsFinishing, Mode=OneWay, Converter={StaticResource BoolToVisibility}}"
-                            Width="16" Height="16" />
-                        <FontIcon Glyph="&#xE73E;" FontSize="14" />
-                        <TextBlock Text="Finish Workout" />
-                    </StackPanel>
-                </Button>
-
             </StackPanel>
         </ScrollViewer>
+
     </Grid>
 </Page>
