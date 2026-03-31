@@ -95,6 +95,8 @@ public partial class App : Application
         services.AddSingleton<IWorkoutDataForwarder, WorkoutDataForwarder>();
         services.AddSingleton<INavigationService, NavigationService>();
 
+        services.AddHttpClient();
+
         services.AddSingleton<ProgressionService>();
         services.AddSingleton<ClientService>();
         services.AddSingleton<TrainerService>();

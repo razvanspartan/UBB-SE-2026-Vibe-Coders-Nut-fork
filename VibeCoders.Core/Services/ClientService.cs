@@ -1,4 +1,7 @@
-﻿using VibeCoders.Models;
+﻿using System.Net.Http;
+using System.Net.Http.Json;
+using VibeCoders.Models;
+using VibeCoders.Models.Integration;
 
 namespace VibeCoders.Services
 {
@@ -6,11 +9,15 @@ namespace VibeCoders.Services
     {
         private readonly IDataStorage _storage;
         private readonly ProgressionService _progressionService;
+        private readonly IHttpClientFactory _httpClientFactory;
 
-        public ClientService(IDataStorage storage, ProgressionService progressionService)
+        private const string NutritionApiEndpoint = "https://nutrition-app.vibecoders.internal/api/nutrition/sync";
+
+        public ClientService(IDataStorage storage, ProgressionService progressionService, IHttpClientFactory httpClientFactory)
         {
             _storage = storage;
             _progressionService = progressionService;
+            _httpClientFactory = httpClientFactory;
         }
 
         // ── Workout ──────────────────────────────────────────────────────────
@@ -99,6 +106,32 @@ namespace VibeCoders.Services
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error modifying workout: {ex.Message}");
+                return false;
+            }
+        }
+
+        // ── Nutrition Sync ───────────────────────────────────────────────────
+
+        /// <summary>
+        /// Serializes <paramref name="payload"/> to JSON and POSTs it to the
+        /// Nutrition App's sync endpoint. Returns <c>true</c> on HTTP 2xx.
+        /// </summary>
+        public async Task<bool> SyncNutritionAsync(
+            NutritionSyncPayload payload,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var client = _httpClientFactory.CreateClient();
+                var response = await client
+                    .PostAsJsonAsync(NutritionApiEndpoint, payload, cancellationToken)
+                    .ConfigureAwait(false);
+
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error syncing nutrition: {ex.Message}");
                 return false;
             }
         }
