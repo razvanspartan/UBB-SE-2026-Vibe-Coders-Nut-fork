@@ -33,6 +33,8 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
             await using var conn = new SqlConnection(_connectionString);
             await conn.OpenAsync(cancellationToken).ConfigureAwait(false);
 
+            //This overrites the schema tables and the app won't work
+
             // workout_log table
             await using (var cmd = new SqlCommand(@"
                 IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='workout_log' AND xtype='U')

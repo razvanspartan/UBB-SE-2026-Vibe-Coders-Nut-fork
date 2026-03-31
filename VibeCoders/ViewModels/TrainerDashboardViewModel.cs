@@ -16,6 +16,7 @@ namespace VibeCoders.ViewModels
 
         public ObservableCollection<Client> AssignedClients { get; set; } = new ObservableCollection<Client>();
         public ObservableCollection<WorkoutLog> SelectedClientLogs { get; set; } = new ObservableCollection<WorkoutLog>();
+        public ObservableCollection<ExerciseDisplayRow> CurrentWorkoutDetails { get; set; } = new();
 
         private Client? _selectedClient;
         public Client? SelectedClient
@@ -28,6 +29,38 @@ namespace VibeCoders.ViewModels
                     _selectedClient = value;
                     LoadLogsForSelectedClient();
                 }
+            }
+        }
+
+        
+
+        private WorkoutLog? _selectedWorkoutLog;
+        public WorkoutLog? SelectedWorkoutLog
+        {
+            get => _selectedWorkoutLog;
+            set
+            {
+                if (_selectedWorkoutLog != value)
+                {
+                    _selectedWorkoutLog = value;
+                    OnWorkoutLogSelected();
+                }
+            }
+        }
+
+        private void OnWorkoutLogSelected()
+        {
+            CurrentWorkoutDetails.Clear();
+            if (_selectedWorkoutLog == null) return;
+
+            foreach (var exercise in _selectedWorkoutLog.Exercises)
+            {
+                CurrentWorkoutDetails.Add(new ExerciseDisplayRow
+                {
+                    Name = exercise.ExerciseName,
+                    MuscleGroup = "Hams", // Ideally pull this from your TemplateExercise data
+                    Sets = exercise.Sets
+                });
             }
         }
 
@@ -53,12 +86,20 @@ namespace VibeCoders.ViewModels
         public void LoadLogsForSelectedClient()
         {
             SelectedClientLogs.Clear();
+            CurrentWorkoutDetails.Clear();
             if (_selectedClient != null && _selectedClient.WorkoutLog != null)
             {
-                foreach (var log in _selectedClient.WorkoutLog)
+                var realLogs = _trainerService.GetClientWorkoutHistory(_selectedClient.Id);
+                foreach (var log in realLogs)
                 {
                     SelectedClientLogs.Add(log);
                 }
+
+                if (SelectedClientLogs.Count > 0)
+                {
+                    SelectedWorkoutLog = SelectedClientLogs[0];
+                }
+
             }
         }
     }

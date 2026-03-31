@@ -74,4 +74,17 @@ public sealed class NavigationService : INavigationService
             _frame.GoBack();
         }
     }
+
+
+    public void NavigateToTrainerDashboard()
+    {
+        if (_frame is null)
+        {
+            return;
+        }
+
+        _frame?.Navigate(typeof(Views.TrainerDashboardView));
+
+    }
+
 }

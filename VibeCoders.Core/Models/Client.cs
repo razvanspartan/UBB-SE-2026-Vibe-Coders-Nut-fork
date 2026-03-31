@@ -8,10 +8,12 @@ namespace VibeCoders.Models
 {
     public class Client : User
     {
+        
         public double Weight { get; set; }
         public double Height { get; set; }
         public List<WorkoutLog> WorkoutLog { get; set; } = new List<WorkoutLog>();
 
+        //TODO: UPDATE DB CLIENT TABLE TO CONTAIN PRIMARY GOAL
         public string PrimaryGoal { get; set; } = "No goal set";
         public string FormattedLastWorkout { get; set; } = "Never";
 

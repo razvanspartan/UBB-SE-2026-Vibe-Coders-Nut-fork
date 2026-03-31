@@ -33,7 +33,7 @@ public partial class App : Application
         var dispatcher = _window.DispatcherQueue ?? DispatcherQueue.GetForCurrentThread();
         dispatcher.TryEnqueue(async () =>
         {
-            try
+        try
             {
                 var storage = _services.GetRequiredService<IDataStorage>();
                 if (storage is SqlDataStorage sql)
@@ -43,6 +43,12 @@ public partial class App : Application
                         sql.EnsureSchemaCreated();
                         sql.SeedPrebuiltWorkouts();
                         sql.SeedAchievementCatalog();
+
+
+                        //TEST DATA
+                        sql.SeedTestData();
+
+
                     }).ConfigureAwait(true);
                 }
             }
@@ -52,7 +58,10 @@ public partial class App : Application
             }
 
             navService.NavigateToClientDashboard(requestRefresh: true);
-        });
+
+            
+        }
+    );
     }
 
     /// <summary>
@@ -88,6 +97,7 @@ public partial class App : Application
 
         services.AddSingleton<ProgressionService>();
         services.AddSingleton<ClientService>();
+        services.AddSingleton<TrainerService>();
 
         services.AddTransient<ClientDashboardViewModel>();
         services.AddTransient<RankShowcaseViewModel>();

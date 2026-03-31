@@ -64,6 +64,13 @@ public sealed partial class MainWindow : Window
             {
                 _navigationService.NavigateToRankShowcase();
             }
+
+            else if (tag == "TrainerDashboard")
+            {
+                _navigationService.NavigateToTrainerDashboard();
+            }
+
+
         }
     }
 }

@@ -17,10 +17,7 @@ namespace VibeCoders.Views
 
         public TrainerDashboardView()
         {
-
-            var db = new SqlDataStorage();
-            var service = new TrainerService(db);
-
+            var service = App.GetService<TrainerService>();
             this.ViewModel = new TrainerDashboardViewModel(service);
             this.InitializeComponent();
         }

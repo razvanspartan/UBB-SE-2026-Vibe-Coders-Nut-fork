@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:models="using:VibeCoders.Models"
     xmlns:views="using:VibeCoders.Views"
+	xmlns:vm="using:VibeCoders.ViewModels"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Grid Padding="32">
@@ -45,8 +46,14 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Text="History" FontSize="24" FontWeight="SemiBold" Padding="12" Margin="10"/>
-                    <ListView Grid.Row="1" ItemsSource="{x:Bind ViewModel.SelectedClientLogs, Mode=OneWay}" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Margin="10">
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="Auto"/>
+						<ColumnDefinition Width="*"/>
+					</Grid.ColumnDefinitions>
+					
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="History" FontSize="24" FontWeight="SemiBold" Padding="12" Margin="10"/>
+                    <ListView Grid.Row="1" Grid.Column="0" ItemsSource="{x:Bind ViewModel.SelectedClientLogs, Mode=OneWay}" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Margin="10"
+							  >
                         <ListView.ItemTemplate>
                             <DataTemplate x:DataType="models:WorkoutLog">
                                 <StackPanel Orientation="Horizontal" Spacing="16">
@@ -55,6 +62,59 @@
                             </DataTemplate>
                         </ListView.ItemTemplate>
                     </ListView>
+
+					<Grid Grid.Column="1">
+						<ListView Grid.Row="1"
+                              ItemsSource="{x:Bind ViewModel.CurrentWorkoutDetails, Mode=OneWay}"
+                              SelectionMode="None">
+
+							<ListView.Header>
+								<Grid ColumnDefinitions="2*, 1*, 4*" Padding="12,8" Background="{ThemeResource LayerFillColorDefaultBrush}">
+									<TextBlock Text="Exercise Name" Grid.Column="0" Foreground="Gray" FontSize="12"/>
+									<TextBlock Text="Group" Grid.Column="1" Foreground="Gray" FontSize="12"/>
+									<TextBlock Text="Sets (Reps / Weight)" Grid.Column="2" Foreground="Gray" FontSize="12" Margin="12,0,0,0"/>
+								</Grid>
+							</ListView.Header>
+
+							<ListView.ItemTemplate>
+								<DataTemplate x:DataType="vm:ExerciseDisplayRow">
+									<Grid ColumnDefinitions="2*, 1*, 4*" Padding="0,8">
+										<TextBlock Text="{x:Bind Name}" VerticalAlignment="Center" Margin="12,0,0,0"/>
+
+										<Border Grid.Column="1" Background="#FFE0E0" CornerRadius="4" Padding="6,2" HorizontalAlignment="Left" VerticalAlignment="Center">
+											<TextBlock Text="{x:Bind MuscleGroup}" Foreground="#802020" FontSize="11"/>
+										</Border>
+
+										<ItemsControl Grid.Column="2" ItemsSource="{x:Bind Sets}">
+											<ItemsControl.ItemsPanel>
+												<ItemsPanelTemplate>
+													<StackPanel Orientation="Horizontal" Spacing="15"/>
+												</ItemsPanelTemplate>
+											</ItemsControl.ItemsPanel>
+											<ItemsControl.ItemTemplate>
+												<DataTemplate x:DataType="models:LoggedSet">
+													<StackPanel Orientation="Horizontal" Spacing="8">
+														<TextBlock Text="{x:Bind ActualReps}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+														<TextBlock Text="×" Foreground="Gray" VerticalAlignment="Center" FontSize="10"/>
+														<TextBlock Text="{x:Bind ActualWeight}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
+
+														<TextBlock Text="|" Foreground="#20FFFFFF" VerticalAlignment="Center" Margin="5,0,0,0"/>
+													</StackPanel>
+												</DataTemplate>
+											</ItemsControl.ItemTemplate>
+										</ItemsControl>
+									</Grid>
+								</DataTemplate>
+							</ListView.ItemTemplate>
+						</ListView>
+						
+					</Grid>
+					
+					
+					
+					
+					
+					
                 </Grid>
             </Grid>
         </Border>

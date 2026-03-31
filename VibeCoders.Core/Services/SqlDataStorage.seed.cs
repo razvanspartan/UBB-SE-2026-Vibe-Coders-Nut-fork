@@ -128,5 +128,80 @@ namespace VibeCoders.Services
             Insert("Week Warrior", "Log workouts on five different days.");
             Insert("Dedicated", "Reach 50 hours of total active time.");
         }
+
+
+        
+
+        /// <summary>
+        /// Seeds dummy users, clients, trainers, and workout logs for testing purposes.
+        /// Safe to call on every startup.
+        /// </summary>
+        public void SeedTestData()
+        {
+            using var conn = new SqlConnection(_connectionString);
+            conn.Open();
+
+            // 1. Check if our test trainer already exists. If yes, bail out.
+            using (var check = new SqlCommand("SELECT COUNT(1) FROM [USER] WHERE username = 'TestTrainer';", conn))
+            {
+                if ((int)check.ExecuteScalar() > 0) return;
+            }
+
+            // 2. Insert Trainer User
+            int trainerUserId;
+            using (var cmd = new SqlCommand("INSERT INTO [USER] (username) VALUES ('TestTrainer'); SELECT SCOPE_IDENTITY();", conn))
+            {
+                trainerUserId = Convert.ToInt32(cmd.ExecuteScalar());
+            }
+
+            // 3. Insert Trainer Record
+            int trainerId;
+            using (var cmd = new SqlCommand("INSERT INTO TRAINER (user_id) VALUES (@UserId); SELECT SCOPE_IDENTITY();", conn))
+            {
+                cmd.Parameters.AddWithValue("@UserId", trainerUserId);
+                trainerId = Convert.ToInt32(cmd.ExecuteScalar());
+            }
+
+            // 4. Insert Client User
+            int clientUserId;
+            using (var cmd = new SqlCommand("INSERT INTO [USER] (username) VALUES ('TestClient'); SELECT SCOPE_IDENTITY();", conn))
+            {
+                clientUserId = Convert.ToInt32(cmd.ExecuteScalar());
+            }
+
+            // 5. Insert Client Record (linked to the Trainer!)
+            int clientId;
+            using (var cmd = new SqlCommand(@"
+                INSERT INTO CLIENT (user_id, trainer_id, weight, height) 
+                VALUES (@UserId, @TrainerId, 85.5, 180.0); 
+                SELECT SCOPE_IDENTITY();", conn))
+            {
+                cmd.Parameters.AddWithValue("@UserId", clientUserId);
+                cmd.Parameters.AddWithValue("@TrainerId", trainerId);
+                clientId = Convert.ToInt32(cmd.ExecuteScalar());
+            }
+
+            // 6. Insert a dummy Workout Log for the Client
+            int workoutLogId;
+            using (var cmd = new SqlCommand(@"
+                INSERT INTO WORKOUT_LOG (client_id, date, total_duration, calories_burned, rating) 
+                VALUES (@ClientId, GETDATE(), '01:15:00', 450, 5);
+                SELECT SCOPE_IDENTITY();", conn))
+            {
+                cmd.Parameters.AddWithValue("@ClientId", clientId);
+                workoutLogId = Convert.ToInt32(cmd.ExecuteScalar());
+            }
+
+            // 7. Insert a dummy Set for that Workout
+            using (var cmd = new SqlCommand(@"
+                INSERT INTO WORKOUT_LOG_SETS (workout_log_id, exercise_name, sets, reps, weight)
+                VALUES (@LogId, 'Barbell Squat', 1, 10, 100.0);", conn))
+            {
+                cmd.Parameters.AddWithValue("@LogId", workoutLogId);
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+
     }
 }

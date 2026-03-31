@@ -4,6 +4,9 @@ namespace VibeCoders.Services
 {
     public partial class SqlDataStorage : IDataStorage
     {
+
+        private readonly string _connectionString = DatabasePaths.GetSqlServerConnectionString();
+
         /// <summary>
         /// Creates all tables required by the workout tracking and progression
         /// module if they do not already exist. Call this once at application
@@ -16,6 +19,42 @@ namespace VibeCoders.Services
 
             using var cmd = new SqlCommand();
             cmd.Connection = conn;
+
+            // ── USER ─────────────────────────────────────────────
+            cmd.CommandText = @"
+                IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='USER' AND xtype='U')
+                CREATE TABLE [USER] (
+                    id INT PRIMARY KEY IDENTITY(1,1),
+                    username VARCHAR(100) NOT NULL
+                    
+                );";
+            cmd.ExecuteNonQuery();
+
+            // ── TRAINER ─────────────────────────────────────────────
+            cmd.CommandText = @"
+                IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='TRAINER' AND xtype='U')
+                CREATE TABLE TRAINER (
+                    trainer_id INT PRIMARY KEY IDENTITY(1,1),
+                    user_id INT NOT NULL,
+                    FOREIGN KEY (user_id) REFERENCES [USER](id)
+                );";
+            cmd.ExecuteNonQuery();
+
+            // ── CLIENT ─────────────────────────────────────────────
+            cmd.CommandText = @"
+                IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='CLIENT' AND xtype='U')
+                CREATE TABLE CLIENT (
+                    client_id INT PRIMARY KEY IDENTITY(1,1),
+                    user_id INT NOT NULL,
+                    trainer_id INT NOT NULL,
+                    weight FLOAT,
+                    height FLOAT,
+                    FOREIGN KEY (user_id) REFERENCES [USER](id),
+                    FOREIGN KEY (trainer_id) REFERENCES TRAINER(trainer_id)
+                );";
+            cmd.ExecuteNonQuery();
+
+
 
             // ── WORKOUT_TEMPLATE ─────────────────────────────────────────────
             cmd.CommandText = @"

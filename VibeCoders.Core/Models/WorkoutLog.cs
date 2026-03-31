@@ -15,4 +15,5 @@ public sealed class WorkoutLog
     public int TotalCaloriesBurned { get; set; }
     public float AverageMet { get; set; }
     public string IntensityTag { get; set; } = string.Empty;
+    public int? Rating { get; set; }
 }
