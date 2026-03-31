@@ -8,11 +8,10 @@ namespace VibeCoders.Utils
     /// </summary>
     public static class ProgressionUtils
     {
-        // ── Weight increment constants (kg) ──────────────────────────────────
-        // Smaller muscles (ARMS, SHOULDERS, CORE) use a 1.25 kg step.
-        // Large compound muscles (CHEST, BACK, LEGS) use a 2.5 kg step.
-        private const double LARGE_MUSCLE_INCREMENT = 2.5;
-        private const double SMALL_MUSCLE_INCREMENT = 1.25;
+        // Weight increment constants (kg) per requirements:
+        // Legs: 5kg, Chest/Back/Shoulders/Arms: 2.5kg
+        private const double LEGS_INCREMENT = 5.0;
+        private const double STANDARD_INCREMENT = 2.5;
 
         // Deload factor: reduce current weight by 10 % when a plateau is confirmed.
         private const double DELOAD_FACTOR = 0.90;
@@ -45,18 +44,18 @@ namespace VibeCoders.Utils
         {
             switch (muscleGroup)
             {
+                case MuscleGroup.LEGS:
+                    return 5.0;
+
                 case MuscleGroup.CHEST:
                 case MuscleGroup.BACK:
-                case MuscleGroup.LEGS:
-                    return LARGE_MUSCLE_INCREMENT;
-
                 case MuscleGroup.SHOULDERS:
                 case MuscleGroup.ARMS:
-                case MuscleGroup.CORE:
-                    return SMALL_MUSCLE_INCREMENT;
+                    return 2.5;
 
+                case MuscleGroup.CORE:
                 default:
-                    return SMALL_MUSCLE_INCREMENT;
+                    return 2.5;
             }
         }
 
@@ -70,8 +69,8 @@ namespace VibeCoders.Utils
         public static double CalculateDeload(double currentWeight)
         {
             double raw = currentWeight * DELOAD_FACTOR;
-            // Round to nearest 0.25 kg
-            double rounded = Math.Round(raw * 4) / 4.0;
+            // Round to nearest 0.5 kg per requirements
+            double rounded = Math.Round(raw * 2) / 2.0;
             return Math.Max(0, rounded);
         }
     }
