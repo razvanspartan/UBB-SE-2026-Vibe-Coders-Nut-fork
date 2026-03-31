@@ -196,14 +196,14 @@
                                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                                        VerticalAlignment="Center" />
                                             <Border Grid.Column="3"
-                                                    Background="{ThemeResource AccentFillColorDefaultBrush}"
+                                                    Background="{x:Bind IntensityBrush}"
                                                     CornerRadius="4"
                                                     Padding="8,2"
                                                     VerticalAlignment="Center"
                                                     Margin="8,0,0,0">
                                                 <TextBlock Text="{x:Bind IntensityTag}"
                                                            Style="{StaticResource CaptionTextBlockStyle}"
-                                                           Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" />
+                                                           Foreground="White" />
                                             </Border>
                                         </Grid>
                                     </Expander.Header>

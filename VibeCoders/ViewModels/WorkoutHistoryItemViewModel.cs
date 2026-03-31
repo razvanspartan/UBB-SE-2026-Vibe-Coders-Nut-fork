@@ -3,6 +3,8 @@ using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.UI;
+using Microsoft.UI.Xaml.Media;
 using VibeCoders.Domain;
 using VibeCoders.Models.Analytics;
 using VibeCoders.Services;
@@ -39,6 +41,20 @@ public sealed partial class WorkoutHistoryItemViewModel : ObservableObject
     public string DurationLine { get; }
     public int TotalCaloriesBurned { get; }
     public string IntensityTag { get; }
+
+    public SolidColorBrush IntensityBrush
+    {
+        get
+        {
+            return IntensityTag.ToLower() switch
+            {
+                "light" => new SolidColorBrush(Colors.Green),
+                "moderate" => new SolidColorBrush(Colors.Orange),
+                "intense" => new SolidColorBrush(Colors.Red),
+                _ => new SolidColorBrush(Colors.Gray)
+            };
+        }
+    }
 
     public ObservableCollection<WorkoutSetRow> Sets { get; } = new();
     public ObservableCollection<ExerciseCalorieInfo> ExerciseCalories { get; } = new();
