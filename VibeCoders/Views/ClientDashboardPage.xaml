@@ -215,6 +215,25 @@
                                                 Width="20" Height="20"
                                                 HorizontalAlignment="Center"
                                                 Margin="0,8" />
+                                            
+                                            <!-- Total Calories Burned Summary -->
+                                            <Border Background="{ThemeResource AccentFillColorSecondaryBrush}"
+                                                    CornerRadius="4"
+                                                    Padding="16,12"
+                                                    Margin="44,8,0,12"
+                                                    Visibility="{x:Bind IsLoadingDetail, Mode=OneWay, Converter={StaticResource BoolToVisibility}, ConverterParameter=Invert}">
+                                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                                    <FontIcon Glyph="&#xE91B;" FontSize="20" 
+                                                              Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/>
+                                                    <TextBlock Style="{StaticResource SubtitleTextBlockStyle}"
+                                                               Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}">
+                                                        <Run Text="Total Calories Burned: "/>
+                                                        <Run Text="{x:Bind TotalCaloriesBurned}" FontWeight="Bold"/>
+                                                        <Run Text=" kcal"/>
+                                                    </TextBlock>
+                                                </StackPanel>
+                                            </Border>
+                                            
                                             <Grid ColumnDefinitions="3*,*,*,*" Margin="44,0,0,8"
                                                   Visibility="{x:Bind IsLoadingDetail, Mode=OneWay, Converter={StaticResource BoolToVisibility}, ConverterParameter=Invert}">
                                                 <TextBlock Text="Exercise" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
