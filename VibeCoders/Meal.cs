@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 public class Meal
 {
@@ -10,7 +11,7 @@ public class Meal
     //Constructor
     public Meal()
     {
-        ingredients = new List<string>();
+        _ingredients = new List<string>();
     }
 
     //(Getters and Setters)

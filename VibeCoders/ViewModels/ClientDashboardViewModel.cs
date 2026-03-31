@@ -14,7 +14,7 @@ using SkiaSharp;
 using VibeCoders.Domain;
 using VibeCoders.Models.Analytics;
 using VibeCoders.Services;
-using VibeCoders.Models; //Did this because of the NutritionPlan class
+// using VibeCoders.Models; // TODO: Uncomment when NutritionPlan class is created
 namespace VibeCoders.ViewModels;
 
 /// <summary>
@@ -28,28 +28,29 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
     private readonly IWorkoutAnalyticsStore _store;
     private readonly IUserSession _session;
     private readonly IAnalyticsDashboardRefreshBus _refreshBus;
+    // private readonly ClientService _clientService; // TODO: Uncomment when NutritionPlan is implemented
     private CancellationTokenSource? _loadCts;
 
     public ClientDashboardViewModel(
         IWorkoutAnalyticsStore store,
         IUserSession session,
-        IAnalyticsDashboardRefreshBus refreshBus,
-        ClientService clientService)
+        IAnalyticsDashboardRefreshBus refreshBus)
+        // ClientService clientService) // TODO: Uncomment when NutritionPlan is implemented
     {
         _store = store;
         _session = session;
         _refreshBus = refreshBus;
-        _clientService = clientService;
+        // _clientService = clientService; // TODO: Uncomment when NutritionPlan is implemented
         _refreshBus.RefreshRequested += OnRefreshRequested;
     }
 
-    // --- Nutrition Plan Properties ---
+    // --- Nutrition Plan Properties (TODO: Implement when NutritionPlan class exists) ---
 
-    [ObservableProperty]
-    private NutritionPlan? currentNutritionPlan;
+    // [ObservableProperty]
+    // private NutritionPlan? currentNutritionPlan;
 
-    [ObservableProperty]
-    private bool isLoadingNutrition;
+    // [ObservableProperty]
+    // private bool isLoadingNutrition;
 
     // ---------------------------------------------
 
@@ -164,7 +165,7 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
             IsLoadingSummary = true;
             IsLoadingChart = true;
             IsLoadingHistory = true;
-            IsLoadingNutrition = true; //loading flag nutrition
+            // IsLoadingNutrition = true; // TODO: Uncomment when NutritionPlan is implemented
 
             await _store.EnsureCreatedAsync(token).ConfigureAwait(true);
 
@@ -172,9 +173,9 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
             var bucketsTask = _store.GetConsistencyLastFourWeeksAsync(uid, token);
             CurrentPage = 0;
             var historyTask = _store.GetWorkoutHistoryPageAsync(uid, CurrentPage, PageSize, token);
-            var nutritionTask = Task.Run(() => _clientService.GetActiveNutritionPlan((int)uid), token); //nutrition plan
+            // var nutritionTask = Task.Run(() => _clientService.GetActiveNutritionPlan((int)uid), token); // TODO: Uncomment when NutritionPlan is implemented
 
-            await Task.WhenAll(summaryTask, bucketsTask, historyTask, nutritionTask).ConfigureAwait(true);
+            await Task.WhenAll(summaryTask, bucketsTask, historyTask).ConfigureAwait(true);
             token.ThrowIfCancellationRequested();
 
             ApplySummary(summaryTask.Result);
@@ -186,8 +187,8 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
             ApplyHistory(historyTask.Result, uid);
             IsLoadingHistory = false;
 
-            CurrentNutritionPlan = nutritionTask.Result;
-            IsLoadingNutrition = false;
+            // CurrentNutritionPlan = nutritionTask.Result; // TODO: Uncomment when NutritionPlan is implemented
+            // IsLoadingNutrition = false; // TODO: Uncomment when NutritionPlan is implemented
         }
         catch (OperationCanceledException)
         {
