@@ -10,6 +10,7 @@ namespace VibeCoders.Services
         private readonly IDataStorage _storage;
         private readonly ProgressionService _progressionService;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly EvaluationEngine _evaluationEngine;
         private readonly IAchievementUnlockedBus _achievementBus;
 
         private const string NutritionApiEndpoint = "https://nutrition-app.vibecoders.internal/api/nutrition/sync";
@@ -45,6 +46,8 @@ namespace VibeCoders.Services
                 _progressionService.EvaluateWorkout(log);
 
                 bool isSaved = _storage.SaveWorkoutLog(log);
+                // Fire milestone checks after every completed workout
+                var unlocked = _evaluationEngine.Evaluate(log.ClientId);
 
                 if (isSaved)
                     EvaluateAndPublishAchievements(log.ClientId);
