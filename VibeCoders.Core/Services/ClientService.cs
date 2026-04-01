@@ -10,14 +10,21 @@ namespace VibeCoders.Services
         private readonly IDataStorage _storage;
         private readonly ProgressionService _progressionService;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly EvaluationEngine _evaluationEngine;
+        private readonly IAchievementUnlockedBus _achievementBus;
 
         private const string NutritionApiEndpoint = "https://nutrition-app.vibecoders.internal/api/nutrition/sync";
 
-        public ClientService(IDataStorage storage, ProgressionService progressionService, IHttpClientFactory httpClientFactory)
+        public ClientService(
+            IDataStorage storage,
+            ProgressionService progressionService,
+            IHttpClientFactory httpClientFactory,
+            IAchievementUnlockedBus achievementBus)
         {
             _storage = storage;
             _progressionService = progressionService;
             _httpClientFactory = httpClientFactory;
+            _achievementBus = achievementBus;
         }
 
         // ── Workout ──────────────────────────────────────────────────────────
@@ -39,6 +46,11 @@ namespace VibeCoders.Services
                 _progressionService.EvaluateWorkout(log);
 
                 bool isSaved = _storage.SaveWorkoutLog(log);
+                // Fire milestone checks after every completed workout
+                var unlocked = _evaluationEngine.Evaluate(log.ClientId);
+
+                if (isSaved)
+                    EvaluateAndPublishAchievements(log.ClientId);
 
                 return isSaved;
             }
@@ -134,6 +146,40 @@ namespace VibeCoders.Services
                 System.Diagnostics.Debug.WriteLine($"Error syncing nutrition: {ex.Message}");
                 return false;
             }
+        }
+
+        // ── Achievement Evaluation ───────────────────────────────────────────
+
+        /// <summary>
+        /// Evaluates seeded achievement criteria for <paramref name="clientId"/> after
+        /// a workout is saved. For each badge newly granted, publishes on the bus so
+        /// the UI can trigger the unlock popup.
+        /// </summary>
+        private void EvaluateAndPublishAchievements(int clientId)
+        {
+            try
+            {
+                // "First Steps" (id 1): complete at least one workout.
+                if (_storage.GetWorkoutCount(clientId) == 1)
+                    TryAwardAndPublish(clientId, achievementId: 1);
+
+                // "Week Warrior" (id 2): log workouts on 5 distinct calendar days.
+                if (_storage.GetDistinctWorkoutDayCount(clientId) >= 5)
+                    TryAwardAndPublish(clientId, achievementId: 2);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Achievement evaluation error: {ex.Message}");
+            }
+        }
+
+        private void TryAwardAndPublish(int clientId, int achievementId)
+        {
+            if (!_storage.AwardAchievement(clientId, achievementId)) return;
+
+            var item = _storage.GetAchievementForClient(achievementId, clientId);
+            if (item != null)
+                _achievementBus.NotifyUnlocked(item);
         }
 
         // ── Notifications ────────────────────────────────────────────────────

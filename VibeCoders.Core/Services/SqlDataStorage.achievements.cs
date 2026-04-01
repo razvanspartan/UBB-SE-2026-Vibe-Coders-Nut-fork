@@ -50,6 +50,64 @@ public partial class SqlDataStorage
     }
 
     /// <inheritdoc />
+    public int GetWorkoutCount(int clientId)
+    {
+        using var conn = new SqlConnection(_connectionString);
+        conn.Open();
+        using var cmd = new SqlCommand(
+            "SELECT COUNT(1) FROM WORKOUT_LOG WHERE client_id = @ClientId;", conn);
+        cmd.Parameters.AddWithValue("@ClientId", clientId);
+        return (int)cmd.ExecuteScalar();
+    }
+
+    /// <inheritdoc />
+    public int GetDistinctWorkoutDayCount(int clientId)
+    {
+        using var conn = new SqlConnection(_connectionString);
+        conn.Open();
+        using var cmd = new SqlCommand(
+            "SELECT COUNT(DISTINCT CAST(date AS DATE)) FROM WORKOUT_LOG WHERE client_id = @ClientId;", conn);
+        cmd.Parameters.AddWithValue("@ClientId", clientId);
+        return (int)cmd.ExecuteScalar();
+    }
+
+    /// <inheritdoc />
+    public AchievementShowcaseItem? GetAchievementForClient(int achievementId, int clientId)
+    {
+        using var conn = new SqlConnection(_connectionString);
+        conn.Open();
+
+        const string sql = @"
+            SELECT
+                a.achievement_id,
+                a.title,
+                a.description,
+                a.criteria,
+                CASE WHEN ca.unlocked = 1 THEN 1 ELSE 0 END AS is_unlocked
+            FROM ACHIEVEMENT a
+            LEFT JOIN CLIENT_ACHIEVEMENT ca
+                ON ca.achievement_id = a.achievement_id
+               AND ca.client_id = @ClientId
+            WHERE a.achievement_id = @AchievementId;";
+
+        using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@AchievementId", achievementId);
+        cmd.Parameters.AddWithValue("@ClientId",      clientId);
+
+        using var reader = cmd.ExecuteReader();
+        if (!reader.Read()) return null;
+
+        return new AchievementShowcaseItem
+        {
+            AchievementId = reader.GetInt32(0),
+            Title         = reader.GetString(1),
+            Description   = reader.GetString(2),
+            Criteria      = reader.GetString(3),
+            IsUnlocked    = reader.GetInt32(4) != 0
+        };
+    }
+
+    /// <inheritdoc />
     public bool AwardAchievement(int clientId, int achievementId)
     {
         using var conn = new SqlConnection(_connectionString);

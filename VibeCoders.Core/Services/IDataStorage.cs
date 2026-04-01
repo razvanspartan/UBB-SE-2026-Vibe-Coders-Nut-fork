@@ -48,6 +48,16 @@ namespace VibeCoders.Services
         /// <param name="clientId">Client whose <c>CLIENT_ACHIEVEMENT</c> rows join the catalog.</param>
         List<AchievementShowcaseItem> GetAchievementShowcaseForClient(int clientId);
 
+        
+        int GetWorkoutCount(int clientId);
+
+        
+        int GetDistinctWorkoutDayCount(int clientId);
+
+       
+        AchievementShowcaseItem? GetAchievementForClient(int achievementId, int clientId);
+
+        
         ///<summary>
         ///Updates the workout's log feedback values when called
         ///</summary>

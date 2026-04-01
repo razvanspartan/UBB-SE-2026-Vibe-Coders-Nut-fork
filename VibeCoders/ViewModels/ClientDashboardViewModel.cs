@@ -44,6 +44,14 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
         _refreshBus.RefreshRequested += OnRefreshRequested;
     }
 
+    [ObservableProperty]
+    private ObservableCollection<Achievement> recentAchievements = new();
+
+    // populate it inside your existing load method:
+    RecentAchievements.Clear();
+    foreach (var a in _storage.GetAchievements(clientId).Take(5))
+        RecentAchievements.Add(a);
+
     // --- Nutrition Plan Properties (TODO: Implement when NutritionPlan class exists) ---
 
     // [ObservableProperty]

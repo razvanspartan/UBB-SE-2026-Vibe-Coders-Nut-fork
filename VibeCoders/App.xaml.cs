@@ -26,7 +26,8 @@ public partial class App : Application
         _services = services.BuildServiceProvider();
 
         var navService = (NavigationService)_services.GetRequiredService<INavigationService>();
-        _window = new MainWindow(navService);
+        var achievementBus = _services.GetRequiredService<IAchievementUnlockedBus>();
+        _window = new MainWindow(navService, achievementBus);
         _window.Activate();
 
         // Show the shell first; schema/seed can block on first LocalDB connection.
@@ -59,7 +60,7 @@ public partial class App : Application
 
             navService.NavigateToClientDashboard(requestRefresh: true);
 
-            
+
         }
     );
     }
@@ -92,6 +93,7 @@ public partial class App : Application
             new SqlWorkoutAnalyticsStore(connectionString));
 
         services.AddSingleton<IAnalyticsDashboardRefreshBus, AnalyticsDashboardRefreshBus>();
+        services.AddSingleton<IAchievementUnlockedBus, AchievementUnlockedBus>();
         services.AddSingleton<IWorkoutDataForwarder, WorkoutDataForwarder>();
         services.AddSingleton<INavigationService, NavigationService>();
 
@@ -99,6 +101,7 @@ public partial class App : Application
 
         services.AddSingleton<ProgressionService>();
         services.AddSingleton<ClientService>();
+        services.AddSingleton<EvaluationEngine>(); // added right now
         services.AddSingleton<TrainerService>();
 
         services.AddTransient<ClientDashboardViewModel>();

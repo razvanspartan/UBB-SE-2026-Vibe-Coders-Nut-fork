@@ -32,6 +32,11 @@ public sealed partial class ClientDashboardPage : Page
         Unloaded += Page_Unloaded;
     }
 
+    private void SeeAllAchievements_Click(object sender, RoutedEventArgs e)
+    {
+        Frame.Navigate(typeof(AchievementsPage), ClientId);
+    }
+
     private async void Page_Loaded(object sender, RoutedEventArgs e)
     {
         await ViewModel.LoadInitialAsync();
