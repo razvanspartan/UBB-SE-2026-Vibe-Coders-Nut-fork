@@ -36,22 +36,23 @@ public sealed class EvaluationEngine
     // ── Default milestone registry ───────────────────────────────────────────
     // Titles must match ACHIEVEMENT.title values seeded at startup.
 
-    private static IReadOnlyList<IMilestoneCheck> BuildDefaultChecks() =>
-    [
-        // Total-workout milestones
-        new WorkoutCountCheck("First Steps",     threshold: 1),
-        new WorkoutCountCheck("Deca Athlete",    threshold: 10),
-        new WorkoutCountCheck("Quarter Century", threshold: 25),
-        new WorkoutCountCheck("Half Century",    threshold: 50),
-        new WorkoutCountCheck("Centurion",       threshold: 100),
+    private static IReadOnlyList<IMilestoneCheck> BuildDefaultChecks()
+    {
+        // Drive workout-count checks directly from the canonical milestone table so
+        // the titles here always match what SeedWorkoutMilestoneAchievements seeds.
+        var checks = TotalWorkoutsMilestoneEvaluator.DefaultMilestones
+            .Select(m => (IMilestoneCheck)new WorkoutCountCheck(m.Title, m.Threshold))
+            .ToList();
 
         // Consecutive-day streak milestones
-        new StreakCheck("3-Day Streak", requiredConsecutiveDays: 3),
-        new StreakCheck("Week Warrior", requiredConsecutiveDays: 7),
+        checks.Add(new StreakCheck("3-Day Streak", requiredConsecutiveDays: 3));
+        checks.Add(new StreakCheck("Week Warrior",  requiredConsecutiveDays: 7));
 
         // Weekly volume milestone
-        new WeeklyVolumeCheck("Week Champion", requiredWorkoutsPerWeek: 6),
-    ];
+        checks.Add(new WeeklyVolumeCheck("Week Champion", requiredWorkoutsPerWeek: 6));
+
+        return checks;
+    }
 
     // ── Public entry point ───────────────────────────────────────────────────
 

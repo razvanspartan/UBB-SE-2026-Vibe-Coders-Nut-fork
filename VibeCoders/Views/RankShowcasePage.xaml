@@ -10,13 +10,19 @@
     Loaded="Page_Loaded">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Padding="20,20,28,32" Spacing="24">
-            <!-- Page chrome: title + manual refresh (useful after DB or workout changes). -->
+        <StackPanel Padding="24,20,28,40" Spacing="24">
+
+            <!-- ── Header row ────────────────────────────────────────────── -->
             <Grid>
-                <TextBlock
-                    Text="Rank showcase"
-                    Style="{StaticResource TitleTextBlockStyle}"
-                    VerticalAlignment="Center" />
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock
+                        Text="Rank Showcase"
+                        Style="{StaticResource TitleTextBlockStyle}" />
+                    <TextBlock
+                        Text="Your dynamic level and achievement history"
+                        Style="{StaticResource CaptionTextBlockStyle}"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
                 <Button
                     HorizontalAlignment="Right"
                     VerticalAlignment="Center"
@@ -29,62 +35,160 @@
                 </Button>
             </Grid>
 
-            <!-- Level / rank / lifetime time from analytics + LevelingTierEvaluator. -->
+            <!-- ── Hero rank card ─────────────────────────────────────────
+                 Displays "Level 5: Elite" prominently with lifetime time
+                 and a progress bar toward the next rank.                  -->
+            <Border
+                Background="{ThemeResource AccentFillColorDefaultBrush}"
+                CornerRadius="12"
+                Padding="28,24">
+                <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+
+                    <!-- Trophy icon + combined level/rank line -->
+                    <StackPanel
+                        Grid.Row="0"
+                        Orientation="Horizontal"
+                        Spacing="16"
+                        VerticalAlignment="Center">
+                        <Border
+                            Width="52" Height="52"
+                            CornerRadius="26"
+                            Background="White"
+                            Opacity="0.15">
+                            <FontIcon
+                                Glyph="&#xE8A4;"
+                                FontSize="28"
+                                Foreground="White"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center" />
+                        </Border>
+                        <StackPanel Spacing="2" VerticalAlignment="Center">
+                            <TextBlock
+                                Text="Your Rank"
+                                Style="{StaticResource CaptionTextBlockStyle}"
+                                Foreground="White"
+                                Opacity="0.75" />
+                            <!-- "Level 5: Elite" – the primary display required by #176 -->
+                            <TextBlock
+                                Text="{x:Bind ViewModel.LevelDisplayLine, Mode=OneWay}"
+                                Style="{StaticResource TitleLargeTextBlockStyle}"
+                                Foreground="White" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Lifetime active time -->
+                    <StackPanel
+                        Grid.Row="1"
+                        Orientation="Horizontal"
+                        Spacing="8"
+                        Margin="0,20,0,0">
+                        <FontIcon Glyph="&#xE916;" FontSize="14" Foreground="White" Opacity="0.75" VerticalAlignment="Center" />
+                        <TextBlock
+                            Text="Lifetime active time"
+                            Style="{StaticResource CaptionTextBlockStyle}"
+                            Foreground="White"
+                            Opacity="0.75"
+                            VerticalAlignment="Center" />
+                        <TextBlock
+                            Text="{x:Bind ViewModel.TotalActiveTimeDisplay, Mode=OneWay}"
+                            Style="{StaticResource BodyStrongTextBlockStyle}"
+                            Foreground="White"
+                            VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <!-- Divider -->
+                    <Rectangle
+                        Grid.Row="2"
+                        Height="1"
+                        Fill="White"
+                        Opacity="0.2"
+                        Margin="0,16,0,0" />
+
+                    <!-- Progress bar (hidden at max rank) -->
+                    <StackPanel
+                        Grid.Row="3"
+                        Spacing="8"
+                        Margin="0,16,0,0"
+                        Visibility="{x:Bind ViewModel.HasNextRank, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                        <Grid>
+                            <TextBlock
+                                Text="Progress to next rank"
+                                Style="{StaticResource CaptionTextBlockStyle}"
+                                Foreground="White"
+                                Opacity="0.75" />
+                            <TextBlock
+                                HorizontalAlignment="Right"
+                                Style="{StaticResource CaptionTextBlockStyle}"
+                                Foreground="White">
+                                <Run Text="{x:Bind ViewModel.ProgressPercent, Mode=OneWay}" /><Run Text="%" />
+                            </TextBlock>
+                        </Grid>
+                        <ProgressBar
+                            Value="{x:Bind ViewModel.ProgressPercent, Mode=OneWay}"
+                            Minimum="0"
+                            Maximum="100"
+                            Height="8"
+                            Background="White"
+                            Opacity="0.3" />
+                    </StackPanel>
+
+                    <!-- Next rank goal line -->
+                    <TextBlock
+                        Grid.Row="4"
+                        Text="{x:Bind ViewModel.NextRankInfo, Mode=OneWay}"
+                        Style="{StaticResource CaptionTextBlockStyle}"
+                        Foreground="White"
+                        Opacity="0.85"
+                        TextWrapping="Wrap"
+                        Margin="0,12,0,0" />
+
+                </Grid>
+            </Border>
+
+            <!-- ── All tier thresholds reference card ────────────────────
+                 Shows every rank level so users understand what to aim for. -->
             <Border
                 Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                 BorderThickness="1"
                 CornerRadius="8"
-                Padding="24">
-                <StackPanel Spacing="4">
+                Padding="20">
+                <StackPanel Spacing="12">
                     <TextBlock
-                        Text="Level"
-                        Style="{StaticResource CaptionTextBlockStyle}"
-                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        Text="Rank Tiers"
+                        Style="{StaticResource SubtitleTextBlockStyle}" />
                     <TextBlock
-                        Text="{x:Bind ViewModel.DisplayLevel, Mode=OneWay}"
-                        Style="{StaticResource TitleLargeTextBlockStyle}" />
-                    <TextBlock
-                        Text="Rank"
+                        Text="Novice → Beginner (1h)  ·  Regular (10h)  ·  Dedicated (50h)  ·  Elite (200h)"
                         Style="{StaticResource CaptionTextBlockStyle}"
                         Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                        Margin="0,12,0,0" />
-                    <TextBlock
-                        Text="{x:Bind ViewModel.RankTitle, Mode=OneWay}"
-                        Style="{StaticResource TitleTextBlockStyle}" />
-                    <TextBlock
-                        Text="Lifetime active time"
-                        Style="{StaticResource CaptionTextBlockStyle}"
-                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                        Margin="0,12,0,0" />
-                    <TextBlock
-                        Text="{x:Bind ViewModel.TotalActiveTimeDisplay, Mode=OneWay}"
-                        Style="{StaticResource BodyStrongTextBlockStyle}" />
+                        TextWrapping="Wrap" />
                 </StackPanel>
             </Border>
 
-            <!-- Full catalog: locked rows stay visible per showcase requirements. -->
+            <!-- ── Achievement showcase header ───────────────────────────── -->
             <StackPanel Spacing="4">
                 <TextBlock
-                    Text="Achievements"
+                    Text="Achievement Showcase"
                     Style="{StaticResource SubtitleTextBlockStyle}" />
                 <TextBlock
-                    Text="Locked goals stay listed so you can see what is next."
+                    Text="Locked goals stay listed so you can always see what is next."
                     Style="{StaticResource CaptionTextBlockStyle}"
                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                     TextWrapping="Wrap" />
             </StackPanel>
 
-            <!-- Shown only while LoadAsync runs on the UI thread. -->
+            <!-- Loading indicator -->
             <ProgressRing
-                Width="24"
-                Height="24"
+                Width="28"
+                Height="28"
                 HorizontalAlignment="Left"
                 IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}"
                 Visibility="{x:Bind ViewModel.IsLoading, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
 
-            <!-- One card per AchievementShowcaseItem. Shows badge title, description,
-                 exact completion criteria, and a visual lock/unlock icon. -->
+            <!-- ── Achievement cards ──────────────────────────────────────
+                 One card per AchievementShowcaseItem.
+                 Shows badge title, description, exact criteria, and a
+                 visual lock / unlock icon.                                -->
             <ItemsControl ItemsSource="{x:Bind ViewModel.ShowcaseAchievements, Mode=OneWay}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="models:AchievementShowcaseItem">
@@ -94,31 +198,48 @@
                             Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                             BorderThickness="1"
-                            CornerRadius="6">
+                            CornerRadius="8">
                             <Grid ColumnSpacing="16">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
 
-                                <!-- Visual lock/unlock icon -->
-                                <Grid Grid.Column="0" VerticalAlignment="Center" Width="36" Height="36">
-                                    <!-- Unlocked badge icon -->
-                                    <FontIcon
-                                        Glyph="&#xE8FB;"
-                                        FontSize="28"
-                                        Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
-                                        Visibility="{x:Bind IsUnlocked, Converter={StaticResource BoolToVisibility}}" />
-                                    <!-- Locked padlock icon -->
-                                    <FontIcon
-                                        Glyph="&#xE72E;"
-                                        FontSize="28"
-                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                        Visibility="{x:Bind IsLocked, Converter={StaticResource BoolToVisibility}}" />
-                                </Grid>
+                                <!-- Lock / unlock icon -->
+                                <Border
+                                    Grid.Column="0"
+                                    Width="44" Height="44"
+                                    CornerRadius="22"
+                                    VerticalAlignment="Center">
+                                    <!-- Unlocked: filled accent circle -->
+                                    <Border
+                                        Background="{ThemeResource AccentFillColorDefaultBrush}"
+                                        CornerRadius="22"
+                                        Visibility="{x:Bind IsUnlocked, Converter={StaticResource BoolToVisibility}}">
+                                        <FontIcon
+                                            Glyph="&#xE8FB;"
+                                            FontSize="22"
+                                            Foreground="White"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center" />
+                                    </Border>
+                                    <!-- Locked: muted circle -->
+                                    <Border
+                                        Background="{ThemeResource CardStrokeColorDefaultBrush}"
+                                        CornerRadius="22"
+                                        Visibility="{x:Bind IsLocked, Converter={StaticResource BoolToVisibility}}">
+                                        <FontIcon
+                                            Glyph="&#xE72E;"
+                                            FontSize="22"
+                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center" />
+                                    </Border>
+                                </Border>
 
-                                <!-- Badge title, description, criteria, status -->
-                                <StackPanel Grid.Column="1" Spacing="4">
+                                <!-- Title, description, criteria -->
+                                <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
                                     <TextBlock
                                         Text="{x:Bind Title}"
                                         Style="{StaticResource BodyStrongTextBlockStyle}" />
@@ -127,28 +248,40 @@
                                         Style="{StaticResource BodyTextBlockStyle}"
                                         Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                         TextWrapping="Wrap" />
-                                    <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,4,0,0">
-                                        <TextBlock
-                                            Text="Criteria:"
-                                            Style="{StaticResource CaptionTextBlockStyle}"
-                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,2,0,0">
+                                        <FontIcon
+                                            Glyph="&#xE946;"
+                                            FontSize="10"
+                                            Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                            VerticalAlignment="Center" />
                                         <TextBlock
                                             Text="{x:Bind Criteria}"
                                             Style="{StaticResource CaptionTextBlockStyle}"
                                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                             TextWrapping="Wrap" />
                                     </StackPanel>
-                                    <TextBlock
-                                        Text="{x:Bind StatusLine}"
-                                        Style="{StaticResource CaptionTextBlockStyle}"
-                                        Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
-                                        Visibility="{x:Bind IsUnlocked, Converter={StaticResource BoolToVisibility}}" />
                                 </StackPanel>
+
+                                <!-- "Unlocked" status pill -->
+                                <Border
+                                    Grid.Column="2"
+                                    Background="{ThemeResource AccentFillColorSecondaryBrush}"
+                                    CornerRadius="4"
+                                    Padding="8,4"
+                                    VerticalAlignment="Center"
+                                    Visibility="{x:Bind IsUnlocked, Converter={StaticResource BoolToVisibility}}">
+                                    <TextBlock
+                                        Text="Unlocked"
+                                        Style="{StaticResource CaptionTextBlockStyle}"
+                                        Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                </Border>
+
                             </Grid>
                         </Border>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
+
         </StackPanel>
     </ScrollViewer>
 </Page>
