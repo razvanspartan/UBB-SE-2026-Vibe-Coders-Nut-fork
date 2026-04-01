@@ -28,8 +28,18 @@ public sealed partial class AchievementsViewModel : ObservableObject
         {
             IsLoading = true;
             Achievements.Clear();
-            foreach (var a in _storage.GetAchievements(clientId))
-                Achievements.Add(a);
+            foreach (var a in _storage.GetAchievementShowcaseForClient(clientId))
+            {
+                Achievements.Add(new Achievement
+                {
+                    AchievementId = a.AchievementId,
+                    Name = a.Title,
+                    Description = a.Description,
+                    Criteria = a.Criteria,
+                    IsUnlocked = a.IsUnlocked,
+                    Icon = a.IsUnlocked ? "&#xE73E;" : "&#xE72E;"
+                });
+            }
         }
         finally
         {

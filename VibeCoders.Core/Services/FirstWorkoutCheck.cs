@@ -4,11 +4,10 @@ namespace VibeCoders.Services;
 
 public sealed class FirstWorkoutCheck : IMilestoneCheck
 {
-    public string AchievementName => "First Step";
+    public string AchievementTitle => "First Step";
 
-    public bool Evaluate(int userId, IDataStorage storage)
+    public bool IsMet(int clientId, IDataStorage storage)
     {
-        var logs = storage.GetWorkoutLogs(userId);
-        return logs.Any();
+        return storage.GetWorkoutCount(clientId) > 0;
     }
 }

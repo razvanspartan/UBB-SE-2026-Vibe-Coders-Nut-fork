@@ -2,6 +2,7 @@ using System.ComponentModel;
 using LiveChartsCore.SkiaSharpView.WinUI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using VibeCoders.Services;
 using VibeCoders.ViewModels;
 
 namespace VibeCoders.Views;
@@ -34,7 +35,8 @@ public sealed partial class ClientDashboardPage : Page
 
     private void SeeAllAchievements_Click(object sender, RoutedEventArgs e)
     {
-        Frame.Navigate(typeof(AchievementsPage), ClientId);
+        var clientId = (int)App.GetService<IUserSession>().CurrentUserId;
+        Frame.Navigate(typeof(AchievementsPage), clientId);
     }
 
     private async void Page_Loaded(object sender, RoutedEventArgs e)

@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LiveChartsCore;
@@ -12,58 +12,37 @@ using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
 using SkiaSharp;
 using VibeCoders.Domain;
+using VibeCoders.Models;
 using VibeCoders.Models.Analytics;
 using VibeCoders.Services;
-// using VibeCoders.Models; // TODO: Uncomment when NutritionPlan class is created
+
 namespace VibeCoders.ViewModels;
 
-/// <summary>
-/// Drives the client analytics dashboard: summary KPIs, 4-week consistency
-/// chart data, and paginated workout history with expandable set detail.
-/// </summary>
 public sealed partial class ClientDashboardViewModel : ObservableObject
 {
     public const int DefaultPageSize = 8;
 
     private readonly IWorkoutAnalyticsStore _store;
+    private readonly IDataStorage _dataStorage;
     private readonly IUserSession _session;
     private readonly IAnalyticsDashboardRefreshBus _refreshBus;
-    // private readonly ClientService _clientService; // TODO: Uncomment when NutritionPlan is implemented
     private CancellationTokenSource? _loadCts;
 
     public ClientDashboardViewModel(
         IWorkoutAnalyticsStore store,
+        IDataStorage dataStorage,
         IUserSession session,
         IAnalyticsDashboardRefreshBus refreshBus)
-        // ClientService clientService) // TODO: Uncomment when NutritionPlan is implemented
     {
         _store = store;
+        _dataStorage = dataStorage;
         _session = session;
         _refreshBus = refreshBus;
-        // _clientService = clientService; // TODO: Uncomment when NutritionPlan is implemented
         _refreshBus.RefreshRequested += OnRefreshRequested;
     }
 
     [ObservableProperty]
     private ObservableCollection<Achievement> recentAchievements = new();
-
-    // populate it inside your existing load method:
-    RecentAchievements.Clear();
-    foreach (var a in _storage.GetAchievements(clientId).Take(5))
-        RecentAchievements.Add(a);
-
-    // --- Nutrition Plan Properties (TODO: Implement when NutritionPlan class exists) ---
-
-    // [ObservableProperty]
-    // private NutritionPlan? currentNutritionPlan;
-
-    // [ObservableProperty]
-    // private bool isLoadingNutrition;
-
-    // ---------------------------------------------
-
-
-    // -- Summary KPIs --
 
     [ObservableProperty]
     private int totalWorkouts;
@@ -72,9 +51,7 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
     private string activeTimeSevenDaysDisplay = "0:00:00";
 
     [ObservableProperty]
-    private string preferredWorkoutDisplay = "\u2014";
-
-    // -- Consistency chart data --
+    private string preferredWorkoutDisplay = "-";
 
     [ObservableProperty]
     private ObservableCollection<ConsistencyWeekBucket> consistencyBuckets = new();
@@ -84,8 +61,6 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
 
     [ObservableProperty]
     private Axis[] chartXAxes = new[] { new Axis() };
-
-    // -- Pagination --
 
     [ObservableProperty]
     private int currentPage;
@@ -99,8 +74,6 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
     [ObservableProperty]
     private bool canGoNext;
 
-    // -- Loading flags --
-
     [ObservableProperty]
     private bool isLoadingSummary;
 
@@ -110,12 +83,8 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
     [ObservableProperty]
     private bool isLoadingChart;
 
-    // -- Empty state --
-
     [ObservableProperty]
     private bool showEmptyState = true;
-
-    // -- History items --
 
     public ObservableCollection<WorkoutHistoryItemViewModel> HistoryItems { get; } = new();
 
@@ -131,8 +100,6 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
 
     partial void OnCurrentPageChanged(int value) => OnPropertyChanged(nameof(PageDisplayText));
     partial void OnTotalCountChanged(int value) => OnPropertyChanged(nameof(PageDisplayText));
-
-    // -- Commands --
 
     [RelayCommand]
     private Task RefreshAsync() => LoadAllAsync();
@@ -153,12 +120,7 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
         await LoadHistoryPageAsync().ConfigureAwait(true);
     }
 
-    /// <summary>
-    /// Entry point called when the dashboard page loads or is navigated to.
-    /// </summary>
     public Task LoadInitialAsync() => LoadAllAsync();
-
-    // -- Private loading --
 
     private void OnRefreshRequested(object? sender, EventArgs e) => _ = LoadAllAsync();
 
@@ -173,7 +135,6 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
             IsLoadingSummary = true;
             IsLoadingChart = true;
             IsLoadingHistory = true;
-            // IsLoadingNutrition = true; // TODO: Uncomment when NutritionPlan is implemented
 
             await _store.EnsureCreatedAsync(token).ConfigureAwait(true);
 
@@ -181,26 +142,27 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
             var bucketsTask = _store.GetConsistencyLastFourWeeksAsync(uid, token);
             CurrentPage = 0;
             var historyTask = _store.GetWorkoutHistoryPageAsync(uid, CurrentPage, PageSize, token);
-            // var nutritionTask = Task.Run(() => _clientService.GetActiveNutritionPlan((int)uid), token); // TODO: Uncomment when NutritionPlan is implemented
 
             await Task.WhenAll(summaryTask, bucketsTask, historyTask).ConfigureAwait(true);
             token.ThrowIfCancellationRequested();
 
             ApplySummary(summaryTask.Result);
-            IsLoadingSummary = false;
-
             ApplyBuckets(bucketsTask.Result);
-            IsLoadingChart = false;
-
             ApplyHistory(historyTask.Result, uid);
-            IsLoadingHistory = false;
+            LoadRecentAchievements((int)uid);
 
-            // CurrentNutritionPlan = nutritionTask.Result; // TODO: Uncomment when NutritionPlan is implemented
-            // IsLoadingNutrition = false; // TODO: Uncomment when NutritionPlan is implemented
+            IsLoadingSummary = false;
+            IsLoadingChart = false;
+            IsLoadingHistory = false;
         }
         catch (OperationCanceledException)
         {
-            // Superseded by a newer load; safe to ignore.
+        }
+        finally
+        {
+            IsLoadingSummary = false;
+            IsLoadingChart = false;
+            IsLoadingHistory = false;
         }
     }
 
@@ -209,6 +171,7 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
         CancelPendingLoad();
         var token = _loadCts!.Token;
         IsLoadingHistory = true;
+
         try
         {
             await _store.EnsureCreatedAsync(token).ConfigureAwait(true);
@@ -217,10 +180,34 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
             token.ThrowIfCancellationRequested();
             ApplyHistory(result, _session.CurrentUserId);
         }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException)
+        {
+        }
         finally
         {
             IsLoadingHistory = false;
+        }
+    }
+
+    private void LoadRecentAchievements(int clientId)
+    {
+        RecentAchievements.Clear();
+
+        var showcase = _dataStorage.GetAchievementShowcaseForClient(clientId)
+            .Take(5)
+            .Select(a => new Achievement
+            {
+                AchievementId = a.AchievementId,
+                Name = a.Title,
+                Description = a.Description,
+                Criteria = a.Criteria,
+                IsUnlocked = a.IsUnlocked,
+                Icon = a.IsUnlocked ? "&#xE73E;" : "&#xE72E;"
+            });
+
+        foreach (var achievement in showcase)
+        {
+            RecentAchievements.Add(achievement);
         }
     }
 
@@ -237,7 +224,7 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
         ActiveTimeSevenDaysDisplay =
             ActiveTimeFormatter.ToHourMinuteSecond(summary.TotalActiveTimeLastSevenDays);
         PreferredWorkoutDisplay = string.IsNullOrWhiteSpace(summary.PreferredWorkoutName)
-            ? "\u2014"
+            ? "-"
             : summary.PreferredWorkoutName;
     }
 
@@ -262,8 +249,7 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
                 Fill = new LinearGradientPaint(
                     new[] { new SKColor(0x00, 0x5F, 0xB8, 90), new SKColor(0x00, 0x5F, 0xB8, 0) },
                     new SKPoint(0.5f, 0),
-                    new SKPoint(0.5f, 1)
-                ),
+                    new SKPoint(0.5f, 1))
             }
         };
 
@@ -275,7 +261,7 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
                     b.WeekStart.ToString("MMM dd", CultureInfo.InvariantCulture)).ToArray(),
                 LabelsRotation = 0,
                 TextSize = 12,
-                LabelsPaint = new SolidColorPaint(new SKColor(0x8A, 0x8A, 0x8A)), // subtle gray
+                LabelsPaint = new SolidColorPaint(new SKColor(0x8A, 0x8A, 0x8A))
             }
         };
     }

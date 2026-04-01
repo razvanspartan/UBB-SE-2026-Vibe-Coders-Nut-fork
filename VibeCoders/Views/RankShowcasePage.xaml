@@ -207,10 +207,9 @@
                                 </Grid.ColumnDefinitions>
 
                                 <!-- Lock / unlock icon -->
-                                <Border
+                                <Grid
                                     Grid.Column="0"
                                     Width="44" Height="44"
-                                    CornerRadius="22"
                                     VerticalAlignment="Center">
                                     <!-- Unlocked: filled accent circle -->
                                     <Border
@@ -236,7 +235,7 @@
                                             HorizontalAlignment="Center"
                                             VerticalAlignment="Center" />
                                     </Border>
-                                </Border>
+                                </Grid>
 
                                 <!-- Title, description, criteria -->
                                 <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">

@@ -3,13 +3,12 @@ namespace VibeCoders.Services;
 public interface IMilestoneCheck
 {
     /// <summary>
-    /// The achievement name this check maps to.
-    /// Must match Achievement.Name in your data store.
+    /// Must match the achievement title in the ACHIEVEMENT catalog.
     /// </summary>
-    string AchievementName { get; }
+    string AchievementTitle { get; }
 
     /// <summary>
-    /// Returns true if the user has met this milestone.
+    /// Returns true when the client has met this milestone.
     /// </summary>
-    bool Evaluate(int userId, IDataStorage storage);
+    bool IsMet(int clientId, IDataStorage storage);
 }

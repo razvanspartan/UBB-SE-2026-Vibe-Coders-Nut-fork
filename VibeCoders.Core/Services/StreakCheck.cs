@@ -6,40 +6,16 @@ public sealed class StreakCheck : IMilestoneCheck
 {
     private readonly int _requiredDays;
 
-    public string AchievementName { get; }
+    public string AchievementTitle { get; }
 
-    public StreakCheck(string achievementName, int requiredDays)
+    public StreakCheck(string achievementTitle, int requiredConsecutiveDays)
     {
-        AchievementName = achievementName;
-        _requiredDays = requiredDays;
+        AchievementTitle = achievementTitle;
+        _requiredDays = requiredConsecutiveDays;
     }
 
-    public bool Evaluate(int userId, IDataStorage storage)
+    public bool IsMet(int clientId, IDataStorage storage)
     {
-        var distinctDays = storage
-            .GetWorkoutLogs(userId)
-            .Select(l => l.Date.Date)
-            .Distinct()
-            .OrderByDescending(d => d)
-            .ToList();
-
-        if (distinctDays.Count < _requiredDays) return false;
-
-        // Walk backwards from the most recent day counting consecutive days
-        int streak = 1;
-        for (int i = 0; i < distinctDays.Count - 1; i++)
-        {
-            if ((distinctDays[i] - distinctDays[i + 1]).Days == 1)
-            {
-                streak++;
-                if (streak >= _requiredDays) return true;
-            }
-            else
-            {
-                break; // streak broken
-            }
-        }
-
-        return streak >= _requiredDays;
+        return storage.GetConsecutiveWorkoutDayStreak(clientId) >= _requiredDays;
     }
 }

@@ -21,13 +21,13 @@ namespace VibeCoders.Services;
 public sealed class EvaluationEngine
 {
     private readonly IDataStorage _storage;
-    private readonly IReadOnlyList<IMilestoneCheck> _checks;
+    private readonly IReadOnlyList<VibeCoders.Domain.IMilestoneCheck> _checks;
 
     /// <summary>Production constructor — uses the full default check registry.</summary>
     public EvaluationEngine(IDataStorage storage) : this(storage, BuildDefaultChecks()) { }
 
     /// <summary>Test constructor — accepts a custom check list for unit testing.</summary>
-    public EvaluationEngine(IDataStorage storage, IReadOnlyList<IMilestoneCheck> checks)
+    public EvaluationEngine(IDataStorage storage, IReadOnlyList<VibeCoders.Domain.IMilestoneCheck> checks)
     {
         _storage = storage;
         _checks  = checks;
@@ -36,20 +36,20 @@ public sealed class EvaluationEngine
     // ── Default milestone registry ───────────────────────────────────────────
     // Titles must match ACHIEVEMENT.title values seeded at startup.
 
-    private static IReadOnlyList<IMilestoneCheck> BuildDefaultChecks()
+    private static IReadOnlyList<VibeCoders.Domain.IMilestoneCheck> BuildDefaultChecks()
     {
         // Drive workout-count checks directly from the canonical milestone table so
         // the titles here always match what SeedWorkoutMilestoneAchievements seeds.
         var checks = TotalWorkoutsMilestoneEvaluator.DefaultMilestones
-            .Select(m => (IMilestoneCheck)new WorkoutCountCheck(m.Title, m.Threshold))
+            .Select(m => (VibeCoders.Domain.IMilestoneCheck)new VibeCoders.Domain.WorkoutCountCheck(m.Title, m.Threshold))
             .ToList();
 
         // Consecutive-day streak milestones
-        checks.Add(new StreakCheck("3-Day Streak", requiredConsecutiveDays: 3));
-        checks.Add(new StreakCheck("Week Warrior",  requiredConsecutiveDays: 7));
+        checks.Add(new VibeCoders.Domain.StreakCheck("3-Day Streak", requiredConsecutiveDays: 3));
+        checks.Add(new VibeCoders.Domain.StreakCheck("Week Warrior",  requiredConsecutiveDays: 7));
 
         // Weekly volume milestone
-        checks.Add(new WeeklyVolumeCheck("Week Champion", requiredWorkoutsPerWeek: 6));
+        checks.Add(new VibeCoders.Domain.WeeklyVolumeCheck("Week Champion", requiredWorkoutsPerWeek: 6));
 
         return checks;
     }

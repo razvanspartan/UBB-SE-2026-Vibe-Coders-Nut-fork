@@ -6,17 +6,16 @@ public sealed class WorkoutCountCheck : IMilestoneCheck
 {
     private readonly int _threshold;
 
-    public string AchievementName { get; }
+    public string AchievementTitle { get; }
 
-    public WorkoutCountCheck(string achievementName, int threshold)
+    public WorkoutCountCheck(string achievementTitle, int threshold)
     {
-        AchievementName = achievementName;
+        AchievementTitle = achievementTitle;
         _threshold = threshold;
     }
 
-    public bool Evaluate(int userId, IDataStorage storage)
+    public bool IsMet(int clientId, IDataStorage storage)
     {
-        var logs = storage.GetWorkoutLogs(userId);
-        return logs.Count() >= _threshold;
+        return storage.GetWorkoutCount(clientId) >= _threshold;
     }
 }

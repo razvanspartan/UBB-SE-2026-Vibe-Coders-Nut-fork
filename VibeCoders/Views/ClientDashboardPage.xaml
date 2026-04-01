@@ -7,6 +7,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="using:VibeCoders.ViewModels"
     xmlns:models="using:VibeCoders.Models.Analytics"
+    xmlns:coreModels="using:VibeCoders.Models"
     mc:Ignorable="d"
     Loaded="Page_Loaded">
 
@@ -71,12 +72,12 @@
         VerticalScrollBarVisibility="Disabled"
         HorizontalScrollMode="Enabled"
         VerticalScrollMode="Disabled">
-        <ItemsRepeater ItemsSource="{x:Bind DashboardViewModel.RecentAchievements, Mode=OneWay}">
+        <ItemsRepeater ItemsSource="{x:Bind ViewModel.RecentAchievements, Mode=OneWay}">
             <ItemsRepeater.Layout>
                 <StackLayout Orientation="Horizontal" Spacing="12" />
             </ItemsRepeater.Layout>
             <ItemsRepeater.ItemTemplate>
-                <DataTemplate x:DataType="models:Achievement">
+                <DataTemplate x:DataType="coreModels:Achievement">
                     <Border
                         Width="140"
                         Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
