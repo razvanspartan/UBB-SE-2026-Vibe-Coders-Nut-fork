@@ -35,93 +35,93 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
 
             //This overrites the schema tables and the app won't work
 
-            //// workout_log table
-            //await using (var cmd = new SqlCommand(@"
-            //    IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='workout_log' AND xtype='U')
-            //    CREATE TABLE workout_log (
-            //        id                    INT PRIMARY KEY IDENTITY(1,1),
-            //        user_id               BIGINT NOT NULL,
-            //        workout_name          VARCHAR(100) NOT NULL,
-            //        log_date              DATE NOT NULL,
-            //        duration_seconds      INT NOT NULL CHECK (duration_seconds >= 0),
-            //        source_template_id    INT NOT NULL DEFAULT 0,
-            //        total_calories_burned INT NOT NULL DEFAULT 0,
-            //        intensity_tag         VARCHAR(20) NOT NULL DEFAULT ''
-            //    );", conn))
-            //{
-            //    await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
-            //}
+            // workout_log table
+            await using (var cmd = new SqlCommand(@"
+                IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='workout_log' AND xtype='U')
+                CREATE TABLE workout_log (
+                    id                    INT PRIMARY KEY IDENTITY(1,1),
+                    user_id               BIGINT NOT NULL,
+                    workout_name          VARCHAR(100) NOT NULL,
+                    log_date              DATE NOT NULL,
+                    duration_seconds      INT NOT NULL CHECK (duration_seconds >= 0),
+                    source_template_id    INT NOT NULL DEFAULT 0,
+                    total_calories_burned INT NOT NULL DEFAULT 0,
+                    intensity_tag         VARCHAR(20) NOT NULL DEFAULT ''
+                );", conn))
+            {
+                await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            }
 
-            //// index on workout_log
-            //await using (var cmd = new SqlCommand(@"
-            //    IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name='ix_workout_log_user_date_id')
-            //    CREATE INDEX ix_workout_log_user_date_id
-            //        ON workout_log (user_id, log_date DESC, id DESC);", conn))
-            //{
-            //    await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
-            //}
+            // index on workout_log
+            await using (var cmd = new SqlCommand(@"
+                IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name='ix_workout_log_user_date_id')
+                CREATE INDEX ix_workout_log_user_date_id
+                    ON workout_log (user_id, log_date DESC, id DESC);", conn))
+            {
+                await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            }
 
-            //// workout_log_exercises table
-            //await using (var cmd = new SqlCommand(@"
-            //    IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='workout_log_exercises' AND xtype='U')
-            //    CREATE TABLE workout_log_exercises (
-            //        id              INT PRIMARY KEY IDENTITY(1,1),
-            //        workout_log_id  INT NOT NULL,
-            //        exercise_name   VARCHAR(100) NOT NULL,
-            //        calories_burned INT NOT NULL DEFAULT 0,
-            //        FOREIGN KEY (workout_log_id)
-            //            REFERENCES workout_log(id) ON DELETE CASCADE
-            //    );", conn))
-            //{
-            //    await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
-            //}
+            // workout_log_exercises table
+            await using (var cmd = new SqlCommand(@"
+                IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='workout_log_exercises' AND xtype='U')
+                CREATE TABLE workout_log_exercises (
+                    id              INT PRIMARY KEY IDENTITY(1,1),
+                    workout_log_id  INT NOT NULL,
+                    exercise_name   VARCHAR(100) NOT NULL,
+                    calories_burned INT NOT NULL DEFAULT 0,
+                    FOREIGN KEY (workout_log_id)
+                        REFERENCES workout_log(id) ON DELETE CASCADE
+                );", conn))
+            {
+                await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            }
 
-            //// index on workout_log_exercises
-            //await using (var cmd = new SqlCommand(@"
-            //    IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name='ix_workout_log_exercises_log')
-            //    CREATE INDEX ix_workout_log_exercises_log
-            //        ON workout_log_exercises (workout_log_id);", conn))
-            //{
-            //    await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
-            //}
+            // index on workout_log_exercises
+            await using (var cmd = new SqlCommand(@"
+                IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name='ix_workout_log_exercises_log')
+                CREATE INDEX ix_workout_log_exercises_log
+                    ON workout_log_exercises (workout_log_id);", conn))
+            {
+                await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            }
 
-            //// workout_log_sets table
-            //await using (var cmd = new SqlCommand(@"
-            //    IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='workout_log_sets' AND xtype='U')
-            //    CREATE TABLE workout_log_sets (
-            //        id              INT PRIMARY KEY IDENTITY(1,1),
-            //        workout_log_id  INT NOT NULL,
-            //        exercise_name   VARCHAR(100) NOT NULL,
-            //        set_index       INT NOT NULL,
-            //        target_reps     INT,
-            //        actual_reps     INT,
-            //        target_weight   FLOAT,
-            //        actual_weight   FLOAT,
-            //        FOREIGN KEY (workout_log_id)
-            //            REFERENCES workout_log(id) ON DELETE CASCADE
-            //    );", conn))
-            //{
-            //    await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
-            //}
+            // workout_log_sets table
+            await using (var cmd = new SqlCommand(@"
+                IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='workout_log_sets' AND xtype='U')
+                CREATE TABLE workout_log_sets (
+                    id              INT PRIMARY KEY IDENTITY(1,1),
+                    workout_log_id  INT NOT NULL,
+                    exercise_name   VARCHAR(100) NOT NULL,
+                    set_index       INT NOT NULL,
+                    target_reps     INT,
+                    actual_reps     INT,
+                    target_weight   FLOAT,
+                    actual_weight   FLOAT,
+                    FOREIGN KEY (workout_log_id)
+                        REFERENCES workout_log(id) ON DELETE CASCADE
+                );", conn))
+            {
+                await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            }
 
-            //// index on workout_log_sets
-            //await using (var cmd = new SqlCommand(@"
-            //    IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name='ix_workout_log_sets_log')
-            //    CREATE INDEX ix_workout_log_sets_log
-            //        ON workout_log_sets (workout_log_id, set_index);", conn))
-            //{
-            //    await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
-            //}
+            // index on workout_log_sets
+            await using (var cmd = new SqlCommand(@"
+                IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name='ix_workout_log_sets_log')
+                CREATE INDEX ix_workout_log_sets_log
+                    ON workout_log_sets (workout_log_id, set_index);", conn))
+            {
+                await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            }
 
-            //await AddColumnIfMissingAsync(conn,
-            //    "workout_log", "total_calories_burned",
-            //    "total_calories_burned INT NOT NULL DEFAULT 0",
-            //    cancellationToken).ConfigureAwait(false);
+            await AddColumnIfMissingAsync(conn,
+                "workout_log", "total_calories_burned",
+                "total_calories_burned INT NOT NULL DEFAULT 0",
+                cancellationToken).ConfigureAwait(false);
 
-            //await AddColumnIfMissingAsync(conn,
-            //    "workout_log", "intensity_tag",
-            //    "intensity_tag VARCHAR(20) NOT NULL DEFAULT ''",
-            //    cancellationToken).ConfigureAwait(false);
+            await AddColumnIfMissingAsync(conn,
+                "workout_log", "intensity_tag",
+                "intensity_tag VARCHAR(20) NOT NULL DEFAULT ''",
+                cancellationToken).ConfigureAwait(false);
 
             _initialized = true;
         }
