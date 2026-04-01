@@ -114,19 +114,20 @@ namespace VibeCoders.Services
                 }
             }
 
-            void Insert(string title, string description)
+            void Insert(string title, string description, string criteria)
             {
                 using var cmd = new SqlCommand(
-                    "INSERT INTO ACHIEVEMENT (title, description) VALUES (@Title, @Description);",
+                    "INSERT INTO ACHIEVEMENT (title, description, criteria) VALUES (@Title, @Description, @Criteria);",
                     conn);
                 cmd.Parameters.AddWithValue("@Title", title);
                 cmd.Parameters.AddWithValue("@Description", description);
+                cmd.Parameters.AddWithValue("@Criteria", criteria);
                 cmd.ExecuteNonQuery();
             }
 
-            Insert("First Steps", "Complete your first workout.");
-            Insert("Week Warrior", "Log workouts on five different days.");
-            Insert("Dedicated", "Reach 50 hours of total active time.");
+            Insert("First Steps",  "Prove that you have what it takes to begin.",  "Complete your first workout.");
+            Insert("Week Warrior", "Show that you can maintain consistency.",       "Log workouts on 5 different days.");
+            Insert("Dedicated",    "Demonstrate your long-term commitment.",        "Reach 50 hours of total active time.");
         }
 
 

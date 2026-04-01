@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -45,27 +46,75 @@ namespace VibeCoders.ViewModels
         [ObservableProperty]
         private bool isLoadingWorkouts;
 
+        // ── Target Goals Multi-select (#74) ──────────────────────────────────
+
+        [ObservableProperty]
+        private bool goalWeightLoss;
+
+        [ObservableProperty]
+        private bool goalMuscleGain;
+
+        [ObservableProperty]
+        private bool goalRawStrength;
+
+        [ObservableProperty]
+        private bool goalMuscularEndurance;
+
         /// <summary>
-        /// Loads all available workouts for the given client.
-        /// Called when the "Available Workouts for You" button is tapped.
+        /// Applies the selected target goals — loads matching PREBUILT templates
+        /// and merges their exercises into the active session. (#74)
         /// </summary>
         [RelayCommand]
-        private void LoadAvailableWorkouts(int clientId)
+        private void ApplyTargetGoals(int clientId)
         {
+            var selectedGoalNames = new List<string>();
+
+            if (GoalWeightLoss) selectedGoalNames.Add("HIIT Fat Burner");
+            if (GoalMuscleGain) selectedGoalNames.Add("Full Body Mass");
+            if (GoalRawStrength) selectedGoalNames.Add("Full Body Power");
+            if (GoalMuscularEndurance) selectedGoalNames.Add("Endurance Circuit");
+
+            if (selectedGoalNames.Count == 0) return;
+
             try
             {
                 IsLoadingWorkouts = true;
-                AvailableWorkouts.Clear();
 
-                var workouts = _storage.GetAvailableWorkouts(clientId);
-                foreach (var w in workouts)
+                var allWorkouts = _storage.GetAvailableWorkouts(clientId);
+                var selected = allWorkouts
+                    .Where(w => selectedGoalNames.Contains(w.Name))
+                    .ToList();
+
+                if (selected.Count == 0) return;
+
+                AvailableWorkouts.Clear();
+                foreach (var w in selected)
                 {
                     AvailableWorkouts.Add(w);
                 }
+
+                // Merge exercises from all selected templates.
+                _activeLog = new WorkoutLog
+                {
+                    WorkoutName = string.Join(" + ", selected.Select(t => t.Name)),
+                    SourceTemplateId = selected[0].Id,
+                    Date = DateTime.Now
+                };
+
+                ExerciseRows.Clear();
+                foreach (var template in selected)
+                {
+                    foreach (var exercise in template.GetExercises())
+                    {
+                        ExerciseRows.Add(new ActiveExerciseViewModel(exercise));
+                    }
+                }
+
+                IsWorkoutStarted = true;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error loading workouts: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error applying goals: {ex.Message}");
             }
             finally
             {
@@ -282,7 +331,7 @@ namespace VibeCoders.ViewModels
                     SetIndex = i,
                     TargetReps = template.TargetReps,
                     TargetWeight = template.TargetWeight,
-                    IsFocused = i == 0  // first set starts focused
+                    IsFocused = i == 0
                 });
             }
         }

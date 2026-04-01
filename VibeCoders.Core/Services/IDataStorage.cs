@@ -47,5 +47,8 @@ namespace VibeCoders.Services
         /// </summary>
         /// <param name="clientId">Client whose <c>CLIENT_ACHIEVEMENT</c> rows join the catalog.</param>
         List<AchievementShowcaseItem> GetAchievementShowcaseForClient(int clientId);
+
+        
+        bool AwardAchievement(int clientId, int achievementId);
     }
 }

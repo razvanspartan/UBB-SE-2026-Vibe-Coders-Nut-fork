@@ -1,9 +1,9 @@
+using System;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using VibeCoders.Models;
 using VibeCoders.ViewModels;
-using System;
 
 namespace VibeCoders.Views;
 
@@ -45,8 +45,16 @@ public sealed partial class ActiveWorkoutPage : Page
 
     private void Page_Loaded(object sender, RoutedEventArgs e)
     {
-        ViewModel.LoadAvailableWorkoutsCommand.Execute(ClientId);
         ViewModel.LoadNotificationsCommand.Execute(ClientId);
+    }
+
+    /// <summary>
+    /// Closes the flyout and applies the selected target goals. (#74)
+    /// </summary>
+    private void ApplyGoalsButton_Click(object sender, RoutedEventArgs e)
+    {
+        TargetGoalsButton.Flyout.Hide();
+        ViewModel.ApplyTargetGoalsCommand.Execute(ClientId);
     }
 
     /// <summary>

@@ -83,7 +83,8 @@
                 IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}"
                 Visibility="{x:Bind ViewModel.IsLoading, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
 
-            <!-- One card per AchievementShowcaseItem; StatusLine is Unlocked vs Locked. -->
+            <!-- One card per AchievementShowcaseItem. Shows badge title, description,
+                 exact completion criteria, and a visual lock/unlock icon. -->
             <ItemsControl ItemsSource="{x:Bind ViewModel.ShowcaseAchievements, Mode=OneWay}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="models:AchievementShowcaseItem">
@@ -94,20 +95,56 @@
                             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                             BorderThickness="1"
                             CornerRadius="6">
-                            <StackPanel Spacing="6">
-                                <TextBlock
-                                    Text="{x:Bind Title}"
-                                    Style="{StaticResource BodyStrongTextBlockStyle}" />
-                                <TextBlock
-                                    Text="{x:Bind Description}"
-                                    Style="{StaticResource BodyTextBlockStyle}"
-                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                    TextWrapping="Wrap" />
-                                <TextBlock
-                                    Text="{x:Bind StatusLine}"
-                                    Style="{StaticResource CaptionTextBlockStyle}"
-                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                            </StackPanel>
+                            <Grid ColumnSpacing="16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Visual lock/unlock icon -->
+                                <Grid Grid.Column="0" VerticalAlignment="Center" Width="36" Height="36">
+                                    <!-- Unlocked badge icon -->
+                                    <FontIcon
+                                        Glyph="&#xE8FB;"
+                                        FontSize="28"
+                                        Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                                        Visibility="{x:Bind IsUnlocked, Converter={StaticResource BoolToVisibility}}" />
+                                    <!-- Locked padlock icon -->
+                                    <FontIcon
+                                        Glyph="&#xE72E;"
+                                        FontSize="28"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        Visibility="{x:Bind IsLocked, Converter={StaticResource BoolToVisibility}}" />
+                                </Grid>
+
+                                <!-- Badge title, description, criteria, status -->
+                                <StackPanel Grid.Column="1" Spacing="4">
+                                    <TextBlock
+                                        Text="{x:Bind Title}"
+                                        Style="{StaticResource BodyStrongTextBlockStyle}" />
+                                    <TextBlock
+                                        Text="{x:Bind Description}"
+                                        Style="{StaticResource BodyTextBlockStyle}"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        TextWrapping="Wrap" />
+                                    <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,4,0,0">
+                                        <TextBlock
+                                            Text="Criteria:"
+                                            Style="{StaticResource CaptionTextBlockStyle}"
+                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        <TextBlock
+                                            Text="{x:Bind Criteria}"
+                                            Style="{StaticResource CaptionTextBlockStyle}"
+                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                            TextWrapping="Wrap" />
+                                    </StackPanel>
+                                    <TextBlock
+                                        Text="{x:Bind StatusLine}"
+                                        Style="{StaticResource CaptionTextBlockStyle}"
+                                        Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                                        Visibility="{x:Bind IsUnlocked, Converter={StaticResource BoolToVisibility}}" />
+                                </StackPanel>
+                            </Grid>
                         </Border>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>

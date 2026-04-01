@@ -139,8 +139,18 @@ namespace VibeCoders.Services
                 CREATE TABLE ACHIEVEMENT (
                     achievement_id  INT PRIMARY KEY IDENTITY(1,1),
                     title           VARCHAR(100) NOT NULL,
-                    description     VARCHAR(250) NOT NULL
+                    description     VARCHAR(250) NOT NULL,
+                    criteria        VARCHAR(500) NOT NULL DEFAULT ''
                 );";
+            cmd.ExecuteNonQuery();
+
+            // ── ACHIEVEMENT migration: add criteria column if it was created without it ──
+            cmd.CommandText = @"
+                IF NOT EXISTS (
+                    SELECT 1 FROM sys.columns
+                    WHERE object_id = OBJECT_ID('ACHIEVEMENT') AND name = 'criteria'
+                )
+                    ALTER TABLE ACHIEVEMENT ADD criteria VARCHAR(500) NOT NULL DEFAULT '';";
             cmd.ExecuteNonQuery();
 
             // ── CLIENT_ACHIEVEMENT ────────────────────────────────────────────
@@ -154,6 +164,20 @@ namespace VibeCoders.Services
                     FOREIGN KEY (client_id) REFERENCES CLIENT(client_id),
                     FOREIGN KEY (achievement_id) REFERENCES ACHIEVEMENT(achievement_id)
                 );";
+            cmd.ExecuteNonQuery();
+
+            // ── CLIENT_ACHIEVEMENT migration: ensure PK exists on older databases ──
+            // The PRIMARY KEY on (client_id, achievement_id) is the DB-level uniqueness
+            // enforcer that prevents duplicate awards even under concurrent operations.
+            cmd.CommandText = @"
+                IF NOT EXISTS (
+                    SELECT 1 FROM sys.key_constraints
+                    WHERE name = 'PK_CLIENT_ACHIEVEMENT'
+                      AND parent_object_id = OBJECT_ID('CLIENT_ACHIEVEMENT')
+                )
+                    ALTER TABLE CLIENT_ACHIEVEMENT
+                        ADD CONSTRAINT PK_CLIENT_ACHIEVEMENT
+                        PRIMARY KEY (client_id, achievement_id);";
             cmd.ExecuteNonQuery();
         }
     }
