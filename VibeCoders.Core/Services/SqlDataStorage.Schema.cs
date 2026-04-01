@@ -24,9 +24,10 @@ namespace VibeCoders.Services
             cmd.CommandText = @"
                 IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='USER' AND xtype='U')
                 CREATE TABLE [USER] (
-                    id INT PRIMARY KEY IDENTITY(1,1),
-                    username VARCHAR(100) NOT NULL
-                    
+                    id            INT PRIMARY KEY IDENTITY(1,1),
+                    username      VARCHAR(100) NOT NULL,
+                    password_hash VARCHAR(100) NOT NULL DEFAULT '',
+                    role          VARCHAR(30)  NOT NULL DEFAULT 'CLIENT'
                 );";
             cmd.ExecuteNonQuery();
 
@@ -94,6 +95,7 @@ namespace VibeCoders.Services
                     calories_burned     INT,
                     rating              INT,
                     trainer_notes       VARCHAR(1000),
+                    intensity_tag       VARCHAR(20) NOT NULL DEFAULT '',
                     FOREIGN KEY (client_id) REFERENCES CLIENT(client_id),
                     FOREIGN KEY (workout_id) REFERENCES WORKOUT_TEMPLATE(workout_template_id)
                 );";
