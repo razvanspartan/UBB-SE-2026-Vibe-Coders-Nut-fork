@@ -15,11 +15,11 @@ public sealed class TotalWorkoutsMilestoneEvaluator
     /// </summary>
     public static IReadOnlyList<WorkoutMilestone> DefaultMilestones { get; } =
     [
-        new WorkoutMilestone(Threshold: 1,   Title: "First Steps",     Description: "Complete your first workout."),
-        new WorkoutMilestone(Threshold: 10,  Title: "Deca Athlete",    Description: "Complete 10 total workouts."),
-        new WorkoutMilestone(Threshold: 25,  Title: "Quarter Century", Description: "Complete 25 total workouts."),
-        new WorkoutMilestone(Threshold: 50,  Title: "Half Century",    Description: "Complete 50 total workouts."),
-        new WorkoutMilestone(Threshold: 100, Title: "Centurion",       Description: "Complete 100 total workouts."),
+        new WorkoutMilestone(Threshold: 1,   Title: "First Rep",       Description: "Complete your first workout."),
+        new WorkoutMilestone(Threshold: 10,  Title: "Getting Serious", Description: "Complete 10 total workouts."),
+        new WorkoutMilestone(Threshold: 25,  Title: "Gym Regular",     Description: "Complete 25 total workouts."),
+        new WorkoutMilestone(Threshold: 50,  Title: "Iron Warrior",    Description: "Complete 50 total workouts."),
+        new WorkoutMilestone(Threshold: 100, Title: "Gym Legend",      Description: "Complete 100 total workouts."),
     ];
 
     private readonly IReadOnlyList<WorkoutMilestone> _milestones;
