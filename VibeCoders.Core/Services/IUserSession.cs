@@ -6,6 +6,9 @@ namespace VibeCoders.Services;
 /// </summary>
 public interface IUserSession
 {
-    /// <summary>Stable user key used to scope analytics queries.</summary>
+    /// <summary>Scopes analytics rows (<c>analytics_workout_log.user_id</c>); same numeric scope as <see cref="CurrentClientId"/> in demo mode.</summary>
     long CurrentUserId { get; }
+
+    /// <summary><c>CLIENT.client_id</c> for the active client (workouts, logs, achievements, calendar).</summary>
+    long CurrentClientId { get; }
 }

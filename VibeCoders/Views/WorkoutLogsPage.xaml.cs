@@ -1,6 +1,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
+using VibeCoders.Services;
 using VibeCoders.ViewModels;
 
 namespace VibeCoders.Views;
@@ -29,6 +30,9 @@ public sealed partial class WorkoutLogsPage : Page
 
     private void Page_Loaded(object sender, RoutedEventArgs e)
     {
-        ViewModel.LoadLogsCommand.Execute(ClientId);
+        var clientId = ClientId != 0
+            ? ClientId
+            : (int)App.GetService<IUserSession>().CurrentClientId;
+        ViewModel.LoadLogsCommand.Execute(clientId);
     }
 }

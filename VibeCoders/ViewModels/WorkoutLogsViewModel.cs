@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
@@ -92,7 +92,7 @@ namespace VibeCoders.ViewModels
         public WorkoutLogItemViewModel(WorkoutLog log)
         {
             Id = log.Id;
-            WorkoutName = log.WorkoutName;
+            WorkoutName = string.IsNullOrWhiteSpace(log.WorkoutName) ? "Workout" : log.WorkoutName;
             Date = log.Date;
 
             // YYYY-MM-DD format per requirements (#78)

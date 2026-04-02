@@ -91,7 +91,7 @@ namespace VibeCoders.ViewModels
             InitializeDaySelection();
 
             // Populate immediately so UI is responsive even if DB is unavailable.
-            var clientId = (int)_userSession.CurrentUserId;
+            var clientId = (int)_userSession.CurrentClientId;
             LoadFallbackWorkouts(clientId);
 
             // Try to refresh from DB in background.
@@ -116,7 +116,7 @@ namespace VibeCoders.ViewModels
             {
                 IsLoading = true;
 
-                var clientId = (int)_userSession.CurrentUserId;
+                var clientId = (int)_userSession.CurrentClientId;
                 var dbLoadTask = Task.Run(() => _dataStorage.GetAvailableWorkouts(clientId));
                 var completedTask = await Task.WhenAny(dbLoadTask, Task.Delay(1500));
 
@@ -149,7 +149,7 @@ namespace VibeCoders.ViewModels
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error loading workouts: {ex.Message}");
-                var clientId = (int)_userSession.CurrentUserId;
+                var clientId = (int)_userSession.CurrentClientId;
                 LoadFallbackWorkouts(clientId);
             }
             finally

@@ -3,6 +3,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using VibeCoders.Models;
+using VibeCoders.Services;
 using VibeCoders.ViewModels;
 
 namespace VibeCoders.Views;
@@ -33,8 +34,14 @@ public sealed partial class ActiveWorkoutPage : Page
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
-        if (e.Parameter is int clientId)
+        if (e.Parameter is int clientId && clientId != 0)
+        {
             ClientId = clientId;
+        }
+        else
+        {
+            ClientId = (int)App.GetService<IUserSession>().CurrentClientId;
+        }
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)

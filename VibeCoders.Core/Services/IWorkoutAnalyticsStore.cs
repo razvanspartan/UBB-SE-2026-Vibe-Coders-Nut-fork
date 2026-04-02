@@ -4,7 +4,7 @@ using VibeCoders.Models.Analytics;
 namespace VibeCoders.Services;
 
 /// <summary>
-/// Analytics data access over the workout_log and workout_log_sets tables.
+/// Analytics data access over the analytics_workout_log tables (separate from WORKOUT_LOG).
 /// Implementations must use parameterized queries and scope every result
 /// to the given user id.
 /// </summary>
