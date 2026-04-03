@@ -10,6 +10,8 @@ namespace VibeCoders.Views
     {
         public TrainerDashboardViewModel ViewModel { get; }
 
+        private bool _isDialogOpen = false;
+
         public static string FormatWorkoutDate(DateTime Date)
         {
 
@@ -36,14 +38,19 @@ namespace VibeCoders.Views
 
         private async void OpenBuilderButton_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
         {
+            if (_isDialogOpen) return;
+
             ViewModel.EditingTemplateId = 0;
             ViewModel.NewRoutineName = string.Empty;
             ViewModel.BuilderExercises.Clear();
+            ViewModel.BuilderErrorText = string.Empty;
 
             WorkoutBuilderDialog.Title = "Assign New Routine";
 
             WorkoutBuilderDialog.XamlRoot = this.Content.XamlRoot;
+            _isDialogOpen = true;
             await WorkoutBuilderDialog.ShowAsync();
+            _isDialogOpen = false;
         }
 
         private void RemoveExercise_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
@@ -55,8 +62,18 @@ namespace VibeCoders.Views
 
         private void WorkoutBuilderDialog_PrimaryButtonClick(Microsoft.UI.Xaml.Controls.ContentDialog sender, Microsoft.UI.Xaml.Controls.ContentDialogButtonClickEventArgs args)
         {
-            if (string.IsNullOrWhiteSpace(ViewModel.NewRoutineName) || ViewModel.BuilderExercises.Count == 0)
+            ViewModel.BuilderErrorText = string.Empty;
+
+            if (string.IsNullOrWhiteSpace(ViewModel.NewRoutineName))
             {
+                ViewModel.BuilderErrorText = "Routine Name cannot be empty.";
+                args.Cancel = true;
+                return;
+            }
+
+            if (ViewModel.BuilderExercises.Count == 0)
+            {
+                ViewModel.BuilderErrorText = "You must add at least one exercise to the routine.";
                 args.Cancel = true;
                 return;
             }
@@ -88,8 +105,11 @@ namespace VibeCoders.Views
             }
         }
 
-        private async void DeleteWorkout_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+        private async void DeleteWorkout_Tapped(object sender, Microsoft.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
+            e.Handled = true;
+            if (_isDialogOpen) return;
+
             var button = (Microsoft.UI.Xaml.Controls.Button)sender;
 
             
@@ -111,7 +131,9 @@ namespace VibeCoders.Views
                 XamlRoot = button.XamlRoot
             };
 
+            _isDialogOpen = true;
             var result = await confirmDelete.ShowAsync();
+            _isDialogOpen = false;
 
             if (result == ContentDialogResult.Primary)
             {
@@ -121,6 +143,9 @@ namespace VibeCoders.Views
 
         private async void Card_Tapped(object sender, Microsoft.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
+
+            if (_isDialogOpen || e.Handled) return;
+
             var grid = sender as Microsoft.UI.Xaml.Controls.Grid;
             var workout = grid?.DataContext as VibeCoders.Models.WorkoutTemplate;
 
@@ -132,7 +157,9 @@ namespace VibeCoders.Views
             WorkoutBuilderDialog.Title = $"Edit Routine: {workout.Name}";
             WorkoutBuilderDialog.XamlRoot = this.Content.XamlRoot;
 
+            _isDialogOpen = true;
             await WorkoutBuilderDialog.ShowAsync();
+            _isDialogOpen = false;
         }
 
     }
