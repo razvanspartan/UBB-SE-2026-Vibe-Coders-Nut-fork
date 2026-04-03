@@ -1,3 +1,4 @@
+using Microsoft.Data.Sqlite;
 using VibeCoders.Models;
 
 namespace VibeCoders.Services;
@@ -54,5 +55,24 @@ public sealed class WorkoutDataForwarder : IWorkoutDataForwarder
         {
             return IntenseIntensity;
         }
+    }
+
+    public int GetTotalActiveTimeForClient(int clientId)
+    {
+        string _connectionString = "";
+        using var conn = new SqliteConnection(_connectionString);
+        conn.Open();
+
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = @"
+        SELECT SUM(Duration)
+        FROM WorkoutLog
+        WHERE ClientId = @ClientId
+          AND IsFinalized = 1;
+    ";
+        cmd.Parameters.AddWithValue("@ClientId", clientId);
+
+        var result = cmd.ExecuteScalar();
+        return result != DBNull.Value ? Convert.ToInt32(result) : 0;
     }
 }
