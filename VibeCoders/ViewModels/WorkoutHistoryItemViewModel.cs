@@ -11,10 +11,6 @@ using VibeCoders.Services;
 
 namespace VibeCoders.ViewModels;
 
-/// <summary>
-/// Represents one row in the workout history list with lazy-loaded
-/// set-level detail for the expanded view.
-/// </summary>
 public sealed partial class WorkoutHistoryItemViewModel : ObservableObject
 {
     private readonly IWorkoutAnalyticsStore _store;

@@ -9,11 +9,6 @@ using VibeCoders.Services;
 
 namespace VibeCoders.ViewModels
 {
-    /// <summary>
-    /// Drives the active workout session screen.
-    /// Loads a WorkoutTemplate, tracks sets in real time via ClientService.SaveSet,
-    /// and finalizes the session via ClientService.FinalizeWorkout.
-    /// </summary>
     public sealed partial class ActiveWorkoutViewModel : ObservableObject
     {
         private readonly ClientService _clientService;
@@ -35,8 +30,6 @@ namespace VibeCoders.ViewModels
             };
         }
 
-        // ── Template selection ───────────────────────────────────────────────
-
         [ObservableProperty]
         private ObservableCollection<WorkoutTemplate> availableWorkouts = new();
 
@@ -45,8 +38,6 @@ namespace VibeCoders.ViewModels
 
         [ObservableProperty]
         private bool isLoadingWorkouts;
-
-        // ── Target Goals Multi-select (#74) ──────────────────────────────────
 
         [ObservableProperty]
         private bool goalWeightLoss;
@@ -60,10 +51,6 @@ namespace VibeCoders.ViewModels
         [ObservableProperty]
         private bool goalMuscularEndurance;
 
-        /// <summary>
-        /// Applies the selected target goals — loads matching PREBUILT templates
-        /// and merges their exercises into the active session. (#74)
-        /// </summary>
         [RelayCommand]
         private void ApplyTargetGoals(int clientId)
         {
@@ -93,7 +80,6 @@ namespace VibeCoders.ViewModels
                     AvailableWorkouts.Add(w);
                 }
 
-                // Merge exercises from all selected templates.
                 _activeLog = new WorkoutLog
                 {
                     WorkoutName = string.Join(" + ", selected.Select(t => t.Name)),
@@ -122,10 +108,6 @@ namespace VibeCoders.ViewModels
             }
         }
 
-        /// <summary>
-        /// Called when the client selects a template from the dropdown.
-        /// Initializes the active log and populates the exercise rows.
-        /// </summary>
         partial void OnSelectedTemplateChanged(WorkoutTemplate? value)
         {
             if (value == null) return;
@@ -146,8 +128,6 @@ namespace VibeCoders.ViewModels
             IsWorkoutStarted = true;
         }
 
-        // ── Active session ───────────────────────────────────────────────────
-
         [ObservableProperty]
         private ObservableCollection<ActiveExerciseViewModel> exerciseRows = new();
 
@@ -160,10 +140,6 @@ namespace VibeCoders.ViewModels
         [ObservableProperty]
         private string errorMessage = string.Empty;
 
-        /// <summary>
-        /// Auto-save hook — called every time the client completes a set.
-        /// Delegates to ClientService.SaveSet which tracks the set in-memory.
-        /// </summary>
         [RelayCommand]
         private void SaveSet(ActiveSetViewModel setViewModel)
         {
@@ -182,13 +158,9 @@ namespace VibeCoders.ViewModels
             _clientService.SaveSet(_activeLog, setViewModel.ExerciseName, set);
             setViewModel.IsCompleted = true;
 
-            // Move focus to next set.
             FocusNextSet(setViewModel);
         }
 
-        /// <summary>
-        /// Finalizes the workout: runs progression evaluation and persists to DB.
-        /// </summary>
         [RelayCommand]
         private void FinishWorkout(int clientId)
         {
@@ -211,7 +183,6 @@ namespace VibeCoders.ViewModels
                     ExerciseRows.Clear();
                     _activeLog = new WorkoutLog { Date = DateTime.Now };
 
-                    // Navigate back to dashboard and trigger a refresh (#66).
                     _navigation.NavigateToClientDashboard(requestRefresh: true);
                 }
                 else
@@ -230,18 +201,8 @@ namespace VibeCoders.ViewModels
             }
         }
 
-        // ── Repeat Workout (#77) ─────────────────────────────────────────────
-
-        /// <summary>
-        /// Stores the last completed workout log so it can be repeated.
-        /// Set by FinishWorkout after a successful save.
-        /// </summary>
         public WorkoutLog? LastCompletedLog { get; private set; }
 
-        /// <summary>
-        /// Repeats the last completed workout by reloading the same template
-        /// and resetting all sets to their target values. (#77)
-        /// </summary>
         [RelayCommand]
         private void RepeatWorkout(int clientId)
         {
@@ -254,8 +215,6 @@ namespace VibeCoders.ViewModels
 
             SelectedTemplate = template;
         }
-
-        // ── Notifications ────────────────────────────────────────────────────
 
         [ObservableProperty]
         private ObservableCollection<Models.Notification> notifications = new();
@@ -279,12 +238,6 @@ namespace VibeCoders.ViewModels
             Notifications.Remove(notification);
         }
 
-        // ── Private helpers ──────────────────────────────────────────────────
-
-        /// <summary>
-        /// Moves focus to the next incomplete set after one is completed.
-        /// Task #67 — Next Set Focus Navigation.
-        /// </summary>
         private void FocusNextSet(ActiveSetViewModel completedSet)
         {
             foreach (var exercise in ExerciseRows)
@@ -301,11 +254,6 @@ namespace VibeCoders.ViewModels
         }
     }
 
-    // ── Supporting ViewModels ────────────────────────────────────────────────
-
-    /// <summary>
-    /// Represents one exercise row in the active workout screen.
-    /// </summary>
     public sealed partial class ActiveExerciseViewModel : ObservableObject
     {
         public string ExerciseName { get; }
@@ -337,10 +285,6 @@ namespace VibeCoders.ViewModels
         }
     }
 
-    /// <summary>
-    /// Represents one set row in the active workout screen.
-    /// Task #72 — Active Workout Set Row Component.
-    /// </summary>
     public sealed partial class ActiveSetViewModel : ObservableObject
     {
         public string ExerciseName { get; set; } = string.Empty;
@@ -360,10 +304,6 @@ namespace VibeCoders.ViewModels
         [ObservableProperty]
         private bool isFocused;
 
-        /// <summary>
-        /// NumberBox.Value is double-only; bridge nullable int? reps for binding.
-        /// NaN in UI maps to null in model.
-        /// </summary>
         public double ActualRepsValue
         {
             get => ActualReps.HasValue ? ActualReps.Value : double.NaN;
@@ -373,10 +313,6 @@ namespace VibeCoders.ViewModels
             }
         }
 
-        /// <summary>
-        /// NumberBox.Value is double-only; bridge nullable double? weight for binding.
-        /// NaN in UI maps to null in model.
-        /// </summary>
         public double ActualWeightValue
         {
             get => ActualWeight ?? double.NaN;

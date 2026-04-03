@@ -55,19 +55,12 @@ public sealed partial class ActiveWorkoutPage : Page
         ViewModel.LoadNotificationsCommand.Execute(ClientId);
     }
 
-    /// <summary>
-    /// Closes the flyout and applies the selected target goals. (#74)
-    /// </summary>
     private void ApplyGoalsButton_Click(object sender, RoutedEventArgs e)
     {
         TargetGoalsButton.Flyout.Hide();
         ViewModel.ApplyTargetGoalsCommand.Execute(ClientId);
     }
 
-    /// <summary>
-    /// Handles Confirm Deload button click from inside DataTemplate.
-    /// Tag="{x:Bind}" passes the Notification as the button's Tag.
-    /// </summary>
     private void ConfirmDeloadButton_Click(object sender, RoutedEventArgs e)
     {
         if (sender is Button btn && btn.Tag is Notification notification)

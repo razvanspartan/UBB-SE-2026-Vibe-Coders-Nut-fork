@@ -9,10 +9,6 @@ using VibeCoders.Services;
 
 namespace VibeCoders.ViewModels
 {
-    /// <summary>
-    /// Drives the Workout Logs page — chronological list of training sessions
-    /// with collapsed/expanded containers per requirements.
-    /// </summary>
     public sealed partial class WorkoutLogsViewModel : ObservableObject
     {
         private readonly IDataStorage _storage;
@@ -24,8 +20,6 @@ namespace VibeCoders.ViewModels
             _navigation = navigation;
         }
 
-        // ── Workout Logs list ────────────────────────────────────────────────
-
         public ObservableCollection<WorkoutLogItemViewModel> Logs { get; } = new();
 
         [ObservableProperty]
@@ -33,8 +27,6 @@ namespace VibeCoders.ViewModels
 
         [ObservableProperty]
         private bool showEmptyState = true;
-
-        // ── Commands ─────────────────────────────────────────────────────────
 
         [RelayCommand]
         private void LoadLogs(int clientId)
@@ -65,12 +57,6 @@ namespace VibeCoders.ViewModels
         }
     }
 
-    /// <summary>
-    /// Represents one workout log row in the Workout Logs list.
-    /// Collapsed: shows WorkoutName + Total Duration (HH:MM).
-    /// Expanded: shows Exercise Name, Sets, Reps, Weight.
-    /// Duration formula: (Total Sets * 1 min) + ((Total Sets - 1) * 3 min rest)
-    /// </summary>
     public sealed partial class WorkoutLogItemViewModel : ObservableObject
     {
         public int Id { get; }
@@ -78,10 +64,6 @@ namespace VibeCoders.ViewModels
         public DateTime Date { get; }
         public string DateDisplay { get; }
 
-        /// <summary>
-        /// Total duration formatted as HH:MM per requirements.
-        /// Formula: (TotalSets * 1 min) + ((TotalSets - 1) * 3 min rest)
-        /// </summary>
         public string TotalDurationDisplay { get; }
 
         public List<WorkoutLogExerciseSummary> Exercises { get; }
@@ -95,14 +77,10 @@ namespace VibeCoders.ViewModels
             WorkoutName = string.IsNullOrWhiteSpace(log.WorkoutName) ? "Workout" : log.WorkoutName;
             Date = log.Date;
 
-            // YYYY-MM-DD format per requirements (#78)
             DateDisplay = log.Date.ToString("yyyy-MM-dd");
 
-            // Calculate total sets across all exercises
             int totalSets = log.Exercises.Sum(e => e.Sets.Count);
 
-            // Duration formula from requirements:
-            // (Total Sets * 1 min) + ((Total Sets - 1) * 3 min rest)
             int totalMinutes = totalSets > 0
                 ? (totalSets * 1) + ((totalSets - 1) * 3)
                 : 0;
@@ -116,11 +94,6 @@ namespace VibeCoders.ViewModels
         }
     }
 
-    /// <summary>
-    /// Summary of one exercise inside an expanded workout log.
-    /// Shows: Exercise Name, Number of Sets, Reps per set, Weight.
-    /// Also carries progression badge data (#63, #64).
-    /// </summary>
     public sealed class WorkoutLogExerciseSummary
     {
         public string ExerciseName { get; }
@@ -136,12 +109,10 @@ namespace VibeCoders.ViewModels
             NumberOfSets = exercise.Sets.Count;
             IsSystemAdjusted = exercise.IsSystemAdjusted;
 
-            // Tooltip text from AdjustmentNote (#64)
             TooltipText = !string.IsNullOrWhiteSpace(exercise.AdjustmentNote)
                 ? exercise.AdjustmentNote
                 : $"Performance: {exercise.PerformanceRatio * 100:F0}% of target reps achieved.";
 
-            // Aggregate reps and weight across sets for display
             var reps = exercise.Sets
                 .Where(s => s.ActualReps.HasValue)
                 .Select(s => s.ActualReps!.Value)

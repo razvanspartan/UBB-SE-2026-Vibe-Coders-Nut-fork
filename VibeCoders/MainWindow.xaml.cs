@@ -116,7 +116,6 @@ public sealed partial class MainWindow : Window
                 _navigationService.NavigateToTrainerDashboard();
             }
 
-
         }
     }
 }

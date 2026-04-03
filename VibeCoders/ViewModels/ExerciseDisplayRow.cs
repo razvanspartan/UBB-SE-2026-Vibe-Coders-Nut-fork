@@ -16,8 +16,6 @@ namespace VibeCoders.ViewModels
         public string MuscleGroup { get; set; } = string.Empty;
         public List<VibeCoders.Models.LoggedSet> Sets { get; set; } = new();
 
-        // ── Helper Methods ───────────────────────────────────────────────────
-        // We keep these public just in case, but use the properties above for XAML
         public string GetReps(int index)
         {
             if (Sets == null || Sets.Count <= index) return "-";

@@ -11,11 +11,6 @@ using VibeCoders.Services;
 
 namespace VibeCoders.ViewModels;
 
-/// <summary>
-/// Backing ViewModel for the Rank Showcase page (#176).
-/// Derives the user's current level, rank title, progress toward the next rank,
-/// and the full achievement catalog (locked rows included per product requirement).
-/// </summary>
 public sealed partial class RankShowcaseViewModel : ObservableObject
 {
     private readonly IWorkoutAnalyticsStore _analytics;
@@ -32,45 +27,21 @@ public sealed partial class RankShowcaseViewModel : ObservableObject
         _data      = data;
     }
 
-    // ── Core rank properties ─────────────────────────────────────────────────
-
     [ObservableProperty] private int    displayLevel;
     [ObservableProperty] private string rankTitle              = "\u2014";
     [ObservableProperty] private string totalActiveTimeDisplay = "0h 00m";
     [ObservableProperty] private bool   isLoading;
 
-    /// <summary>
-    /// Combined label shown in the hero card: "Level 5: Elite".
-    /// Format matches the product spec example "Level 5: Gym Novice".
-    /// </summary>
     [ObservableProperty] private string levelDisplayLine = "Level \u2014";
 
-    // ── Progress to next rank ────────────────────────────────────────────────
-
-    /// <summary>0–100 value that drives the progress bar fill.</summary>
     [ObservableProperty] private double progressPercent;
 
-    /// <summary>
-    /// Human-readable "Next: Level 3: Regular — 8h 12m to go" (or "Max rank reached").
-    /// </summary>
     [ObservableProperty] private string nextRankInfo = string.Empty;
 
-    /// <summary>
-    /// False while the user is at max rank so the progress bar is hidden.
-    /// </summary>
     [ObservableProperty] private bool hasNextRank;
 
-    // ── Achievement showcase ─────────────────────────────────────────────────
-
-    /// <summary>Bound to the achievements list (unlocked and locked).</summary>
     public ObservableCollection<AchievementShowcaseItem> ShowcaseAchievements { get; } = new();
 
-    // ── Load ─────────────────────────────────────────────────────────────────
-
-    /// <summary>
-    /// Loads level, rank, lifetime active time, next-rank progress, and the
-    /// full achievement showcase from storage.
-    /// </summary>
     public async Task LoadAsync(CancellationToken cancellationToken = default)
     {
         IsLoading = true;
@@ -101,18 +72,11 @@ public sealed partial class RankShowcaseViewModel : ObservableObject
         }
     }
 
-    // ── Helpers ──────────────────────────────────────────────────────────────
-
-    /// <summary>
-    /// Fills <see cref="ProgressPercent"/>, <see cref="NextRankInfo"/>, and
-    /// <see cref="HasNextRank"/> from the current total active time and tier table.
-    /// </summary>
     private void ComputeNextRankProgress(
         TimeSpan total,
         IReadOnlyList<LevelTier> tiers,
         int currentLevel)
     {
-        // Find the index of the current tier so we can look at the next one.
         int currentIndex = -1;
         for (int i = 0; i < tiers.Count; i++)
         {
@@ -126,7 +90,6 @@ public sealed partial class RankShowcaseViewModel : ObservableObject
         int nextIndex = currentIndex + 1;
         if (currentIndex < 0 || nextIndex >= tiers.Count)
         {
-            // Max rank reached.
             HasNextRank     = false;
             ProgressPercent = 100;
             NextRankInfo    = "Max rank reached — keep going!";
@@ -151,7 +114,6 @@ public sealed partial class RankShowcaseViewModel : ObservableObject
         NextRankInfo   = $"Next: Level {next.Level}: {next.RankTitle} — {FormatTime(remaining)} to go";
     }
 
-    /// <summary>Formats a TimeSpan as "Xh Ym" (or "Xs" for very short durations).</summary>
     private static string FormatTime(TimeSpan t)
     {
         if (t.TotalHours >= 1)

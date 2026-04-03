@@ -17,11 +17,9 @@ namespace VibeCoders.Views
         {
             this.InitializeComponent();
             
-            // Get ViewModel from DI container
             _viewModel = App.GetService<CalendarIntegrationViewModel>();
             this.DataContext = _viewModel;
             
-            // Wire up events when page is loaded.
             this.Loaded += async (s, e) =>
             {
                 GenerateCalendarButton.Click += GenerateCalendarButton_Click;
@@ -42,7 +40,6 @@ namespace VibeCoders.Views
             {
                 GenerateCalendarButton.IsEnabled = false;
                 
-                // Validate input in ViewModel
                 string? validationError = _viewModel.ValidateInput();
                 if (validationError != null)
                 {
@@ -50,7 +47,6 @@ namespace VibeCoders.Views
                     return;
                 }
 
-                // Generate the calendar .ics file asynchronously
                 var icsContent = await _viewModel.GenerateCalendarAsync();
                 
                 if (string.IsNullOrEmpty(icsContent))
@@ -59,12 +55,10 @@ namespace VibeCoders.Views
                     return;
                 }
 
-                // Prompt user to select save location
                 var savePicker = new FileSavePicker();
                 savePicker.SuggestedStartLocation = PickerLocationId.Downloads;
                 savePicker.FileTypeChoices.Add("iCalendar", new System.Collections.Generic.List<string> { ".ics" });
                 
-                // Get the HWND for the file picker (WinUI 3 requirement)
                 var window = (Application.Current as App)?._window;
                 if (window == null)
                 {
@@ -85,25 +79,21 @@ namespace VibeCoders.Views
                 
                 if (file == null)
                 {
-                    // User cancelled the save dialog
                     return;
                 }
 
-                // Write the .ics content to the file
                 await Windows.Storage.FileIO.WriteTextAsync(file, icsContent);
                 
                 ShowSuccess($"Calendar file '{file.Name}' saved successfully! You can now import it into your calendar application.");
             }
             catch (InvalidOperationException ex)
             {
-                // Validation error from ViewModel
                 ShowError(ex.Message);
             }
             catch (Exception ex)
             {
                 if (ex is COMException)
                 {
-                    // Fallback path for environments where WinRT picker cannot open.
                     var fallbackPath = await SaveToDownloadsFallbackAsync();
                     if (!string.IsNullOrWhiteSpace(fallbackPath))
                     {
