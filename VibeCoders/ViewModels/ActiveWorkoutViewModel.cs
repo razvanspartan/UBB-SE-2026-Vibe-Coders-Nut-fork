@@ -30,6 +30,38 @@ namespace VibeCoders.ViewModels
             };
         }
 
+        public void StartRestTimer(int seconds = 90)
+        {
+            RestTimeRemaining = seconds;
+            IsResting = true;
+
+            _restTimer?.Stop();
+            _restTimer = new Timer(1000);
+
+            _restTimer.Elapsed += (s, e) =>
+            {
+                if (RestTimeRemaining > 0)
+                {
+                    RestTimeRemaining--;
+                }
+                else
+                {
+                    _restTimer?.Stop();
+                    IsResting = false;
+                }
+            };
+
+            _restTimer.Start();
+        }
+
+        private Timer? _restTimer;
+
+        [ObservableProperty]
+        private int restTimeRemaining;
+
+        [ObservableProperty]
+        private bool isResting;
+
         private Dictionary<string, double> GetPreviousBestWeights()
         {
             try

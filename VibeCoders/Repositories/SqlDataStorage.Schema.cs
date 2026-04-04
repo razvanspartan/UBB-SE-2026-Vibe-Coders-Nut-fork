@@ -34,5 +34,9 @@ namespace VibeCoders.Services
             using var reader = new StreamReader(stream);
             return reader.ReadToEnd();
         }
+        public int GetTotalActiveTimeForClient(int clientId)
+        {
+            return 1;
+        }
     }
 }

@@ -17,6 +17,9 @@
     </Page.Transitions>
 
     <Grid RowDefinitions="Auto,*">
+        <TextBlock Text="{x:Bind RestTimeRemaining"
+           Foreground="Orange"
+           Visibility="{x:Bind IsResting, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
         <!-- ═══════════════════════════════════════════════════════
              TOP BAR — Timer + Finish button (always visible, fixed)
