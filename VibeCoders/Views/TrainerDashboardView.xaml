@@ -32,6 +32,17 @@
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
+            <ListView ItemsSource="{x:Bind ViewModel.AssignedClients}">
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="models:Client">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{x:Bind Username}" Margin="0,0,8,0"/>
+                            <Button Content="Open Profile"
+                        />
+                        </StackPanel>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
         </Grid>
 
 		<ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">

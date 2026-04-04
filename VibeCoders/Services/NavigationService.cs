@@ -66,4 +66,13 @@ public sealed class NavigationService : INavigationService
 
     }
 
+    public void NavigateToClientProfile(int clientId)
+    {
+        if (_frame == null)
+        {
+            return;
+        }
+        _frame.Navigate(typeof(ClientProfileView), clientId);
+    }
+
 }

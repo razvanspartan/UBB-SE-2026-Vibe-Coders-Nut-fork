@@ -93,5 +93,12 @@ public partial class App : Application
         services.AddTransient<ActiveWorkoutViewModel>();
         services.AddTransient<WorkoutLogsViewModel>();
         services.AddTransient<AchievementsViewModel>();
+
+        services.AddTransient<TrainerDashboardViewModel>(sp =>
+        {
+            var trainerService = sp.GetRequiredService<TrainerService>();
+            var navService = sp.GetRequiredService<INavigationService>() as NavigationService;
+            return new TrainerDashboardViewModel(trainerService, navService!);
+        });
     }
 }
