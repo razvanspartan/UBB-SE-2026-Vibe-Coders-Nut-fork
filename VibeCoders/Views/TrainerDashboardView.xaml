@@ -348,7 +348,7 @@
 												Content="Assign Plan"
 												Style="{StaticResource AccentButtonStyle}"
 												IsEnabled="{x:Bind ViewModel.CanAssignPlan, Mode=OneWay}"
-												Click="{x:Bind ViewModel.AssignNutritionPlan}" />
+												Command="{x:Bind ViewModel.AssignNutritionPlanCommand}" />
 											<TextBlock
 												Grid.Column="1"
 												Text="{x:Bind ViewModel.AssignmentStatus, Mode=OneWay}"

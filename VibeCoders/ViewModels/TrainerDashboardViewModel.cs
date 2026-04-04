@@ -319,14 +319,16 @@ namespace VibeCoders.ViewModels
                 EndDate = _planEndDate.Date,
             };
 
-            _trainerService.DataStorage.SaveNutritionPlanForClient(plan, _selectedClient.Id);
+            if (!_trainerService.AssignNutritionPlan(plan, _selectedClient.Id))
+                return;
 
             AssignmentStatus =
                 $"Plan assigned to {_selectedClient.Username}: " +
                 $"{plan.StartDate:MMM d, yyyy} - {plan.EndDate:MMM d, yyyy}";
         }
 
-        public void AssignNutritionPlan(object sender, RoutedEventArgs e)
+        [RelayCommand]
+        private void AssignNutritionPlan()
         {
             AssignNutritionPlanCore();
         }

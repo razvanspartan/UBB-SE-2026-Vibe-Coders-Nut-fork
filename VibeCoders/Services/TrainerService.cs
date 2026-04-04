@@ -55,5 +55,15 @@ namespace VibeCoders.Services
             return DataStorage.GetAllExerciseNames();
         }
 
+        public bool AssignNutritionPlan(NutritionPlan plan, int clientId)
+        {
+            if (plan == null)
+                return false;
+            if (clientId <= 0)
+                return false;
+
+            DataStorage.SaveNutritionPlanForClient(plan, clientId);
+            return true;
+        }
     }
 }
