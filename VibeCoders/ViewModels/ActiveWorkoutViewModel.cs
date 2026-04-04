@@ -30,6 +30,27 @@ namespace VibeCoders.ViewModels
             };
         }
 
+        private Dictionary<string, double> GetPreviousBestWeights()
+        {
+            try
+            {
+                var allLogs = _storage.GetWorkoutLogs();
+
+                return allLogs
+                    .SelectMany(log => log.Exercises)
+                    .SelectMany(ex => ex.Sets)
+                    .GroupBy(s => s.ExerciseName)
+                    .ToDictionary(
+                        g => g.Key,
+                        g => g.Max(s => s.ActualWeight ?? 0)
+                    );
+            }
+            catch
+            {
+                return new Dictionary<string, double>();
+            }
+        }
+
         [ObservableProperty]
         private ObservableCollection<WorkoutTemplate> availableWorkouts = new();
 
@@ -257,6 +278,8 @@ namespace VibeCoders.ViewModels
     public sealed partial class ActiveExerciseViewModel : ObservableObject
     {
         public string ExerciseName { get; }
+        [ObservableProperty]
+        private double? previousBestWeight;
         public MuscleGroup MuscleGroup { get; }
         public ObservableCollection<ActiveSetViewModel> Sets { get; } = new();
 
