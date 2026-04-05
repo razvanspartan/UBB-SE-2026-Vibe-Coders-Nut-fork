@@ -1,7 +1,8 @@
 <Page
     x:Class="VibeCoders.Views.FocusModeView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:VibeCoders.ViewModels">
 
     <Grid Background="Black">
         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="20">
@@ -38,57 +39,51 @@
 
             </StackPanel>
 
-            <ItemsRepeater>
-                <ItemsRepeater.ItemsSource>
-                    <x:Array Type="StackPanel">
+            <StackPanel Spacing="10">
+                <!-- Exercise 1 -->
+                <StackPanel Margin="0,10">
+                    <TextBlock Text="Bench Press"
+                               Foreground="White"
+                               FontSize="24"/>
 
-                        <!-- Exercise 1 -->
-                        <StackPanel Margin="0,10">
-                            <TextBlock Text="Bench Press"
-                                       Foreground="White"
-                                       FontSize="24"/>
-
-                            <!-- Sets -->
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal" Spacing="10">
-                                    <TextBlock Text="Set 1:" Foreground="Gray"/>
-                                    <TextBlock Text="Reps: 10" Foreground="White"/>
-                                    <TextBlock Text="Weight: 80kg" Foreground="White"/>
-                                </StackPanel>
-
-                                <StackPanel Orientation="Horizontal" Spacing="10">
-                                    <TextBlock Text="Set 2:" Foreground="Gray"/>
-                                    <TextBlock Text="Reps: 8" Foreground="White"/>
-                                    <TextBlock Text="Weight: 85kg" Foreground="White"/>
-                                </StackPanel>
-                            </StackPanel>
+                    <!-- Sets -->
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="Set 1:" Foreground="Gray"/>
+                            <TextBlock Text="Reps: 10" Foreground="White"/>
+                            <TextBlock Text="Weight: 80kg" Foreground="White"/>
                         </StackPanel>
 
-                        <!-- Exercise 2 -->
-                        <StackPanel Margin="0,10">
-                            <TextBlock Text="Incline Dumbbell Press"
-                                       Foreground="White"
-                                       FontSize="24"/>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="Set 2:" Foreground="Gray"/>
+                            <TextBlock Text="Reps: 8" Foreground="White"/>
+                            <TextBlock Text="Weight: 85kg" Foreground="White"/>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
 
-                            <!-- Sets -->
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal" Spacing="10">
-                                    <TextBlock Text="Set 1:" Foreground="Gray"/>
-                                    <TextBlock Text="Reps: 12" Foreground="White"/>
-                                    <TextBlock Text="Weight: 24kg" Foreground="White"/>
-                                </StackPanel>
+                <!-- Exercise 2 -->
+                <StackPanel Margin="0,10">
+                    <TextBlock Text="Incline Dumbbell Press"
+                               Foreground="White"
+                               FontSize="24"/>
 
-                                <StackPanel Orientation="Horizontal" Spacing="10">
-                                    <TextBlock Text="Set 2:" Foreground="Gray"/>
-                                    <TextBlock Text="Reps: 10" Foreground="White"/>
-                                    <TextBlock Text="Weight: 26kg" Foreground="White"/>
-                                </StackPanel>
-                            </StackPanel>
+                    <!-- Sets -->
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="Set 1:" Foreground="Gray"/>
+                            <TextBlock Text="Reps: 12" Foreground="White"/>
+                            <TextBlock Text="Weight: 24kg" Foreground="White"/>
                         </StackPanel>
 
-                    </x:Array>
-                </ItemsRepeater.ItemsSource>
-            </ItemsRepeater>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="Set 2:" Foreground="Gray"/>
+                            <TextBlock Text="Reps: 10" Foreground="White"/>
+                            <TextBlock Text="Weight: 26kg" Foreground="White"/>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
             
             
 

@@ -18,11 +18,6 @@ namespace VibeCoders.Services
             cmd.ExecuteNonQuery();
         }
 
-        public int GetTotalActiveTimeForClient(int clientId)
-        {
-            return 1;
-        }
-
         private static string LoadSchemaSql()
         {
             var assembly = Assembly.GetExecutingAssembly();
@@ -33,10 +28,6 @@ namespace VibeCoders.Services
             using var stream = assembly.GetManifestResourceStream(resourceName)!;
             using var reader = new StreamReader(stream);
             return reader.ReadToEnd();
-        }
-        public int GetTotalActiveTimeForClient(int clientId)
-        {
-            return 1;
         }
     }
 }

@@ -36,7 +36,7 @@ namespace VibeCoders.ViewModels
             IsResting = true;
 
             _restTimer?.Stop();
-            _restTimer = new Timer(1000);
+            _restTimer = new System.Timers.Timer(1000);
 
             _restTimer.Elapsed += (s, e) =>
             {
@@ -54,7 +54,7 @@ namespace VibeCoders.ViewModels
             _restTimer.Start();
         }
 
-        private Timer? _restTimer;
+        private System.Timers.Timer? _restTimer;
 
         [ObservableProperty]
         private int restTimeRemaining;
@@ -62,11 +62,11 @@ namespace VibeCoders.ViewModels
         [ObservableProperty]
         private bool isResting;
 
-        private Dictionary<string, double> GetPreviousBestWeights()
+        private Dictionary<string, double> GetPreviousBestWeights(int clientId)
         {
             try
             {
-                var allLogs = _storage.GetWorkoutLogs();
+                var allLogs = _storage.GetWorkoutHistory(clientId);
 
                 return allLogs
                     .SelectMany(log => log.Exercises)
