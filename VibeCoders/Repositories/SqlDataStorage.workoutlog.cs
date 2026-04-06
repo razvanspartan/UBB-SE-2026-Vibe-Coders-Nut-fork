@@ -255,8 +255,12 @@ namespace VibeCoders.Services
                     Id           = reader.GetInt32(0),
                     WorkoutLogId = workoutLogId,
                     ExerciseName = exerciseName,
+<<<<<<< HEAD
+                    SetIndex     = reader.GetInt32(2),
+=======
                     SetIndex     = setIndex,
                     SetNumber    = setIndex + 1,
+>>>>>>> origin/main
                     ActualReps   = reader.IsDBNull(3) ? null : reader.GetInt32(3),
                     ActualWeight = reader.IsDBNull(4) ? null : reader.GetDouble(4),
                     TargetReps   = reader.IsDBNull(5) ? null : reader.GetInt32(5),

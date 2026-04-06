@@ -33,6 +33,8 @@ public sealed partial class ActiveWorkoutPage : Page
         ViewModel.LoadNotificationsCommand.Execute(ClientId);
     }
 
+<<<<<<< HEAD
+=======
     private async void OpenFocusMode_Click(object sender, RoutedEventArgs e)
     {
         if (!ViewModel.IsWorkoutStarted) return;
@@ -50,6 +52,7 @@ public sealed partial class ActiveWorkoutPage : Page
         await dialog.ShowAsync();
     }
 
+>>>>>>> origin/main
     private void ApplyGoalsButton_Click(object sender, RoutedEventArgs e)
     {
         TargetGoalsButton.Flyout.Hide();

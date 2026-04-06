@@ -20,7 +20,7 @@ namespace VibeCoders.ViewModels;
 
 public sealed partial class ClientDashboardViewModel : ObservableObject
 {
-    public const int DefaultPageSize = 8;
+    public const int DefaultPageSize = 5;
 
     private readonly IWorkoutAnalyticsStore _store;
     private readonly IDataStorage _dataStorage;
@@ -41,8 +41,7 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
         _refreshBus.RefreshRequested += OnRefreshRequested;
     }
 
-    [ObservableProperty]
-    private ObservableCollection<Achievement> recentAchievements = new();
+
 
     [ObservableProperty]
     private int totalWorkouts;
@@ -148,8 +147,13 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
 
             ApplySummary(summaryTask.Result);
             ApplyBuckets(bucketsTask.Result);
+<<<<<<< HEAD
+            ApplyHistory(historyTask.Result, uid);
+
+=======
             ApplyHistory(historyTask.Result, clientId);
             LoadRecentAchievements((int)clientId);
+>>>>>>> origin/main
 
             IsLoadingSummary = false;
             IsLoadingChart = false;
@@ -189,27 +193,7 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
         }
     }
 
-    private void LoadRecentAchievements(int clientId)
-    {
-        RecentAchievements.Clear();
 
-        var showcase = _dataStorage.GetAchievementShowcaseForClient(clientId)
-            .Take(5)
-            .Select(a => new Achievement
-            {
-                AchievementId = a.AchievementId,
-                Name = a.Title,
-                Description = a.Description,
-                Criteria = a.Criteria,
-                IsUnlocked = a.IsUnlocked,
-                Icon = a.IsUnlocked ? "&#xE73E;" : "&#xE72E;"
-            });
-
-        foreach (var achievement in showcase)
-        {
-            RecentAchievements.Add(achievement);
-        }
-    }
 
     public void ReloadAchievementsPreview() =>
         LoadRecentAchievements((int)_session.CurrentClientId);

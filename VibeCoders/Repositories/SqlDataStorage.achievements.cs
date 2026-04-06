@@ -128,12 +128,28 @@ public partial class SqlDataStorage
         conn.Open();
 
         const string sql = @"
+<<<<<<< HEAD
+            SELECT
+                a.achievement_id,
+                a.title,
+                a.description,
+                a.criteria,
+                CASE WHEN ca.unlocked = 1 THEN 1 ELSE 0 END AS is_unlocked
+            FROM ACHIEVEMENT a
+            LEFT JOIN CLIENT_ACHIEVEMENT ca
+                ON ca.achievement_id = a.achievement_id
+               AND ca.client_id = @ClientId
+            ORDER BY
+                CASE WHEN COALESCE(ca.unlocked, 0) = 1 THEN 0 ELSE 1 END,
+                a.achievement_id;";
+=======
             SELECT a.achievement_id, a.title, a.description, a.criteria,
                    CASE WHEN COALESCE(ca.unlocked, 0) = 1 THEN 1 ELSE 0 END
             FROM ACHIEVEMENT a
             LEFT JOIN CLIENT_ACHIEVEMENT ca
                 ON ca.achievement_id = a.achievement_id AND ca.client_id = @ClientId
             ORDER BY COALESCE(ca.unlocked, 0) DESC, a.achievement_id;";
+>>>>>>> origin/main
 
         using var cmd    = new SqliteCommand(sql, conn);
         cmd.Parameters.AddWithValue("@ClientId", clientId);
@@ -180,11 +196,24 @@ public partial class SqlDataStorage
         conn.Open();
 
         const string sql = @"
+<<<<<<< HEAD
+            SELECT
+                a.achievement_id,
+                a.title,
+                a.description,
+                a.criteria,
+                CASE WHEN ca.unlocked = 1 THEN 1 ELSE 0 END AS is_unlocked
+            FROM ACHIEVEMENT a
+            LEFT JOIN CLIENT_ACHIEVEMENT ca
+                ON ca.achievement_id = a.achievement_id
+               AND ca.client_id = @ClientId
+=======
             SELECT a.achievement_id, a.title, a.description, a.criteria,
                    CASE WHEN COALESCE(ca.unlocked, 0) = 1 THEN 1 ELSE 0 END
             FROM ACHIEVEMENT a
             LEFT JOIN CLIENT_ACHIEVEMENT ca
                 ON ca.achievement_id = a.achievement_id AND ca.client_id = @ClientId
+>>>>>>> origin/main
             WHERE a.achievement_id = @AchievementId;";
 
         using var cmd = new SqliteCommand(sql, conn);

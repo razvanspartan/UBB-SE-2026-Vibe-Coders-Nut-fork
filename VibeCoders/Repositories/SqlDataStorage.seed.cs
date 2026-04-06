@@ -257,7 +257,11 @@ namespace VibeCoders.Services
             {
                 using var cmd = new SqliteCommand(@"
                     INSERT INTO WORKOUT_LOG (client_id, date, total_duration, calories_burned, rating)
+<<<<<<< HEAD
+                    VALUES (@ClientId, @Date, @Duration, @Cals, 5);", conn);
+=======
                     VALUES (@ClientId, @Date, @Duration, @Cals, NULL);", conn);
+>>>>>>> origin/main
                 cmd.Parameters.AddWithValue("@ClientId", clientId);
                 cmd.Parameters.AddWithValue("@Date",     date.ToString("o"));
                 cmd.Parameters.AddWithValue("@Duration", duration);

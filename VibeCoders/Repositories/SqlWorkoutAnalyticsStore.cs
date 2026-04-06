@@ -54,23 +54,44 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
         ArgumentNullException.ThrowIfNull(log);
         await EnsureCreatedAsync(cancellationToken).ConfigureAwait(false);
 
+<<<<<<< HEAD
+=======
         int cid = log.ClientId > 0 ? log.ClientId : (int)clientId;
         if (cid <= 0)
             throw new InvalidOperationException("Workout log must have a positive client id.");
 
+>>>>>>> origin/main
         await using var conn = new SqliteConnection(_connectionString);
         await conn.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var tx = conn.BeginTransaction();
 
         try
         {
+<<<<<<< HEAD
+            int clientId;
+            await using (var getClient = new SqliteCommand(
+                "SELECT client_id FROM CLIENT WHERE user_id = @uid;", conn, tx))
+            {
+                getClient.Parameters.AddWithValue("@uid", userId);
+                var result = await getClient.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
+                if (result == null)
+                    throw new InvalidOperationException($"No client found for user_id {userId}.");
+                clientId = Convert.ToInt32(result);
+            }
+
+=======
+>>>>>>> origin/main
             await using (var insertLog = new SqliteCommand(@"
                 INSERT INTO WORKOUT_LOG
                     (client_id, workout_id, date, total_duration, calories_burned, rating, intensity_tag)
                 VALUES
                     (@clientId, @tmpl, @date, @dur, @cal, NULL, @intensity);", conn, tx))
             {
+<<<<<<< HEAD
+                insertLog.Parameters.AddWithValue("@clientId",  clientId);
+=======
                 insertLog.Parameters.AddWithValue("@clientId",  cid);
+>>>>>>> origin/main
                 insertLog.Parameters.AddWithValue("@tmpl",      log.SourceTemplateId);
                 insertLog.Parameters.AddWithValue("@date",      log.Date.ToString("o"));
                 insertLog.Parameters.AddWithValue("@dur",       log.Duration.ToString());
@@ -150,10 +171,18 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
                     ELSE 0
                 END), 0)
             FROM WORKOUT_LOG wl
+<<<<<<< HEAD
+            JOIN CLIENT c ON c.client_id = wl.client_id
+            WHERE c.user_id = @uid
+              AND date(wl.date) >= @start
+              AND date(wl.date) <= @end;",
+            "@uid", userId,
+=======
             WHERE wl.client_id = @cid
               AND date(wl.date) >= @start
               AND date(wl.date) <= @end;",
             "@cid", clientId,
+>>>>>>> origin/main
             "@start", windowStart.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
             "@end",   today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
             cancellationToken).ConfigureAwait(false);
@@ -224,10 +253,18 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
             var count = await ScalarLongAsync(conn, @"
                 SELECT COUNT(*)
                 FROM WORKOUT_LOG wl
+<<<<<<< HEAD
+                JOIN CLIENT c ON c.client_id = wl.client_id
+                WHERE c.user_id = @uid
+                  AND date(wl.date) >= @start
+                  AND date(wl.date) <  @end;",
+                "@uid",   userId,
+=======
                 WHERE wl.client_id = @cid
                   AND date(wl.date) >= @start
                   AND date(wl.date) <  @end;",
                 "@cid",   clientId,
+>>>>>>> origin/main
                 "@start", weekStart.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
                 "@end",   weekEnd.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
                 cancellationToken).ConfigureAwait(false);
@@ -273,7 +310,11 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
             ORDER BY wl.date DESC, wl.workout_log_id DESC
             LIMIT @take OFFSET @skip;", conn);
 
+<<<<<<< HEAD
+        cmd.Parameters.AddWithValue("@uid",  userId);
+=======
         cmd.Parameters.AddWithValue("@cid",  clientId);
+>>>>>>> origin/main
         cmd.Parameters.AddWithValue("@skip", pageIndex * pageSize);
         cmd.Parameters.AddWithValue("@take", pageSize);
 
@@ -325,7 +366,11 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
             WHERE wl.workout_log_id = @id AND wl.client_id = @cid;", conn))
         {
             head.Parameters.AddWithValue("@id",  workoutLogId);
+<<<<<<< HEAD
+            head.Parameters.AddWithValue("@uid", userId);
+=======
             head.Parameters.AddWithValue("@cid", clientId);
+>>>>>>> origin/main
 
             await using var r = await head.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
             if (!await r.ReadAsync(cancellationToken).ConfigureAwait(false)) return null;

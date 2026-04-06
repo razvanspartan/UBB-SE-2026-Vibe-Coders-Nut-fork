@@ -122,6 +122,8 @@ namespace VibeCoders.Services
             }
         }
 
+<<<<<<< HEAD
+=======
         public NutritionPlan? GetActiveNutritionPlan(int clientId)
         {
             if (clientId <= 0)
@@ -151,6 +153,7 @@ namespace VibeCoders.Services
             }
         }
 
+>>>>>>> origin/main
         private void RunAchievementEvaluation(int clientId)
         {
             try

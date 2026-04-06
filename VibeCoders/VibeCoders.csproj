@@ -57,12 +57,15 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="SQLScripts\schema.sql" />
+<<<<<<< HEAD
+=======
   </ItemGroup>
   <ItemGroup>
     <Page Update="Views\ClientProfileView.xaml"></Page>
     <Page Update="Views\FocusModeView.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
+>>>>>>> origin/main
   </ItemGroup>
   <ItemGroup>
     <Page Update="Views\WorkoutLogsPage.xaml">

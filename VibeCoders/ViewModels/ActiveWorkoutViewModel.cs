@@ -39,6 +39,8 @@ namespace VibeCoders.ViewModels
             };
         }
 
+<<<<<<< HEAD
+=======
         public void StartRestTimer(int seconds = 90)
         {
             var dq = DispatcherQueue.GetForCurrentThread();
@@ -144,6 +146,7 @@ namespace VibeCoders.ViewModels
             }
         }
 
+>>>>>>> origin/main
         [ObservableProperty]
         private ObservableCollection<WorkoutTemplate> availableWorkouts = new();
 
@@ -274,7 +277,10 @@ namespace VibeCoders.ViewModels
             _clientService.SaveSet(_activeLog, setViewModel.ExerciseName, set);
             setViewModel.IsCompleted = true;
 
+<<<<<<< HEAD
+=======
             StartRestTimer();
+>>>>>>> origin/main
             FocusNextSet(setViewModel);
         }
 
