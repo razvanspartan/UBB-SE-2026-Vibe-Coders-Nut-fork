@@ -38,7 +38,6 @@ jobs:
       - name: StyleCop Check (Modified Files Only)
         if: steps.files.outputs.modified_files != ''
         shell: bash
-        # --verify-no-changes makes it fail if there are style violations
-        # analyzers --diagnostics=SA tells it to ONLY run StyleCop rules
+        # Changed 'warning' to 'warn' and added --diagnostics SA to focus on StyleCop
         run: |
-          dotnet format analyzers --include ${{ steps.files.outputs.modified_files }} --verify-no-changes --severity warning --verbosity diagnostic
+          dotnet format analyzers --include ${{ steps.files.outputs.modified_files }} --verify-no-changes --severity warn --diagnostics SA --verbosity diagnostic
