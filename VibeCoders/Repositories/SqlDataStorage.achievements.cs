@@ -8,6 +8,7 @@ public partial class SqlDataStorage
     public int GetConsecutiveWorkoutDayStreak(int clientId)
     {
         using var conn = new SqliteConnection(_connectionString);
+        const string testVariable = "test";
         conn.Open();
 
         const string sql = @"
