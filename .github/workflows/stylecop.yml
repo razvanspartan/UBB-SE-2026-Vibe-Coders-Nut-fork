@@ -5,9 +5,7 @@ on:
     branches: ["main"]
 
 permissions:
-  pull-requests: write
   contents: read
-  security-events: write
 
 jobs:
   check-style:
@@ -26,136 +24,49 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
-      - name: Get changed files
+      - name: Get changed C# files
+        id: changed
         shell: pwsh
         run: |
           git fetch origin ${{ github.base_ref }} --depth=1
-          git diff --name-only --diff-filter=ACMR origin/${{ github.base_ref }}...HEAD > changed_files.txt
+          $files = git diff --name-only --diff-filter=ACMR origin/${{ github.base_ref }}...HEAD `
+            | Where-Object { $_ -match '\.cs$' }
+          if ($files.Count -eq 0) {
+            "has_files=false" >> $env:GITHUB_OUTPUT
+          } else {
+            "has_files=true" >> $env:GITHUB_OUTPUT
+            $files | Set-Content changed_cs_files.txt
+            Write-Host "Changed C# files:"
+            $files | ForEach-Object { Write-Host "  $_" }
+          }
 
-      - name: Build with analyzers (SARIF)
-        id: build
-        continue-on-error: true
+      - name: Run StyleCop on changed files
+        if: steps.changed.outputs.has_files == 'true'
         shell: pwsh
         run: |
-          $token = [guid]::NewGuid().ToString('N')
-          Write-Output "::stop-commands::$token"
-          dotnet build --configuration Release -p:Platform=x64 `
-            /p:TreatWarningsAsErrors=false `
-            /p:Deterministic=true `
-            /p:ContinuousIntegrationBuild=true `
-            /p:RunAnalyzers=true `
-            /p:ErrorLog=stylecop.sarif `
-            --no-incremental
-          Write-Output "::$token::"
+          $files = Get-Content changed_cs_files.txt
+          dotnet format analyzers VibeCoders/VibeCoders.csproj `
+            --verify-no-changes `
+            --report stylecop-report `
+            --include $files
 
-      - name: Filter SARIF to changed files
-        id: filter
+      - name: Annotate StyleCop issues
+        if: always() && steps.changed.outputs.has_files == 'true'
         shell: pwsh
         run: |
-          if (-not (Test-Path stylecop.sarif)) {
-            '{"version":"2.1.0","runs":[{"tool":{"driver":{"name":"StyleCop"}},"results":[]}]}' | Set-Content filtered.sarif
-            "issue_count=0" >> $env:GITHUB_OUTPUT
-            exit 0
-          }
+          $reportFile = Get-ChildItem -Path stylecop-report -Filter '*.json' -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $reportFile) { exit 0 }
 
-          $workspace = ($env:GITHUB_WORKSPACE -replace '\\', '/').TrimEnd('/').ToLowerInvariant()
-          $changed = @(Get-Content changed_files.txt | Where-Object { $_.Trim() } | ForEach-Object {
-            (($_.Trim() -replace '\\', '/').TrimStart('./')).ToLowerInvariant()
-          })
-          $changedSet = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
-          foreach ($changedFile in $changed) {
-            [void]$changedSet.Add($changedFile)
-          }
+          $report = Get-Content $reportFile.FullName -Raw | ConvertFrom-Json
+          $changed = Get-Content changed_cs_files.txt | ForEach-Object { $_.Trim().ToLowerInvariant() -replace '\\', '/' }
 
-          $sarif = Get-Content stylecop.sarif -Raw | ConvertFrom-Json
-
-          function Get-RelativePath([string]$uri, [string]$workspaceRoot)
-          {
-            if ([string]::IsNullOrWhiteSpace($uri)) {
-              return $null
-            }
-
-            $candidate = $uri
-            if ($candidate.StartsWith('file:', [System.StringComparison]::OrdinalIgnoreCase)) {
-              try {
-                $candidate = [System.Uri]::new($candidate).LocalPath
-              }
-              catch {
-                $candidate = $uri.Substring(5)
-              }
-            }
-
-            $candidate = ($candidate -replace '\\', '/').Trim()
-            $candidate = $candidate.TrimStart('/')
-            $candidate = $candidate.ToLowerInvariant()
-
-            if ($candidate.StartsWith($workspaceRoot + '/')) {
-              return $candidate.Substring($workspaceRoot.Length + 1)
-            }
-
-            return $candidate
-          }
-
-          $issueCount = 0
-
-          foreach ($run in $sarif.runs) {
-            $run.results = @($run.results | Where-Object {
-              $locations = @($_.locations)
-              foreach ($location in $locations) {
-                $uri = $location.physicalLocation.artifactLocation.uri
-
-                $relativePath = Get-RelativePath $uri $workspace
-                if (-not $relativePath) { continue }
-
-                # Direct match
-                if ($changedSet.Contains($relativePath)) {
-                  $location.physicalLocation.artifactLocation.uri = $relativePath
-                  $issueCount++
-                  return $true
-                }
-
-                # Suffix match: SARIF path may be project-relative (missing top folder)
-                foreach ($cf in $changed) {
-                  if ($cf.EndsWith("/$relativePath") -or $cf -eq $relativePath) {
-                    $location.physicalLocation.artifactLocation.uri = $cf
-                    $issueCount++
-                    return $true
-                  }
-                }
-              }
-
-              return $false
-            })
-          }
-
-          $sarif | ConvertTo-Json -Depth 100 | Set-Content filtered.sarif
-          "issue_count=$issueCount" >> $env:GITHUB_OUTPUT
-
-      - name: Annotate changed-file issues
-        if: always()
-        shell: pwsh
-        run: |
-          if ('${{ steps.filter.outputs.issue_count }}' -eq '0') {
-            exit 0
-          }
-
-          $sarif = Get-Content filtered.sarif -Raw | ConvertFrom-Json
-          foreach ($run in $sarif.runs) {
-            foreach ($result in @($run.results)) {
-              $location = $result.locations[0].physicalLocation
-              $path = $location.artifactLocation.uri
-              $region = $location.region
-              $line = if ($region.startLine) { $region.startLine } else { 1 }
-              $column = if ($region.startColumn) { $region.startColumn } else { 1 }
-              $ruleId = if ($result.ruleId) { $result.ruleId } else { 'StyleCop' }
-              $message = $result.message.text
-
-              "::error file=$path,line=$line,col=$column,title=$ruleId::$message"
+          foreach ($doc in $report) {
+            $filePath = ($doc.DocumentId.ProjectId.ProjectName + '/' + $doc.FileName) -replace '\\', '/'
+            foreach ($change in $doc.FileChanges) {
+              $line = $change.LineNumber
+              $col  = $change.CharNumber
+              $id   = $change.DiagnosticId
+              $msg  = $change.FormatDescription
+              "::error file=$filePath,line=$line,col=$col,title=$id::$msg"
             }
           }
-
-      - name: Fail on changed-file issues
-        if: always() && steps.filter.outputs.issue_count != '0'
-        shell: pwsh
-        run: |
-          Write-Error "StyleCop found ${{ steps.filter.outputs.issue_count }} issue(s) in modified files."
