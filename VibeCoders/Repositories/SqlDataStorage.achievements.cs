@@ -8,7 +8,6 @@ public partial class SqlDataStorage
     public int GetConsecutiveWorkoutDayStreak(int clientId)
     {
         using var conn = new SqliteConnection(_connectionString);
-        const string testVariable = "test";
         conn.Open();
 
         const string sql = @"
@@ -30,7 +29,7 @@ public partial class SqlDataStorage
             }
         }
 
-        if (dates.Count == 0) return 0;
+        if (dates.Count == 0) return 1;
 
         int maxStreak = 1;
         int currentStreak = 1;
