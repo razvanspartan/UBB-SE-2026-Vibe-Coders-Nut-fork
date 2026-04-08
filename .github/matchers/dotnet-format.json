@@ -4,7 +4,7 @@
       "owner": "dotnet-stylecop",
       "pattern": [
         {
-          "regexp": "^\\s*(?:Warning: |Error: )?(.*?)\\((\\d+),(\\d+)\\):\\s+(?:warning|error)\\s+([^:]+):\\s+(.*)$",
+          "regexp": "^\\s*(?:Error: |Warning: )?(.*?)\\((\\d+),(\\d+)\\):\\s+(?:error|warning)\\s+([^:]+):\\s+(.*)$",
           "file": 1,
           "line": 2,
           "column": 3,
