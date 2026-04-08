@@ -46,3 +46,11 @@ jobs:
       # Step 3: Build (This still catches StyleCop errors in the modified files)
       - name: Build and Style Check
         run: dotnet build --configuration Release /p:TreatWarningsAsErrors=true
+      - name: PR Summary Comment
+      if: failure()
+      uses: thollander/actions-comment-pull-request@v2
+      with:
+        message: |
+          ## :x: StyleCop Check Failed
+          I've found some styling issues in your modified files. 
+          Please check the **Files changed** tab for specific line-by-line feedback! :art:
