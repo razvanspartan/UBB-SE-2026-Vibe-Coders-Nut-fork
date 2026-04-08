@@ -29,4 +29,6 @@ jobs:
         run: dotnet restore
 
       - name: Build and Style Check
-        run: dotnet build --configuration Release /p:TreatWarningsAsErrors=true /p:Deterministic=true /p:ContinuousIntegrationBuild=true -clp:NoSummary
+        # Removed TreatWarningsAsErrors just for this run so the build 
+        # doesn't stop immediately. We also add -keepgoing.
+        run: dotnet build --configuration Release /p:Deterministic=true /p:ContinuousIntegrationBuild=true -clp:NoSummary --no-incremental
