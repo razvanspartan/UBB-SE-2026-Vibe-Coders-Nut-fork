@@ -29,6 +29,7 @@ jobs:
         run: dotnet restore
 
       - name: Build and Style Check
-        # Removed TreatWarningsAsErrors just for this run so the build 
-        # doesn't stop immediately. We also add -keepgoing.
-        run: dotnet build --configuration Release /p:Deterministic=true /p:ContinuousIntegrationBuild=true -clp:NoSummary --no-incremental
+        # 1. Added /p:TreatWarningsAsErrors=true to fail the PR on style issues
+        # 2. Added -p:Platform=x64 to stop the XAML compiler from freaking out
+        # 3. Kept path fixes for GitHub Annotations
+        run: dotnet build --configuration Release -p:Platform=x64 /p:TreatWarningsAsErrors=true /p:Deterministic=true /p:ContinuousIntegrationBuild=true --no-incremental -clp:NoSummary

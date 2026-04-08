@@ -18,6 +18,9 @@
     <EnableMsixTooling>false</EnableMsixTooling>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)SE.ruleset</CodeAnalysisRuleSet>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Views\ClientProfileView.xaml" />
