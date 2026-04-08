@@ -7,6 +7,7 @@ on:
 permissions:
   pull-requests: write
   contents: read
+  security-events: write
 
 jobs:
   check-style:
@@ -17,9 +18,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Add Problem Matcher
-        run: echo "::add-matcher::.github/matchers/dotnet-format.json"
-
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
@@ -28,6 +26,37 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
-      - name: Build and Style Check
-        # Removed backslashes to avoid PowerShell ParserErrors
-        run: dotnet build --configuration Release -p:Platform=x64 /p:TreatWarningsAsErrors=true /p:Deterministic=true /p:ContinuousIntegrationBuild=true --no-incremental -clp:NoSummary
+      - name: Get changed files
+        shell: pwsh
+        run: |
+          git fetch origin ${{ github.base_ref }} --depth=1
+          git diff --name-only origin/${{ github.base_ref }} > changed_files.txt
+
+      - name: Build with analyzers (SARIF)
+        run: |
+          dotnet build --configuration Release -p:Platform=x64 `
+            /p:TreatWarningsAsErrors=true `
+            /p:Deterministic=true `
+            /p:ContinuousIntegrationBuild=true `
+            /p:RunAnalyzers=true `
+            /p:ErrorLog=stylecop.sarif `
+            --no-incremental
+
+      - name: Filter SARIF to changed files
+        shell: pwsh
+        run: |
+          $changed = Get-Content changed_files.txt
+          $sarif = Get-Content stylecop.sarif | ConvertFrom-Json
+
+          $sarif.runs[0].results = $sarif.runs[0].results | Where-Object {
+            $file = $_.locations[0].physicalLocation.artifactLocation.uri
+            $file = $file -replace '/', '\'
+            $changed | Where-Object { $file.EndsWith($_) }
+          }
+
+          $sarif | ConvertTo-Json -Depth 100 | Set-Content filtered.sarif
+
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: filtered.sarif
