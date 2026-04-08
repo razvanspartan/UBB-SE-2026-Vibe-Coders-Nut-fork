@@ -1,0 +1,26 @@
+name: StyleCop Check (Changed Files Only)
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  style-check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Run Style Check on PR Diff
+        uses: jsturtevant/setup-dotnet-format@v1
+        with:
+          only-changed-files: true
