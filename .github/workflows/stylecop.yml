@@ -33,7 +33,9 @@ jobs:
           git diff --name-only --diff-filter=ACMR origin/${{ github.base_ref }}...HEAD > changed_files.txt
 
       - name: Build with analyzers (SARIF)
+        id: build
         continue-on-error: true
+        shell: pwsh
         run: |
           dotnet build --configuration Release -p:Platform=x64 `
             /p:TreatWarningsAsErrors=true `
@@ -42,22 +44,57 @@ jobs:
             /p:RunAnalyzers=true `
             /p:ErrorLog=stylecop.sarif `
             /p:ContinueOnError=true `
-            --no-incremental
+            --no-incremental *> build-output.log
 
       - name: Filter SARIF to changed files
+        id: filter
         shell: pwsh
-        continue-on-error: true
         run: |
           if (-not (Test-Path stylecop.sarif)) {
             '{"version":"2.1.0","runs":[{"tool":{"driver":{"name":"StyleCop"}},"results":[]}]}' | Set-Content filtered.sarif
+            "issue_count=0" >> $env:GITHUB_OUTPUT
             exit 0
           }
 
+          $workspace = ($env:GITHUB_WORKSPACE -replace '\\', '/').TrimEnd('/').ToLowerInvariant()
           $changed = @(Get-Content changed_files.txt | Where-Object { $_.Trim() } | ForEach-Object {
-            ($_.Trim() -replace '\\', '/').TrimStart('./').ToLowerInvariant()
+            (($_.Trim() -replace '\\', '/').TrimStart('./')).ToLowerInvariant()
           })
+          $changedSet = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+          foreach ($changedFile in $changed) {
+            [void]$changedSet.Add($changedFile)
+          }
 
           $sarif = Get-Content stylecop.sarif -Raw | ConvertFrom-Json
+
+          function Get-RelativePath([string]$uri, [string]$workspaceRoot)
+          {
+            if ([string]::IsNullOrWhiteSpace($uri)) {
+              return $null
+            }
+
+            $candidate = $uri
+            if ($candidate.StartsWith('file:', [System.StringComparison]::OrdinalIgnoreCase)) {
+              try {
+                $candidate = [System.Uri]::new($candidate).LocalPath
+              }
+              catch {
+                $candidate = $uri.Substring(5)
+              }
+            }
+
+            $candidate = ($candidate -replace '\\', '/').Trim()
+            $candidate = $candidate.TrimStart('/')
+            $candidate = $candidate.ToLowerInvariant()
+
+            if ($candidate.StartsWith($workspaceRoot + '/')) {
+              return $candidate.Substring($workspaceRoot.Length + 1)
+            }
+
+            return $candidate
+          }
+
+          $issueCount = 0
 
           foreach ($run in $sarif.runs) {
             $run.results = @($run.results | Where-Object {
@@ -65,16 +102,11 @@ jobs:
               foreach ($location in $locations) {
                 $uri = $location.physicalLocation.artifactLocation.uri
 
-                if ([string]::IsNullOrWhiteSpace($uri)) {
-                  continue
-                }
-
-                $normalizedUri = ($uri -replace '\\', '/').ToLowerInvariant()
-
-                foreach ($changedFile in $changed) {
-                  if ($normalizedUri -eq $changedFile -or $normalizedUri.EndsWith("/$changedFile")) {
-                    return $true
-                  }
+                $relativePath = Get-RelativePath $uri $workspace
+                if ($relativePath -and $changedSet.Contains($relativePath)) {
+                  $location.physicalLocation.artifactLocation.uri = $relativePath
+                  $issueCount++
+                  return $true
                 }
               }
 
@@ -83,10 +115,33 @@ jobs:
           }
 
           $sarif | ConvertTo-Json -Depth 100 | Set-Content filtered.sarif
+          "issue_count=$issueCount" >> $env:GITHUB_OUTPUT
 
-      - name: Upload SARIF
+      - name: Annotate changed-file issues
         if: always()
-        continue-on-error: true
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: filtered.sarif
+        shell: pwsh
+        run: |
+          if ('${{ steps.filter.outputs.issue_count }}' -eq '0') {
+            exit 0
+          }
+
+          $sarif = Get-Content filtered.sarif -Raw | ConvertFrom-Json
+          foreach ($run in $sarif.runs) {
+            foreach ($result in @($run.results)) {
+              $location = $result.locations[0].physicalLocation
+              $path = $location.artifactLocation.uri
+              $region = $location.region
+              $line = if ($region.startLine) { $region.startLine } else { 1 }
+              $column = if ($region.startColumn) { $region.startColumn } else { 1 }
+              $ruleId = if ($result.ruleId) { $result.ruleId } else { 'StyleCop' }
+              $message = $result.message.text
+
+              "::error file=$path,line=$line,col=$column,title=$ruleId::$message"
+            }
+          }
+
+      - name: Fail on changed-file issues
+        if: always() && steps.filter.outputs.issue_count != '0'
+        shell: pwsh
+        run: |
+          Write-Error "StyleCop found ${{ steps.filter.outputs.issue_count }} issue(s) in modified files."
