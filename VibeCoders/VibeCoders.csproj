@@ -18,8 +18,10 @@
     <EnableMsixTooling>false</EnableMsixTooling>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <WarningsAsErrors>$(WarningsAsErrors);SA1101;SA1200</WarningsAsErrors>
+    <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)SE.ruleset</CodeAnalysisRuleSet>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Views\ClientProfileView.xaml" />

@@ -1,0 +1,85 @@
+name: StyleCop Check
+
+on:
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  check-style:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Get changed C# files
+        id: changed
+        shell: pwsh
+        run: |
+          git fetch origin ${{ github.base_ref }} --depth=1
+          $files = git diff --name-only --diff-filter=ACMR origin/${{ github.base_ref }}...HEAD `
+            | Where-Object { $_ -match '\.cs$' }
+          if ($files.Count -eq 0) {
+            "has_files=false" >> $env:GITHUB_OUTPUT
+          } else {
+            "has_files=true" >> $env:GITHUB_OUTPUT
+            $files | Set-Content changed_cs_files.txt
+            Write-Host "Changed C# files:"
+            $files | ForEach-Object { Write-Host "  $_" }
+          }
+
+      - name: Run StyleCop on changed files
+        id: stylecop
+        if: steps.changed.outputs.has_files == 'true'
+        shell: pwsh
+        run: |
+          $files = Get-Content changed_cs_files.txt
+          $fileMap = @{}
+          foreach ($f in $files) {
+            $full = [System.IO.Path]::GetFullPath($f).ToLowerInvariant()
+            $fileMap[$full] = $f -replace '\\', '/'
+          }
+
+          # Suppress GitHub auto-annotations and redirect ALL build output to file
+          $token = [guid]::NewGuid().ToString('N')
+          Write-Output "::stop-commands::$token"
+          dotnet build VibeCoders/VibeCoders.csproj `
+            --configuration Release -p:Platform=x64 `
+            /p:TreatWarningsAsErrors=false `
+            /p:RunAnalyzers=true `
+            --no-incremental 2>&1 | Out-File build-output.log
+          Write-Output "::$token::"
+
+          # Parse build log and annotate only changed files
+          $issueCount = 0
+          foreach ($line in Get-Content build-output.log) {
+            if ($line -match '^\s*(.+?)\((\d+),(\d+)\):\s+(warning|error)\s+([A-Z]+\d+):\s+(.+?)(?:\s+\[.+?\])?\s*$') {
+              $fileFull = [System.IO.Path]::GetFullPath($Matches[1].Trim()).ToLowerInvariant()
+              $relPath = $fileMap[$fileFull]
+              if ($relPath) {
+                $ln  = $Matches[2]
+                $col = $Matches[3]
+                $id  = $Matches[5]
+                $msg = $Matches[6].Trim()
+                "::error file=$relPath,line=$ln,col=$col,title=$id::$msg"
+                $issueCount++
+              }
+            }
+          }
+
+          "issue_count=$issueCount" >> $env:GITHUB_OUTPUT
+          if ($issueCount -gt 0) {
+            Write-Error "StyleCop found $issueCount issue(s) in modified files."
+          }

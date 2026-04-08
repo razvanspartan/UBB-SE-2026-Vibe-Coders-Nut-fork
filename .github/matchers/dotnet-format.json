@@ -1,0 +1,18 @@
+{
+  "problem-matcher": [
+    {
+      "owner": "dotnet-stylecop",
+      "pattern": [
+        {
+          "regexp": "^\\s*(?:Error: |Warning: )?(.*?)\\((\\d+),(\\d+)\\):\\s+(?:error|warning)\\s+([^:]+):\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "code": 5,
+          "message": 6
+        }
+      ]
+    }
+  ]
+}
