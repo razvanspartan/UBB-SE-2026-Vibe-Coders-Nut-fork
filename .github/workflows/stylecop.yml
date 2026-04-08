@@ -41,32 +41,49 @@ jobs:
           }
 
       - name: Run StyleCop on changed files
+        id: stylecop
         if: steps.changed.outputs.has_files == 'true'
+        continue-on-error: true
         shell: pwsh
         run: |
           $files = Get-Content changed_cs_files.txt
-          dotnet format analyzers VibeCoders/VibeCoders.csproj `
-            --verify-no-changes `
-            --report stylecop-report `
-            --include $files
+          $changed = $files | ForEach-Object { [System.IO.Path]::GetFullPath($_).ToLowerInvariant() }
+          $changedSet = [System.Collections.Generic.HashSet[string]]::new(
+            [string[]]$changed, [System.StringComparer]::OrdinalIgnoreCase)
 
-      - name: Annotate StyleCop issues
-        if: always() && steps.changed.outputs.has_files == 'true'
-        shell: pwsh
-        run: |
-          $reportFile = Get-ChildItem -Path stylecop-report -Filter '*.json' -ErrorAction SilentlyContinue | Select-Object -First 1
-          if (-not $reportFile) { exit 0 }
+          $token = [guid]::NewGuid().ToString('N')
+          Write-Output "::stop-commands::$token"
 
-          $report = Get-Content $reportFile.FullName -Raw | ConvertFrom-Json
-          $changed = Get-Content changed_cs_files.txt | ForEach-Object { $_.Trim().ToLowerInvariant() -replace '\\', '/' }
+          $output = dotnet build VibeCoders/VibeCoders.csproj `
+            --configuration Release -p:Platform=x64 `
+            /p:TreatWarningsAsErrors=false `
+            /p:RunAnalyzers=true `
+            --no-incremental 2>&1 | Out-String
 
-          foreach ($doc in $report) {
-            $filePath = ($doc.DocumentId.ProjectId.ProjectName + '/' + $doc.FileName) -replace '\\', '/'
-            foreach ($change in $doc.FileChanges) {
-              $line = $change.LineNumber
-              $col  = $change.CharNumber
-              $id   = $change.DiagnosticId
-              $msg  = $change.FormatDescription
-              "::error file=$filePath,line=$line,col=$col,title=$id::$msg"
+          Write-Output "::$token::"
+
+          $issueCount = 0
+          $pattern = '^(.+?)\((\d+),(\d+)\):\s+(warning|error)\s+(SA\d+):\s+(.+?)(?:\s+\[.+\])?$'
+
+          foreach ($line in $output -split "`n") {
+            if ($line -match $pattern) {
+              $fileFull = [System.IO.Path]::GetFullPath($Matches[1].Trim()).ToLowerInvariant()
+              if ($changedSet.Contains($fileFull)) {
+                $relPath = ($files | Where-Object {
+                  [System.IO.Path]::GetFullPath($_).ToLowerInvariant() -eq $fileFull
+                } | Select-Object -First 1) -replace '\\', '/'
+                $ln   = $Matches[2]
+                $col  = $Matches[3]
+                $sev  = $Matches[4]
+                $id   = $Matches[5]
+                $msg  = $Matches[6].Trim()
+                "::error file=$relPath,line=$ln,col=$col,title=$id::$msg"
+                $issueCount++
+              }
             }
+          }
+
+          "issue_count=$issueCount" >> $env:GITHUB_OUTPUT
+          if ($issueCount -gt 0) {
+            Write-Error "StyleCop found $issueCount issue(s) in modified files."
           }
