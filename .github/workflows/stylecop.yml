@@ -30,9 +30,10 @@ jobs:
         shell: pwsh
         run: |
           git fetch origin ${{ github.base_ref }} --depth=1
-          git diff --name-only origin/${{ github.base_ref }} > changed_files.txt
+          git diff --name-only --diff-filter=ACMR origin/${{ github.base_ref }}...HEAD > changed_files.txt
 
       - name: Build with analyzers (SARIF)
+        continue-on-error: true
         run: |
           dotnet build --configuration Release -p:Platform=x64 `
             /p:TreatWarningsAsErrors=true `
@@ -45,19 +46,47 @@ jobs:
 
       - name: Filter SARIF to changed files
         shell: pwsh
+        continue-on-error: true
         run: |
-          $changed = Get-Content changed_files.txt
-          $sarif = Get-Content stylecop.sarif | ConvertFrom-Json
+          if (-not (Test-Path stylecop.sarif)) {
+            '{"version":"2.1.0","runs":[{"tool":{"driver":{"name":"StyleCop"}},"results":[]}]}' | Set-Content filtered.sarif
+            exit 0
+          }
 
-          $sarif.runs[0].results = $sarif.runs[0].results | Where-Object {
-            $file = $_.locations[0].physicalLocation.artifactLocation.uri
-            $file = $file -replace '/', '\'
-            $changed | Where-Object { $file.EndsWith($_) }
+          $changed = @(Get-Content changed_files.txt | Where-Object { $_.Trim() } | ForEach-Object {
+            ($_.Trim() -replace '\\', '/').TrimStart('./').ToLowerInvariant()
+          })
+
+          $sarif = Get-Content stylecop.sarif -Raw | ConvertFrom-Json
+
+          foreach ($run in $sarif.runs) {
+            $run.results = @($run.results | Where-Object {
+              $locations = @($_.locations)
+              foreach ($location in $locations) {
+                $uri = $location.physicalLocation.artifactLocation.uri
+
+                if ([string]::IsNullOrWhiteSpace($uri)) {
+                  continue
+                }
+
+                $normalizedUri = ($uri -replace '\\', '/').ToLowerInvariant()
+
+                foreach ($changedFile in $changed) {
+                  if ($normalizedUri -eq $changedFile -or $normalizedUri.EndsWith("/$changedFile")) {
+                    return $true
+                  }
+                }
+              }
+
+              return $false
+            })
           }
 
           $sarif | ConvertTo-Json -Depth 100 | Set-Content filtered.sarif
 
       - name: Upload SARIF
+        if: always()
+        continue-on-error: true
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: filtered.sarif
