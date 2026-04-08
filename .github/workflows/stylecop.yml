@@ -37,6 +37,8 @@ jobs:
         continue-on-error: true
         shell: pwsh
         run: |
+          $token = [guid]::NewGuid().ToString('N')
+          Write-Output "::stop-commands::$token"
           dotnet build --configuration Release -p:Platform=x64 `
             /p:TreatWarningsAsErrors=false `
             /p:Deterministic=true `
@@ -44,6 +46,7 @@ jobs:
             /p:RunAnalyzers=true `
             /p:ErrorLog=stylecop.sarif `
             --no-incremental
+          Write-Output "::$token::"
 
       - name: Filter SARIF to changed files
         id: filter
@@ -102,10 +105,22 @@ jobs:
                 $uri = $location.physicalLocation.artifactLocation.uri
 
                 $relativePath = Get-RelativePath $uri $workspace
-                if ($relativePath -and $changedSet.Contains($relativePath)) {
+                if (-not $relativePath) { continue }
+
+                # Direct match
+                if ($changedSet.Contains($relativePath)) {
                   $location.physicalLocation.artifactLocation.uri = $relativePath
                   $issueCount++
                   return $true
+                }
+
+                # Suffix match: SARIF path may be project-relative (missing top folder)
+                foreach ($cf in $changed) {
+                  if ($cf.EndsWith("/$relativePath") -or $cf -eq $relativePath) {
+                    $location.physicalLocation.artifactLocation.uri = $cf
+                    $issueCount++
+                    return $true
+                  }
                 }
               }
 
