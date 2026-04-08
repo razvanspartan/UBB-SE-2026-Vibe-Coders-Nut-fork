@@ -29,7 +29,7 @@ public partial class SqlDataStorage
             }
         }
 
-        if (dates.Count == 0) return 1;
+        if (dates.Count == 0) return 0;
 
         int maxStreak = 1;
         int currentStreak = 1;
