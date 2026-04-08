@@ -17,7 +17,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      # 1. MOVE THIS UP: Registration must happen before any dotnet commands
       - name: Add Problem Matcher
         run: echo "::add-matcher::.github/matchers/dotnet-format.json"
 
@@ -36,22 +35,15 @@ jobs:
           FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep '\.cs$' | xargs)
           echo "modified_files=$FILES" >> $GITHUB_OUTPUT
 
-      - name: Format Check (Modified Files Only)
+      # 1. RUN FORMAT FIRST
+      # We add 'continue-on-error: true' so we can still run the build and see SA errors too
+      - name: Format Check (Whitespace/Commas)
         if: steps.files.outputs.modified_files != ''
         shell: bash
         run: |
           dotnet format --include ${{ steps.files.outputs.modified_files }} --verify-no-changes --verbosity diagnostic
+        continue-on-error: true 
 
-      - name: Build and Style Check
-        # 2. ADD LOGGING FLAG: -consoleLoggerParameters:NoSummary
-        # This prevents MSBuild from "cleaning up" the logs in a way that breaks the Matcher.
+      # 2. RUN BUILD (STYLECOP)
+      - name: Build and Style Check (SA Warnings)
         run: dotnet build --configuration Release /p:TreatWarningsAsErrors=true /p:Deterministic=true -clp:NoSummary
-
-      - name: PR Summary Comment
-        if: failure()
-        uses: thollander/actions-comment-pull-request@v2
-        with:
-          message: |
-            ## :x: StyleCop Check Failed
-            I've found some styling issues in your modified files. 
-            Please check the **Files changed** tab for specific line-by-line feedback! :art:
