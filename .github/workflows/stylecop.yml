@@ -33,7 +33,6 @@ jobs:
           git diff --name-only origin/${{ github.base_ref }} > changed_files.txt
 
       - name: Build with analyzers (SARIF)
-        /p:ContinueOnError=true
         run: |
           dotnet build --configuration Release -p:Platform=x64 `
             /p:TreatWarningsAsErrors=true `
@@ -41,6 +40,7 @@ jobs:
             /p:ContinuousIntegrationBuild=true `
             /p:RunAnalyzers=true `
             /p:ErrorLog=stylecop.sarif `
+            /p:ContinueOnError=true `
             --no-incremental
 
       - name: Filter SARIF to changed files
