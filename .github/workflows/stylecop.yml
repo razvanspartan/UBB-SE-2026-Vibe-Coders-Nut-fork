@@ -38,13 +38,12 @@ jobs:
         shell: pwsh
         run: |
           dotnet build --configuration Release -p:Platform=x64 `
-            /p:TreatWarningsAsErrors=true `
+            /p:TreatWarningsAsErrors=false `
             /p:Deterministic=true `
             /p:ContinuousIntegrationBuild=true `
             /p:RunAnalyzers=true `
             /p:ErrorLog=stylecop.sarif `
-            /p:ContinueOnError=true `
-            --no-incremental *> build-output.log
+            --no-incremental
 
       - name: Filter SARIF to changed files
         id: filter
