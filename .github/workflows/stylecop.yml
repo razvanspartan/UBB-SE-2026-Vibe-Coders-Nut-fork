@@ -29,12 +29,5 @@ jobs:
         run: dotnet restore
 
       - name: Build and Style Check
-        # Explicitly passing the properties via /p: ensures they aren't ignored
-        run: |
-          dotnet build --configuration Release \
-            -p:Platform=x64 \
-            -p:TreatWarningsAsErrors=true \
-            -p:Deterministic=true \
-            -p:ContinuousIntegrationBuild=true \
-            --no-incremental \
-            -clp:NoSummary
+        # Removed backslashes to avoid PowerShell ParserErrors
+        run: dotnet build --configuration Release -p:Platform=x64 /p:TreatWarningsAsErrors=true /p:Deterministic=true /p:ContinuousIntegrationBuild=true --no-incremental -clp:NoSummary
