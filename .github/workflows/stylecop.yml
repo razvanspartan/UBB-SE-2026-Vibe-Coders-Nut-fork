@@ -17,6 +17,10 @@ jobs:
         with:
           fetch-depth: 0
 
+      # 1. MOVE THIS UP: Registration must happen before any dotnet commands
+      - name: Add Problem Matcher
+        run: echo "::add-matcher::.github/matchers/dotnet-format.json"
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
@@ -25,14 +29,10 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
-      - name: Add Problem Matcher
-        run: echo "::add-matcher::.github/matchers/dotnet-format.json"
-
       - name: Get Modified Files
         id: files
         shell: bash
         run: |
-          # Use origin/${{ github.base_ref }} to ensure we compare against the PR target
           FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep '\.cs$' | xargs)
           echo "modified_files=$FILES" >> $GITHUB_OUTPUT
 
@@ -43,9 +43,10 @@ jobs:
           dotnet format --include ${{ steps.files.outputs.modified_files }} --verify-no-changes --verbosity diagnostic
 
       - name: Build and Style Check
-        run: dotnet build --configuration Release /p:TreatWarningsAsErrors=true
+        # 2. ADD LOGGING FLAG: -consoleLoggerParameters:NoSummary
+        # This prevents MSBuild from "cleaning up" the logs in a way that breaks the Matcher.
+        run: dotnet build --configuration Release /p:TreatWarningsAsErrors=true -consoleLoggerParameters:NoSummary
 
-      # FIXED INDENTATION BELOW
       - name: PR Summary Comment
         if: failure()
         uses: thollander/actions-comment-pull-request@v2
