@@ -4,7 +4,7 @@
       "owner": "dotnet-everything",
       "pattern": [
         {
-          "regexp": "^\\s*(.*)\\((\\d+),(\\d+)\\):\\s+(warning|error)\\s+([^:]+):\\s+(.*)\\s+\\[.*\\]$",
+          "regexp": "^(?:Warning: )?\\s*(.*?)\\((\\d+),(\\d+)\\):\\s+(?:warning|error)\\s+([^:]+):\\s+(.*)\\s+\\[.*\\]$",
           "file": 1,
           "line": 2,
           "column": 3,

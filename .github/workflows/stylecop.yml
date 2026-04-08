@@ -45,7 +45,7 @@ jobs:
       - name: Build and Style Check
         # 2. ADD LOGGING FLAG: -consoleLoggerParameters:NoSummary
         # This prevents MSBuild from "cleaning up" the logs in a way that breaks the Matcher.
-        run: dotnet build --configuration Release /p:TreatWarningsAsErrors=true -consoleLoggerParameters:NoSummary
+        run: dotnet build --configuration Release /p:TreatWarningsAsErrors=true /p:Deterministic=true -clp:NoSummary
 
       - name: PR Summary Comment
         if: failure()
