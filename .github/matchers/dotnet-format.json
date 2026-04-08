@@ -1,10 +1,10 @@
 {
   "problem-matcher": [
     {
-      "owner": "dotnet-everything",
+      "owner": "dotnet-stylecop",
       "pattern": [
         {
-          "regexp": "^(?:Warning: )?\\s*(.*?)\\((\\d+),(\\d+)\\):\\s+(?:warning|error)\\s+([^:]+):\\s+(.*)\\s+\\[.*\\]$",
+          "regexp": "^\\s*(?:Warning: )?(.*?)\\((\\d+),(\\d+)\\):\\s+(?:warning|error)\\s+([^:]+):\\s+(.*)$",
           "file": 1,
           "line": 2,
           "column": 3,
