@@ -43,7 +43,6 @@ jobs:
       - name: Run StyleCop on changed files
         id: stylecop
         if: steps.changed.outputs.has_files == 'true'
-        continue-on-error: true
         shell: pwsh
         run: |
           $files = Get-Content changed_cs_files.txt
@@ -63,7 +62,7 @@ jobs:
           Write-Output "::$token::"
 
           $issueCount = 0
-          $pattern = '^(.+?)\((\d+),(\d+)\):\s+(warning|error)\s+(SA\d+):\s+(.+?)(?:\s+\[.+\])?$'
+          $pattern = '^(.+?)\((\d+),(\d+)\):\s+(warning|error)\s+([A-Z]+\d+):\s+(.+?)(?:\s+\[.+\])?$'
 
           foreach ($line in $output -split "`n") {
             if ($line -match $pattern) {
