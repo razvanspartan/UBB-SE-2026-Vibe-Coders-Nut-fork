@@ -1,26 +1,28 @@
-name: StyleCop Check (Changed Files Only)
+name: StyleCop and Format Check
 
 on:
   pull_request:
-    branches: [main]
+    branches: [ "main" ]
 
 jobs:
-  style-check:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
+  check-style:
+    runs-on: windows-latest # Required for WinUI 3 build dependencies
+
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+    - uses: actions/checkout@v4
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: "8.0.x"
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x 
 
-      - name: Run Style Check on PR Diff
-        uses: jsturtevant/setup-dotnet-format@v1
-        with:
-          only-changed-files: true
+    - name: Restore dependencies
+      run: dotnet restore
+
+    # This runs the StyleCop Analyzers during build
+    - name: Build with StyleCop
+      run: dotnet build --configuration Release /p:TreatWarningsAsErrors=true
+
+    # Optional: If you also want to check general whitespace/formatting
+    - name: Dotnet Format Check
+      run: dotnet format --verify-no-changes --verbosity diagnostic
