@@ -28,16 +28,5 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
-      - name: Get Modified Files
-        id: files
-        shell: bash
-        run: |
-          FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep '\.cs$' | xargs)
-          echo "modified_files=$FILES" >> $GITHUB_OUTPUT
-
-      - name: StyleCop Check (Modified Files Only)
-        if: steps.files.outputs.modified_files != ''
-        shell: bash
-        # Changed 'warning' to 'warn' and added --diagnostics SA to focus on StyleCop
-        run: |
-          dotnet format analyzers --include ${{ steps.files.outputs.modified_files }} --verify-no-changes --severity warn --diagnostics SA --verbosity diagnostic
+      - name: Build and Style Check
+        run: dotnet build --configuration Release /p:TreatWarningsAsErrors=true /p:Deterministic=true /p:ContinuousIntegrationBuild=true -clp:NoSummary
