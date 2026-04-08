@@ -2,27 +2,47 @@ name: StyleCop and Format Check
 
 on:
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
+
+permissions:
+  pull-requests: write
+  contents: read
 
 jobs:
   check-style:
-    runs-on: windows-latest # Required for WinUI 3 build dependencies
+    runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Important: Fetches all history so we can compare branches
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 8.0.x 
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
 
-    - name: Restore dependencies
-      run: dotnet restore
+      - name: Restore dependencies
+        run: dotnet restore
 
-    # This runs the StyleCop Analyzers during build
-    - name: Build with StyleCop
-      run: dotnet build --configuration Release /p:TreatWarningsAsErrors=true
+      - name: Add Problem Matcher
+        run: echo "::add-matcher::.github/matchers/dotnet-format.json"
 
-    # Optional: If you also want to check general whitespace/formatting
-    - name: Dotnet Format Check
-      run: dotnet format --verify-no-changes --verbosity diagnostic
+      # Step 1: Get a list of modified .cs files
+      - name: Get Modified Files
+        id: files
+        shell: bash
+        run: |
+          # Compare current branch to the target branch (usually main)
+          FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep '\.cs$' | xargs)
+          echo "modified_files=$FILES" >> $GITHUB_OUTPUT
+
+      # Step 2: Run format ONLY on those files
+      - name: Format Check (Modified Files Only)
+        if: steps.files.outputs.modified_files != ''
+        run: |
+          dotnet format --include ${{ steps.files.outputs.modified_files }} --verify-no-changes --verbosity diagnostic
+
+      # Step 3: Build (This still catches StyleCop errors in the modified files)
+      - name: Build and Style Check
+        run: dotnet build --configuration Release /p:TreatWarningsAsErrors=true
