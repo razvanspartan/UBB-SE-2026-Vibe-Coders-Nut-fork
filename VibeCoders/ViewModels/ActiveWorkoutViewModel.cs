@@ -11,7 +11,7 @@ using VibeCoders.Services;
 
 namespace VibeCoders.ViewModels
 {
-    public sealed partial class ActiveWorkoutViewModel : ObservableObject
+    public partial class ActiveWorkoutViewModel : ObservableObject
     {
         private readonly ClientService clientService_;
         private readonly IDataStorage storage_;
