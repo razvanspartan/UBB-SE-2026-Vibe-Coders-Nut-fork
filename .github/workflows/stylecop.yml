@@ -89,7 +89,7 @@ jobs:
                 $col = $Matches[3]
                 $id  = $Matches[5]
                 $msg = $Matches[6].Trim()
-                "::error file=$relPath,line=$ln,col=$col,title=$id::$msg"
+                Write-Output "::error file=$relPath,line=$ln,col=$col,title=$id::$msg"
                 $issueCount++
               }
             }
