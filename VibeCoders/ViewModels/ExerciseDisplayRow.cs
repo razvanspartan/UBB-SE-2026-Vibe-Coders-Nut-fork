@@ -1,31 +1,36 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using VibeCoders.Models;
-using VibeCoders.Services;
-
 namespace VibeCoders.ViewModels
 {
-    
+    using System.Collections.Generic;
+    using VibeCoders.Models;
+
     public class ExerciseDisplayRow
     {
-        public string Name { get; set; } = string.Empty;
-        public string MuscleGroup { get; set; } = string.Empty;
-        public List<VibeCoders.Models.LoggedSet> Sets { get; set; } = new();
+        private const string EmptyDisplayValue = "-";
 
-        public string GetReps(int index)
+        public string Name { get; set; } = string.Empty;
+
+        public string MuscleGroup { get; set; } = string.Empty;
+
+        public List<LoggedSet> Sets { get; set; } = new List<LoggedSet>();
+
+        public string GetReps(int setIndex)
         {
-            if (Sets == null || Sets.Count <= index) return "-";
-            return Sets[index].ActualReps?.ToString() ?? "-";
+            if (this.Sets == null || this.Sets.Count <= setIndex)
+            {
+                return ExerciseDisplayRow.EmptyDisplayValue;
+            }
+
+            return this.Sets[setIndex].ActualReps?.ToString() ?? ExerciseDisplayRow.EmptyDisplayValue;
         }
 
-        public string GetWeight(int index)
+        public string GetWeight(int setIndex)
         {
-            if (Sets == null || Sets.Count <= index) return "-";
-            return Sets[index].ActualWeight?.ToString() ?? "-";
+            if (this.Sets == null || this.Sets.Count <= setIndex)
+            {
+                return ExerciseDisplayRow.EmptyDisplayValue;
+            }
+
+            return this.Sets[setIndex].ActualWeight?.ToString() ?? ExerciseDisplayRow.EmptyDisplayValue;
         }
     }
 }

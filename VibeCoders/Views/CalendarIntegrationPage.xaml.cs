@@ -1,160 +1,179 @@
-using System;
-using System.IO;
-using System.Runtime.InteropServices;
-using System.Threading.Tasks;
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using VibeCoders.ViewModels;
-using Windows.Storage.Pickers;
+#pragma warning disable SA1600 // Elements should be documented
+#pragma warning disable SA1601 // Partial elements should be documented
 
 namespace VibeCoders.Views
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
+    using System.IO;
+    using System.Runtime.InteropServices;
+    using System.Threading.Tasks;
+    using Microsoft.UI.Xaml;
+    using Microsoft.UI.Xaml.Controls;
+    using VibeCoders.ViewModels;
+    using Windows.Storage.Pickers;
+
     public sealed partial class CalendarIntegrationPage : Page
     {
-        private CalendarIntegrationViewModel? _viewModel;
+        private const string IcsExtension = ".ics";
+        private const string CalendarFormatName = "iCalendar";
+        private const string DownloadsDirectoryName = "Downloads";
+        private const string DefaultFileNamePrefix = "Workout";
+        private const string ErrorTitle = "Error";
+        private const string SuccessTitle = "Success";
+        private const string FileNameDateTimeFormat = "yyyyMMdd-HHmmss";
+
+        private readonly CalendarIntegrationViewModel? viewModel;
 
         public CalendarIntegrationPage()
         {
             this.InitializeComponent();
-            
-            _viewModel = App.GetService<CalendarIntegrationViewModel>();
-            this.DataContext = _viewModel;
-            
-            this.Loaded += async (s, e) =>
-            {
-                GenerateCalendarButton.Click += GenerateCalendarButton_Click;
 
-                if (_viewModel != null)
-                {
-                    await _viewModel.EnsureWorkoutsLoadedAsync();
-                }
-            };
+            this.viewModel = App.GetService<CalendarIntegrationViewModel>();
+            this.DataContext = this.viewModel;
+
+            this.Loaded += this.OnPageLoaded;
         }
 
-        private async void GenerateCalendarButton_Click(object sender, RoutedEventArgs e)
+        private async void OnPageLoaded(object sender, RoutedEventArgs routedEventArgs)
         {
-            if (_viewModel == null)
+            this.GenerateCalendarButton.Click += this.GenerateCalendarButton_Click;
+
+            if (this.viewModel != null)
+            {
+                await this.viewModel.EnsureWorkoutsLoadedAsync();
+            }
+        }
+
+        [SuppressMessage("StyleCop.CSharp.NamingRules", "SA1300:ElementMustBeginWithUpperCaseLetter", Justification = "Event handler naming convention matches XAML.")]
+        private async void GenerateCalendarButton_Click(object sender, RoutedEventArgs routedEventArgs)
+        {
+            if (this.viewModel == null)
+            {
                 return;
+            }
 
             try
             {
-                GenerateCalendarButton.IsEnabled = false;
-                
-                string? validationError = _viewModel.ValidateInput();
+                this.GenerateCalendarButton.IsEnabled = false;
+
+                string? validationError = this.viewModel.ValidateInput();
                 if (validationError != null)
                 {
-                    ShowError(validationError);
+                    this.ShowError(validationError);
                     return;
                 }
 
-                var icsContent = await _viewModel.GenerateCalendarAsync();
-                
-                if (string.IsNullOrEmpty(icsContent))
+                string calendarFileContent = await this.viewModel.GenerateCalendarAsync();
+
+                if (string.IsNullOrEmpty(calendarFileContent))
                 {
-                    ShowError("Failed to generate calendar file. Please try again.");
+                    this.ShowError("Failed to generate calendar file. Please try again.");
                     return;
                 }
 
-                var savePicker = new FileSavePicker();
+                FileSavePicker savePicker = new FileSavePicker();
                 savePicker.SuggestedStartLocation = PickerLocationId.Downloads;
-                savePicker.FileTypeChoices.Add("iCalendar", new System.Collections.Generic.List<string> { ".ics" });
-                
-                var window = (Application.Current as App)?._window;
-                if (window == null)
+                savePicker.FileTypeChoices.Add(CalendarIntegrationPage.CalendarFormatName, new List<string> { CalendarIntegrationPage.IcsExtension });
+
+                Window? applicationWindow = (Application.Current as App)?._window;
+                if (applicationWindow == null)
                 {
-                    ShowError("Unable to access app window for save dialog.");
+                    this.ShowError("Unable to access app window for save dialog.");
                     return;
                 }
 
-                var hWnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
-                if (hWnd == IntPtr.Zero)
+                IntPtr windowHandle = WinRT.Interop.WindowNative.GetWindowHandle(applicationWindow);
+                if (windowHandle == IntPtr.Zero)
                 {
-                    ShowError("Unable to initialize save dialog window handle.");
+                    this.ShowError("Unable to initialize save dialog window handle.");
                     return;
                 }
 
-                WinRT.Interop.InitializeWithWindow.Initialize(savePicker, hWnd);
-                
-                var file = await savePicker.PickSaveFileAsync();
-                
-                if (file == null)
+                WinRT.Interop.InitializeWithWindow.Initialize(savePicker, windowHandle);
+
+                Windows.Storage.StorageFile savedFile = await savePicker.PickSaveFileAsync();
+
+                if (savedFile == null)
                 {
                     return;
                 }
 
-                await Windows.Storage.FileIO.WriteTextAsync(file, icsContent);
-                
-                ShowSuccess($"Calendar file '{file.Name}' saved successfully! You can now import it into your calendar application.");
+                await Windows.Storage.FileIO.WriteTextAsync(savedFile, calendarFileContent);
+
+                this.ShowSuccess($"Calendar file '{savedFile.Name}' saved successfully! You can now import it into your calendar application.");
             }
-            catch (InvalidOperationException ex)
+            catch (InvalidOperationException invalidOperationException)
             {
-                ShowError(ex.Message);
+                this.ShowError(invalidOperationException.Message);
             }
-            catch (Exception ex)
+            catch (Exception generalException)
             {
-                if (ex is COMException)
+                if (generalException is COMException)
                 {
-                    var fallbackPath = await SaveToDownloadsFallbackAsync();
+                    string? fallbackPath = await this.SaveToDownloadsFallbackAsync();
                     if (!string.IsNullOrWhiteSpace(fallbackPath))
                     {
-                        ShowSuccess($"Save dialog unavailable. Calendar saved to: {fallbackPath}");
+                        this.ShowSuccess($"Save dialog unavailable. Calendar saved to: {fallbackPath}");
                     }
                     else
                     {
-                        ShowError("Error saving calendar file: could not open the save dialog.");
+                        this.ShowError("Error saving calendar file: could not open the save dialog.");
                     }
                 }
                 else
                 {
-                    ShowError($"Error saving calendar file: {ex.Message}");
+                    this.ShowError($"Error saving calendar file: {generalException.Message}");
                 }
             }
             finally
             {
-                GenerateCalendarButton.IsEnabled = true;
+                this.GenerateCalendarButton.IsEnabled = true;
             }
         }
 
         private void ShowError(string message)
         {
-            StatusInfoBar.Severity = InfoBarSeverity.Error;
-            StatusInfoBar.Title = "Error";
-            StatusInfoBar.Message = message;
-            StatusInfoBar.IsOpen = true;
+            this.StatusInfoBar.Severity = InfoBarSeverity.Error;
+            this.StatusInfoBar.Title = CalendarIntegrationPage.ErrorTitle;
+            this.StatusInfoBar.Message = message;
+            this.StatusInfoBar.IsOpen = true;
         }
 
         private void ShowSuccess(string message)
         {
-            StatusInfoBar.Severity = InfoBarSeverity.Success;
-            StatusInfoBar.Title = "Success";
-            StatusInfoBar.Message = message;
-            StatusInfoBar.IsOpen = true;
+            this.StatusInfoBar.Severity = InfoBarSeverity.Success;
+            this.StatusInfoBar.Title = CalendarIntegrationPage.SuccessTitle;
+            this.StatusInfoBar.Message = message;
+            this.StatusInfoBar.IsOpen = true;
         }
 
         private async Task<string?> SaveToDownloadsFallbackAsync()
         {
-            if (_viewModel == null || string.IsNullOrEmpty(_viewModel.GeneratedIcsContent))
+            if (this.viewModel == null || string.IsNullOrEmpty(this.viewModel.GeneratedCalendarFileContent))
             {
                 return null;
             }
 
             try
             {
-                var downloadsPath = Path.Combine(
+                string downloadsFolderPath = Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                    "Downloads");
-                Directory.CreateDirectory(downloadsPath);
+                    CalendarIntegrationPage.DownloadsDirectoryName);
 
-                var safeWorkoutName = (_viewModel.SelectedWorkout?.Name ?? "Workout")
+                Directory.CreateDirectory(downloadsFolderPath);
+
+                string sanitizedWorkoutName = (this.viewModel.SelectedWorkout?.Name ?? CalendarIntegrationPage.DefaultFileNamePrefix)
                     .Replace(" ", "-")
                     .Replace("/", "-")
                     .Replace("\\", "-");
 
-                var fileName = $"{safeWorkoutName}-{DateTime.Now:yyyyMMdd-HHmmss}.ics";
-                var fullPath = Path.Combine(downloadsPath, fileName);
+                string generatedFileName = $"{sanitizedWorkoutName}-{DateTime.Now:yyyyMMdd-HHmmss}{CalendarIntegrationPage.IcsExtension}";
+                string fullStoragePath = Path.Combine(downloadsFolderPath, generatedFileName);
 
-                await File.WriteAllTextAsync(fullPath, _viewModel.GeneratedIcsContent);
-                return fullPath;
+                await File.WriteAllTextAsync(fullStoragePath, this.viewModel.GeneratedCalendarFileContent);
+                return fullStoragePath;
             }
             catch
             {
@@ -163,4 +182,3 @@ namespace VibeCoders.Views
         }
     }
 }
-

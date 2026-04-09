@@ -1,49 +1,58 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using System.Collections.ObjectModel;
-using VibeCoders.Models;
-using VibeCoders.Services;
+#pragma warning disable SA1600 // Elements should be documented
+#pragma warning disable SA1601 // Partial elements should be documented
+#pragma warning disable MVVMTK0045
 
-namespace VibeCoders.ViewModels;
-
-public sealed partial class AchievementsViewModel : ObservableObject
+namespace VibeCoders.ViewModels
 {
-    private readonly IDataStorage _storage;
+    using System.Collections.ObjectModel;
+    using CommunityToolkit.Mvvm.ComponentModel;
+    using CommunityToolkit.Mvvm.Input;
+    using VibeCoders.Models;
+    using VibeCoders.Services;
 
-    public AchievementsViewModel(IDataStorage storage)
+    public sealed partial class AchievementsViewModel : ObservableObject
     {
-        _storage = storage;
-    }
+        private const string UnlockedIcon = "&#xE73E;";
+        private const string LockedIcon = "&#xE72E;";
 
-    [ObservableProperty]
-    private ObservableCollection<Achievement> achievements = new();
+        private readonly IDataStorage storage;
 
-    [ObservableProperty]
-    private bool isLoading;
+        [ObservableProperty]
+        private ObservableCollection<Achievement> achievements = new ObservableCollection<Achievement>();
 
-    [RelayCommand]
-    private void LoadAchievements(int clientId)
-    {
-        try
+        [ObservableProperty]
+        private bool isLoading;
+
+        public AchievementsViewModel(IDataStorage storage)
         {
-            IsLoading = true;
-            Achievements.Clear();
-            foreach (var a in _storage.GetAchievementShowcaseForClient(clientId))
-            {
-                Achievements.Add(new Achievement
-                {
-                    AchievementId = a.AchievementId,
-                    Name = a.Title,
-                    Description = a.Description,
-                    Criteria = a.Criteria,
-                    IsUnlocked = a.IsUnlocked,
-                    Icon = a.IsUnlocked ? "&#xE73E;" : "&#xE72E;"
-                });
-            }
+            this.storage = storage;
         }
-        finally
+
+        [RelayCommand]
+        private void LoadAchievements(int clientId)
         {
-            IsLoading = false;
+            try
+            {
+                this.IsLoading = true;
+                this.Achievements.Clear();
+
+                foreach (var achievementShowcaseItem in this.storage.GetAchievementShowcaseForClient(clientId))
+                {
+                    this.Achievements.Add(new Achievement
+                    {
+                        AchievementId = achievementShowcaseItem.AchievementId,
+                        Name = achievementShowcaseItem.Title,
+                        Description = achievementShowcaseItem.Description,
+                        Criteria = achievementShowcaseItem.Criteria,
+                        IsUnlocked = achievementShowcaseItem.IsUnlocked,
+                        Icon = achievementShowcaseItem.IsUnlocked ? AchievementsViewModel.UnlockedIcon : AchievementsViewModel.LockedIcon
+                    });
+                }
+            }
+            finally
+            {
+                this.IsLoading = false;
+            }
         }
     }
 }

@@ -1,85 +1,89 @@
-using System.ComponentModel;
-using LiveChartsCore.SkiaSharpView.WinUI;
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using VibeCoders.Services;
-using VibeCoders.ViewModels;
+#pragma warning disable SA1600
+#pragma warning disable SA1601
 
-namespace VibeCoders.Views;
-
-public sealed partial class ClientDashboardPage : Page
+namespace VibeCoders.Views
 {
-    private readonly CartesianChart _chart;
-    private readonly IAchievementUnlockedBus _achievementBus;
+    using System.ComponentModel;
+    using LiveChartsCore.SkiaSharpView.WinUI;
+    using Microsoft.UI.Xaml;
+    using Microsoft.UI.Xaml.Controls;
+    using VibeCoders.Services;
+    using VibeCoders.ViewModels;
 
-    public ClientDashboardViewModel ViewModel { get; }
-
-    public ClientDashboardPage()
+    public sealed partial class ClientDashboardPage : Page
     {
-        ViewModel = App.GetService<ClientDashboardViewModel>();
-        DataContext = ViewModel;
-        InitializeComponent();
+        private readonly CartesianChart chart;
+        private readonly IAchievementUnlockedBus achievementBus;
 
-        _achievementBus = App.GetService<IAchievementUnlockedBus>();
-        _achievementBus.AchievementUnlocked += OnAchievementUnlocked;
-
-        _chart = new CartesianChart
+        public ClientDashboardPage()
         {
-            HorizontalAlignment = HorizontalAlignment.Stretch,
-            VerticalAlignment = VerticalAlignment.Stretch,
-            Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Transparent)
-        };
+            this.ViewModel = App.GetService<ClientDashboardViewModel>();
+            this.DataContext = this.ViewModel;
+            this.InitializeComponent();
 
-        SyncChartToViewModel();
-        ViewModel.PropertyChanged += OnViewModelPropertyChanged;
-        ChartContainer.Children.Add(_chart);
+            this.achievementBus = App.GetService<IAchievementUnlockedBus>();
+            this.achievementBus.AchievementUnlocked += this.OnAchievementUnlocked;
 
-        Unloaded += Page_Unloaded;
-    }
+            this.chart = new CartesianChart
+            {
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch,
+                Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Transparent)
+            };
 
-    private void SeeAllAchievements_Click(object sender, RoutedEventArgs e)
-    {
-        var clientId = (int)App.GetService<IUserSession>().CurrentClientId;
-        Frame.Navigate(typeof(AchievementsPage), clientId);
-    }
+            this.SyncChartToViewModel();
+            this.ViewModel.PropertyChanged += this.OnViewModelPropertyChanged;
+            this.ChartContainer.Children.Add(this.chart);
 
-    private async void Page_Loaded(object sender, RoutedEventArgs e)
-    {
-        await ViewModel.LoadInitialAsync();
-
-        var workoutState = App.GetService<WorkoutUiState>();
-        var note = workoutState.ProgressionHeadsUp;
-        if (!string.IsNullOrWhiteSpace(note))
-        {
-            ProgressionInfoBar.Message = note;
-            ProgressionInfoBar.IsOpen = true;
-            workoutState.ProgressionHeadsUp = null;
+            this.Unloaded += this.Page_Unloaded;
         }
-    }
 
-    private void Page_Unloaded(object sender, RoutedEventArgs e)
-    {
-        _achievementBus.AchievementUnlocked -= OnAchievementUnlocked;
-        ViewModel.PropertyChanged -= OnViewModelPropertyChanged;
-        ChartContainer.Children.Remove(_chart);
-    }
+        public ClientDashboardViewModel ViewModel { get; }
 
-    private void OnAchievementUnlocked(object? sender, AchievementUnlockedEventArgs e)
-    {
-        ViewModel.ReloadAchievementsPreview();
-    }
-
-    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName is nameof(ViewModel.ChartSeries) or nameof(ViewModel.ChartXAxes))
+        private void SeeAllAchievements_Click(object sender, RoutedEventArgs routedEventArgs)
         {
-            SyncChartToViewModel();
+            int clientId = (int)App.GetService<IUserSession>().CurrentClientId;
+            this.Frame.Navigate(typeof(AchievementsPage), clientId);
         }
-    }
 
-    private void SyncChartToViewModel()
-    {
-        _chart.Series = ViewModel.ChartSeries;
-        _chart.XAxes = ViewModel.ChartXAxes;
+        private async void Page_Loaded(object sender, RoutedEventArgs routedEventArgs)
+        {
+            await this.ViewModel.LoadInitialAsync();
+
+            WorkoutUiState workoutUiState = App.GetService<WorkoutUiState>();
+            string? progressionHeadsUpNote = workoutUiState.ProgressionHeadsUp;
+            if (!string.IsNullOrWhiteSpace(progressionHeadsUpNote))
+            {
+                this.ProgressionInfoBar.Message = progressionHeadsUpNote;
+                this.ProgressionInfoBar.IsOpen = true;
+                workoutUiState.ProgressionHeadsUp = null;
+            }
+        }
+
+        private void Page_Unloaded(object sender, RoutedEventArgs routedEventArgs)
+        {
+            this.achievementBus.AchievementUnlocked -= this.OnAchievementUnlocked;
+            this.ViewModel.PropertyChanged -= this.OnViewModelPropertyChanged;
+            this.ChartContainer.Children.Remove(this.chart);
+        }
+
+        private void OnAchievementUnlocked(object? sender, AchievementUnlockedEventArgs achievementUnlockedEventArgs)
+        {
+            this.ViewModel.ReloadAchievementsPreview();
+        }
+
+        private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs propertyChangedEventArgs)
+        {
+            if (propertyChangedEventArgs.PropertyName is nameof(ClientDashboardViewModel.ChartSeries) or nameof(ClientDashboardViewModel.ChartXAxes))
+            {
+                this.SyncChartToViewModel();
+            }
+        }
+
+        private void SyncChartToViewModel()
+        {
+            this.chart.Series = this.ViewModel.ChartSeries;
+            this.chart.XAxes = this.ViewModel.ChartXAxes;
+        }
     }
 }

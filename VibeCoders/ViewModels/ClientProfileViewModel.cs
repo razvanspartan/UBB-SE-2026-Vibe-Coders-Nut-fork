@@ -1,114 +1,131 @@
-﻿using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using VibeCoders.Domain;
-using VibeCoders.Models;
-using VibeCoders.Models.Integration;
-using VibeCoders.Services;
+#pragma warning disable SA1600 // Elements should be documented
+#pragma warning disable SA1601 // Partial elements should be documented
+#pragma warning disable MVVMTK0045
 
-namespace VibeCoders.ViewModels;
-
-public partial class ClientProfileViewModel : ObservableObject
+namespace VibeCoders.ViewModels
 {
-    private readonly IDataStorage _storage;
-    private readonly ClientService _clientService;
-    private int _loadedClientId;
+    using System;
+    using System.Collections.Generic;
+    using System.Collections.ObjectModel;
+    using System.Diagnostics;
+    using System.Linq;
+    using System.Threading.Tasks;
+    using CommunityToolkit.Mvvm.ComponentModel;
+    using CommunityToolkit.Mvvm.Input;
+    using VibeCoders.Domain;
+    using VibeCoders.Models;
+    using VibeCoders.Models.Integration;
+    using VibeCoders.Services;
 
-    [ObservableProperty]
-    private ObservableCollection<LoggedExercise> loggedExercises = new();
-
-    [ObservableProperty]
-    private ObservableCollection<Meal> meals = new();
-
-    [ObservableProperty]
-    private string caloriesSummary = "Calories burned (all logged workouts): 0";
-
-    [ObservableProperty]
-    private string latestSessionHint = string.Empty;
-
-    [ObservableProperty]
-    private string syncNutritionStatus = string.Empty;
-
-    public ClientProfileViewModel(IDataStorage storage, ClientService clientService)
+    public partial class ClientProfileViewModel : ObservableObject
     {
-        _storage = storage;
-        _clientService = clientService;
-    }
+        private const int InvalidClientId = 0;
+        private const int DefaultTrainerId = 1;
+        private const float DefaultBodyMassIndex = 0.0f;
+        private const float MinimumValidMetric = 0.0f;
+        private const int EmptyCollectionCount = 0;
 
-    [RelayCommand]
-    private async Task SyncNutritionAsync()
-    {
-        if (_loadedClientId <= 0) return;
+        private readonly IDataStorage storage;
+        private readonly ClientService clientService;
+        private int loadedClientId;
 
-        SyncNutritionStatus = "Syncing…";
+        [ObservableProperty]
+        private ObservableCollection<LoggedExercise> loggedExercises = new ObservableCollection<LoggedExercise>();
 
-        var history = _storage.GetWorkoutHistory(_loadedClientId);
-        var totalCalories = history.Sum(h => h.TotalCaloriesBurned);
-        var last = history.FirstOrDefault();
-        var difficulty = string.IsNullOrWhiteSpace(last?.IntensityTag) ? "unknown" : last.IntensityTag;
+        [ObservableProperty]
+        private ObservableCollection<Meal> meals = new ObservableCollection<Meal>();
 
-        float bmi = 0f;
-        // UserBmi is optional on the payload: missing roster row or zero weight/height stays at 0 without throwing.
-        // Only GetTrainerClient is in try/catch (storage I/O); FirstOrDefault + BMI math run outside so failures there are not swallowed.
-        List<Client> roster;
-        try
+        [ObservableProperty]
+        private string caloriesSummary = "Calories burned (all logged workouts): 0";
+
+        [ObservableProperty]
+        private string latestSessionHint = string.Empty;
+
+        [ObservableProperty]
+        private string syncNutritionStatus = string.Empty;
+
+        public ClientProfileViewModel(IDataStorage storage, ClientService clientService)
         {
-            roster = _storage.GetTrainerClient(1);
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"ClientProfileViewModel: BMI lookup failed; sync continues with UserBmi=0. {ex.Message}");
-            roster = [];
-        }
-
-        var profileClient = roster.FirstOrDefault(c => c.Id == _loadedClientId);
-        if (profileClient is { Weight: > 0, Height: > 0 })
-            bmi = (float)BmiCalculator.Calculate(profileClient.Weight, profileClient.Height);
-
-        var payload = new NutritionSyncPayload
-        {
-            TotalCalories = totalCalories,
-            WorkoutDifficulty = difficulty,
-            UserBmi = bmi
-        };
-
-        var ok = await _clientService.SyncNutritionAsync(payload).ConfigureAwait(true);
-        SyncNutritionStatus = ok
-            ? "Nutrition sync OK."
-            : "Sync failed — start your local nutrition API (see NutritionSyncOptions default URL) or check the network.";
-    }
-
-    public void LoadClientData(int clientId)
-    {
-        _loadedClientId = clientId;
-        var history = _storage.GetWorkoutHistory(clientId);
-        var totalCal = history.Sum(h => h.TotalCaloriesBurned);
-        CaloriesSummary = $"Calories burned (all logged workouts): {totalCal}";
-
-        var latest = history.FirstOrDefault();
-        if (latest != null && latest.Exercises is { Count: > 0 })
-        {
-            LatestSessionHint = $"Latest session: {latest.WorkoutName} — {latest.Date:g}";
-            LoggedExercises = new ObservableCollection<LoggedExercise>(latest.Exercises);
-        }
-        else
-        {
-            LatestSessionHint = "No completed workouts with exercises yet.";
-            LoggedExercises = new ObservableCollection<LoggedExercise>();
+            this.storage = storage;
+            this.clientService = clientService;
         }
 
-        var plan = _clientService.GetActiveNutritionPlan(clientId);
-        if (plan != null)
+        [RelayCommand]
+        private async Task SyncNutritionAsync()
         {
-            var mealList = _storage.GetMealsForPlan(plan.PlanId);
-            Meals = new ObservableCollection<Meal>(mealList);
+            if (this.loadedClientId <= ClientProfileViewModel.InvalidClientId)
+            {
+                return;
+            }
+
+            this.SyncNutritionStatus = "Syncing…";
+
+            var workoutHistory = this.storage.GetWorkoutHistory(this.loadedClientId);
+            var totalCalories = workoutHistory.Sum(workoutHistoryItem => workoutHistoryItem.TotalCaloriesBurned);
+            var lastHistoryItem = workoutHistory.FirstOrDefault();
+            var workoutDifficulty = string.IsNullOrWhiteSpace(lastHistoryItem?.IntensityTag) ? "unknown" : lastHistoryItem.IntensityTag;
+
+            float bodyMassIndex = ClientProfileViewModel.DefaultBodyMassIndex;
+
+            List<Client> clientRoster;
+            try
+            {
+                clientRoster = this.storage.GetTrainerClient(ClientProfileViewModel.DefaultTrainerId);
+            }
+            catch (Exception exception)
+            {
+                Debug.WriteLine($"ClientProfileViewModel: Body Mass Index lookup failed; sync continues with UserBmi={ClientProfileViewModel.DefaultBodyMassIndex}. {exception.Message}");
+                clientRoster = new List<Client>();
+            }
+
+            var profileClient = clientRoster.FirstOrDefault(clientItem => clientItem.Id == this.loadedClientId);
+            if (profileClient != null && profileClient.Weight > ClientProfileViewModel.MinimumValidMetric && profileClient.Height > ClientProfileViewModel.MinimumValidMetric)
+            {
+                bodyMassIndex = (float)BmiCalculator.Calculate(profileClient.Weight, profileClient.Height);
+            }
+
+            var nutritionSyncPayload = new NutritionSyncPayload
+            {
+                TotalCalories = totalCalories,
+                WorkoutDifficulty = workoutDifficulty,
+                UserBmi = bodyMassIndex
+            };
+
+            var isSyncSuccessful = await this.clientService.SyncNutritionAsync(nutritionSyncPayload).ConfigureAwait(true);
+            this.SyncNutritionStatus = isSyncSuccessful
+                ? "Nutrition sync OK."
+                : "Sync failed — start your local nutrition API (see NutritionSyncOptions default URL) or check the network.";
         }
-        else
+
+        public void LoadClientData(int clientId)
         {
-            Meals = new ObservableCollection<Meal>();
+            this.loadedClientId = clientId;
+            var workoutHistory = this.storage.GetWorkoutHistory(clientId);
+            var totalCaloriesLogged = workoutHistory.Sum(workoutHistoryItem => workoutHistoryItem.TotalCaloriesBurned);
+            this.CaloriesSummary = $"Calories burned (all logged workouts): {totalCaloriesLogged}";
+
+            var latestSession = workoutHistory.FirstOrDefault();
+            if (latestSession != null && latestSession.Exercises != null && latestSession.Exercises.Count > ClientProfileViewModel.EmptyCollectionCount)
+            {
+                this.LatestSessionHint = $"Latest session: {latestSession.WorkoutName} — {latestSession.Date:g}";
+                this.LoggedExercises = new ObservableCollection<LoggedExercise>(latestSession.Exercises);
+            }
+            else
+            {
+                this.LatestSessionHint = "No completed workouts with exercises yet.";
+                this.LoggedExercises = new ObservableCollection<LoggedExercise>();
+            }
+
+            var nutritionPlan = this.clientService.GetActiveNutritionPlan(clientId);
+            if (nutritionPlan != null)
+            {
+                var mealList = this.storage.GetMealsForPlan(nutritionPlan.PlanId);
+                this.Meals = new ObservableCollection<Meal>(mealList);
+            }
+            else
+            {
+                this.Meals = new ObservableCollection<Meal>();
+            }
         }
     }
 }

@@ -1,68 +1,72 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using VibeCoders.Models;
-
 namespace VibeCoders.Services
 {
+    using System;
+    using System.Collections.Generic;
+    using VibeCoders.Models;
+
     public class TrainerService
     {
-       
-        public IDataStorage DataStorage { get; }
+        private readonly IDataStorage storage;
 
-     
         public TrainerService(IDataStorage storage)
         {
-            DataStorage = storage;
+            this.storage = storage;
         }
 
-        
         public List<Client> GetAssignedClients(int trainerId)
         {
-            
-            return DataStorage.GetTrainerClient(trainerId);
+            return this.storage.GetTrainerClient(trainerId);
         }
 
         public List<WorkoutLog> GetClientWorkoutHistory(int clientId)
         {
-            
-            return DataStorage.GetWorkoutHistory(clientId);
+            return this.storage.GetWorkoutHistory(clientId);
         }
 
-        public bool SaveWorkoutFeedback(WorkoutLog log)
+        public bool SaveWorkoutFeedback(WorkoutLog workoutLog)
         {
-            if (log == null) return false;
+            if (workoutLog == null)
+            {
+                return false;
+            }
 
-            return DataStorage.UpdateWorkoutLogFeedback(log.Id, log.Rating, log.TrainerNotes);
+            return this.storage.UpdateWorkoutLogFeedback(workoutLog.Id, workoutLog.Rating, workoutLog.TrainerNotes);
         }
 
-        public void assignWorkout(Client client, WorkoutLog workout)
+        public void AssignWorkout(Client client, WorkoutLog workout)
         {
             throw new NotImplementedException("Workout assignment coming in Slice 2!");
         }
 
         public bool SaveTrainerWorkout(WorkoutTemplate template)
         {
-            if (template == null) return false;
+            if (template == null)
+            {
+                return false;
+            }
 
-            return DataStorage.SaveTrainerWorkout(template);
+            return this.storage.SaveTrainerWorkout(template);
         }
 
         public List<string> GetPredefinedExercises()
         {
-            return DataStorage.GetAllExerciseNames();
+            return this.storage.GetAllExerciseNames();
         }
 
         public bool AssignNutritionPlan(NutritionPlan plan, int clientId)
         {
             if (plan == null)
+            {
                 return false;
-            if (clientId <= 0)
-                return false;
+            }
 
-            DataStorage.SaveNutritionPlanForClient(plan, clientId);
+            int minimumValidClientId = 0;
+            if (clientId <= minimumValidClientId)
+            {
+                return false;
+            }
+
+            this.storage.SaveNutritionPlanForClient(plan, clientId);
             return true;
         }
     }
