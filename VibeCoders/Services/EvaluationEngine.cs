@@ -6,15 +6,17 @@ namespace VibeCoders.Services;
 
 public sealed class EvaluationEngine
 {
-    private readonly IDataStorage _storage;
-    private readonly IReadOnlyList<VibeCoders.Domain.IMilestoneCheck> _checks;
+    private readonly IDataStorage storage;
+    private readonly IReadOnlyList<VibeCoders.Domain.IMilestoneCheck> checks;
 
-    public EvaluationEngine(IDataStorage storage) : this(storage, BuildDefaultChecks()) { }
+    public EvaluationEngine(IDataStorage storage) : this(storage, BuildDefaultChecks())
+    {
+    }
 
     public EvaluationEngine(IDataStorage storage, IReadOnlyList<VibeCoders.Domain.IMilestoneCheck> checks)
     {
-        _storage = storage;
-        _checks  = checks;
+        this.storage = storage;
+        this.checks = checks;
     }
 
     private static IReadOnlyList<VibeCoders.Domain.IMilestoneCheck> BuildDefaultChecks()
@@ -37,19 +39,32 @@ public sealed class EvaluationEngine
 
         try
         {
-            var catalog = _storage
+            var catalog = storage
                 .GetAchievementShowcaseForClient(clientId)
                 .ToDictionary(a => a.Title, StringComparer.OrdinalIgnoreCase);
 
-            foreach (var check in _checks)
+            foreach (var check in checks)
             {
-                if (!catalog.TryGetValue(check.AchievementTitle, out var item)) continue;
-                if (item.IsUnlocked) continue;
+                if (!catalog.TryGetValue(check.AchievementTitle, out var item))
+                {
+                    continue;
+                }
 
-                if (!check.IsMet(clientId, _storage)) continue;
+                if (item.IsUnlocked)
+                {
+                    continue;
+                }
 
-                bool awarded = _storage.AwardAchievement(clientId, item.AchievementId);
-                if (!awarded) continue;
+                if (!check.IsMet(clientId, storage))
+                {
+                    continue;
+                }
+
+                bool awarded = storage.AwardAchievement(clientId, item.AchievementId);
+                if (!awarded)
+                {
+                    continue;
+                }
 
                 newlyUnlocked.Add(check.AchievementTitle);
                 Debug.WriteLine(
