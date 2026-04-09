@@ -8,7 +8,7 @@ namespace VibeCoders.Services
 {
     public class ClientService
     {
-        private readonly IDataStorage _storage;
+        private readonly IDataStorage storage;
         private readonly ProgressionService _progressionService;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly EvaluationEngine _evaluationEngine;
@@ -23,7 +23,7 @@ namespace VibeCoders.Services
             IAchievementUnlockedBus achievementBus,
             NutritionSyncOptions nutritionSync)
         {
-            _storage            = storage;
+            this.storage            = storage;
             _progressionService = progressionService;
             _httpClientFactory  = httpClientFactory;
             _evaluationEngine   = evaluationEngine;
@@ -44,7 +44,7 @@ namespace VibeCoders.Services
 
                 ComputeCalories(log);
 
-                bool isSaved = _storage.SaveWorkoutLog(log);
+                bool isSaved = storage.SaveWorkoutLog(log);
                 if (!isSaved) return false;
 
                 RunAchievementEvaluation(log.ClientId);
@@ -98,7 +98,7 @@ namespace VibeCoders.Services
 
             try
             {
-                return _storage.SaveWorkoutLog(updatedLog);
+                return storage.SaveWorkoutLog(updatedLog);
             }
             catch (Exception ex)
             {
@@ -134,7 +134,7 @@ namespace VibeCoders.Services
 
             try
             {
-                var plans = _storage.GetNutritionPlansForClient(clientId);
+                var plans = storage.GetNutritionPlansForClient(clientId);
                 var today = DateTime.Today;
                 NutritionPlan? best = null;
 
@@ -160,7 +160,7 @@ namespace VibeCoders.Services
         {
             if (log.Exercises.Count == 0 || log.Duration == TimeSpan.Zero) return;
 
-            double weightKg = _storage.GetClientWeight(log.ClientId);
+            double weightKg = storage.GetClientWeight(log.ClientId);
             TimeSpan durationPerExercise = log.Duration / log.Exercises.Count;
 
             foreach (var exercise in log.Exercises)
@@ -186,7 +186,7 @@ namespace VibeCoders.Services
 
                 foreach (var title in newlyUnlocked)
                 {
-                    var catalog = _storage.GetAchievementShowcaseForClient(clientId);
+                    var catalog = storage.GetAchievementShowcaseForClient(clientId);
                     var item    = catalog.FirstOrDefault(
                         a => string.Equals(a.Title, title, StringComparison.OrdinalIgnoreCase));
 
@@ -205,7 +205,7 @@ namespace VibeCoders.Services
         {
             try
             {
-                return _storage.GetNotifications(clientId);
+                return storage.GetNotifications(clientId);
             }
             catch (Exception ex)
             {

@@ -13,16 +13,16 @@ namespace VibeCoders.ViewModels
 {
     public sealed partial class ActiveWorkoutViewModel : ObservableObject
     {
-        private readonly ClientService _clientService;
-        private readonly IDataStorage _storage;
-        private readonly INavigationService _navigation;
-        private readonly WorkoutUiState _workoutUiState;
-        private WorkoutLog _activeLog;
-        private ActiveSetViewModel? _currentPendingSet;
+        private readonly ClientService clientService;
+        private readonly IDataStorage storage;
+        private readonly INavigationService navigation;
+        private readonly WorkoutUiState workoutUiState;
+        private WorkoutLog activeLog;
+        private ActiveSetViewModel? currentPendingSet;
 
-        private System.Timers.Timer? _restTimer;
-        private DispatcherTimer? _elapsedTimer;
-        private TimeSpan _elapsedWorkout;
+        private System.Timers.Timer? restTimer;
+        private DispatcherTimer? elapsedTimer;
+        private TimeSpan elapsedWorkout;
 
         public ActiveWorkoutViewModel(
             ClientService clientService,
@@ -30,11 +30,11 @@ namespace VibeCoders.ViewModels
             INavigationService navigation,
             WorkoutUiState workoutUiState)
         {
-            _clientService = clientService;
-            _storage = storage;
-            _navigation = navigation;
-            _workoutUiState = workoutUiState;
-            _activeLog = new WorkoutLog
+            this.clientService = clientService;
+            this.storage = storage;
+            this.navigation = navigation;
+            this.workoutUiState = workoutUiState;
+            activeLog = new WorkoutLog
             {
                 Date = DateTime.Now
             };
@@ -44,12 +44,20 @@ namespace VibeCoders.ViewModels
         private void SetRestTime(string? timeStr)
         {
             if (string.IsNullOrWhiteSpace(timeStr))
+            {
                 return;
+            }
 
             if (int.TryParse(timeStr, out int seconds))
             {
-                if (seconds < 0) seconds = 0;
-                if (seconds > 3600) seconds = 3600; // Cap at 1 hour
+                if (seconds < 0)
+                {
+                    seconds = 0;
+                }
+                if (seconds > 3600)
+                {
+                    seconds = 3600; // Cap at 1 hour
+                }
 
                 StartRestTimer(seconds);
             }
@@ -61,34 +69,39 @@ namespace VibeCoders.ViewModels
             {
                 IsResting = false;
                 RestTimeRemaining = 0;
-                _restTimer?.Stop();
+                restTimer?.Stop();
                 return;
             }
 
             var dq = DispatcherQueue.GetForCurrentThread();
-            if (dq is null) return;
+            if (dq is null)
+            {
+                return;
+            }
 
             RestTimeRemaining = seconds;
             IsResting = true;
 
-            _restTimer?.Stop();
-            _restTimer = new System.Timers.Timer(1000);
+            restTimer?.Stop();
+            restTimer = new System.Timers.Timer(1000);
 
-            _restTimer.Elapsed += (_, _) =>
+            restTimer.Elapsed += (_, _) =>
             {
                 dq.TryEnqueue(() =>
                 {
                     if (RestTimeRemaining > 0)
+                    {
                         RestTimeRemaining--;
+                    }
                     else
                     {
-                        _restTimer?.Stop();
+                        restTimer?.Stop();
                         IsResting = false;
                     }
                 });
             };
 
-            _restTimer.Start();
+            restTimer.Start();
         }
 
         [ObservableProperty]
@@ -122,7 +135,7 @@ namespace VibeCoders.ViewModels
         {
             if (value)
             {
-                _elapsedWorkout = TimeSpan.Zero;
+                elapsedWorkout = TimeSpan.Zero;
                 WorkoutElapsedDisplay = "00:00";
                 StartWorkoutElapsedTimer();
             }
@@ -135,20 +148,24 @@ namespace VibeCoders.ViewModels
         private void StartWorkoutElapsedTimer()
         {
             StopWorkoutElapsedTimer();
-            _elapsedTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
-            _elapsedTimer.Tick += (_, _) =>
+            elapsedTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+            elapsedTimer.Tick += (_, _) =>
             {
-                _elapsedWorkout = _elapsedWorkout.Add(TimeSpan.FromSeconds(1));
-                WorkoutElapsedDisplay = _elapsedWorkout.ToString(@"mm\:ss");
+                elapsedWorkout = elapsedWorkout.Add(TimeSpan.FromSeconds(1));
+                WorkoutElapsedDisplay = elapsedWorkout.ToString(@"mm\:ss");
             };
-            _elapsedTimer.Start();
+            elapsedTimer.Start();
         }
 
         private void StopWorkoutElapsedTimer()
         {
-            if (_elapsedTimer is null) return;
-            _elapsedTimer.Stop();
-            _elapsedTimer = null;
+            if (elapsedTimer is null)
+            {
+                return;
+            }
+
+            elapsedTimer.Stop();
+            elapsedTimer = null;
         }
 
         private static string? BuildProgressionHeadsUp(WorkoutLog log)
@@ -166,7 +183,7 @@ namespace VibeCoders.ViewModels
         {
             try
             {
-                var allLogs = _storage.GetWorkoutHistory(clientId);
+                var allLogs = storage.GetWorkoutHistory(clientId);
 
                 return allLogs
                     .SelectMany(log => log.Exercises)
@@ -174,8 +191,7 @@ namespace VibeCoders.ViewModels
                     .GroupBy(s => s.ExerciseName)
                     .ToDictionary(
                         g => g.Key,
-                        g => g.Max(s => s.ActualWeight ?? 0)
-                    );
+                        g => g.Max(s => s.ActualWeight ?? 0));
             }
             catch
             {
@@ -184,10 +200,10 @@ namespace VibeCoders.ViewModels
         }
 
         [ObservableProperty]
-        private ObservableCollection<WorkoutTemplate> availableWorkouts = new();
+        private ObservableCollection<WorkoutTemplate> availableWorkouts = new ();
 
         [ObservableProperty]
-        private ObservableCollection<WorkoutTemplate> customWorkouts = new();
+        private ObservableCollection<WorkoutTemplate> customWorkouts = new ();
 
         [ObservableProperty]
         private bool hasCustomWorkouts;
@@ -203,12 +219,15 @@ namespace VibeCoders.ViewModels
 
         public void LoadCustomWorkouts(int clientId)
         {
-            var allWorkouts = _storage.GetAvailableWorkouts(clientId);
+            var allWorkouts = storage.GetAvailableWorkouts(clientId);
             CustomWorkouts.Clear();
             foreach (var w in allWorkouts.Where(w =>
                          (w.Type == WorkoutType.CUSTOM || w.Type == WorkoutType.TRAINER_ASSIGNED) &&
                          w.ClientId == clientId))
+            {
                 CustomWorkouts.Add(w);
+            }
+
             HasCustomWorkouts = CustomWorkouts.Count > 0;
         }
 
@@ -222,7 +241,10 @@ namespace VibeCoders.ViewModels
         [RelayCommand]
         private void ApplyTargetGoals(int clientId)
         {
-            if (string.IsNullOrEmpty(SelectedGoal)) return;
+            if (string.IsNullOrEmpty(SelectedGoal))
+            {
+                return;
+            }
 
             var selectedGoalNames = new List<string> { SelectedGoal };
 
@@ -230,12 +252,15 @@ namespace VibeCoders.ViewModels
             {
                 IsLoadingWorkouts = true;
 
-                var allWorkouts = _storage.GetAvailableWorkouts(clientId);
+                var allWorkouts = storage.GetAvailableWorkouts(clientId);
                 var selected = allWorkouts
                     .Where(w => selectedGoalNames.Contains(w.Name))
                     .ToList();
 
-                if (selected.Count == 0) return;
+                if (selected.Count == 0)
+                {
+                    return;
+                }
 
                 AvailableWorkouts.Clear();
                 foreach (var w in selected)
@@ -243,7 +268,7 @@ namespace VibeCoders.ViewModels
                     AvailableWorkouts.Add(w);
                 }
 
-                _activeLog = new WorkoutLog
+                activeLog = new WorkoutLog
                 {
                     WorkoutName = string.Join(" + ", selected.Select(t => t.Name)),
                     SourceTemplateId = selected[0].Id,
@@ -261,7 +286,7 @@ namespace VibeCoders.ViewModels
                 }
 
                 UpdateCurrentSetDisplay();
-                WorkoutSessionTitle = _activeLog.WorkoutName;
+                WorkoutSessionTitle = activeLog.WorkoutName;
                 IsWorkoutStarted = true;
             }
             catch (Exception ex)
@@ -278,7 +303,7 @@ namespace VibeCoders.ViewModels
         {
             if (value == null) return;
 
-            _activeLog = new WorkoutLog
+            activeLog = new WorkoutLog
             {
                 WorkoutName = value.Name,
                 SourceTemplateId = value.Id,
@@ -298,7 +323,7 @@ namespace VibeCoders.ViewModels
         }
 
         [ObservableProperty]
-        private ObservableCollection<ActiveExerciseViewModel> exerciseRows = new();
+        private ObservableCollection<ActiveExerciseViewModel> exerciseRows = new ();
 
         [ObservableProperty]
         private bool isWorkoutStarted;
@@ -312,7 +337,10 @@ namespace VibeCoders.ViewModels
         [RelayCommand]
         private void SaveSet(ActiveSetViewModel setViewModel)
         {
-            if (setViewModel == null || !IsWorkoutStarted) return;
+            if (setViewModel == null || !IsWorkoutStarted)
+            {
+                return;
+            }
 
             ErrorMessage = string.Empty;
 
@@ -326,7 +354,7 @@ namespace VibeCoders.ViewModels
                 TargetWeight = null
             };
 
-            bool isSaved = _clientService.SaveSet(_activeLog, setViewModel.ExerciseName, set);
+            bool isSaved = clientService.SaveSet(activeLog, setViewModel.ExerciseName, set);
             if (!isSaved)
             {
                 ErrorMessage = "Failed to save set. Please try again.";
@@ -342,25 +370,28 @@ namespace VibeCoders.ViewModels
         [RelayCommand]
         private void FinishWorkout(int clientId)
         {
-            if (!IsWorkoutStarted) return;
+            if (!IsWorkoutStarted)
+            {
+                return;
+            }
 
             try
             {
                 IsFinishing = true;
                 ErrorMessage = string.Empty;
 
-                _activeLog.ClientId = clientId;
-                _activeLog.Duration = _elapsedWorkout;
+                activeLog.ClientId = clientId;
+                activeLog.Duration = elapsedWorkout;
 
-                bool success = _clientService.FinalizeWorkout(_activeLog);
+                bool success = clientService.FinalizeWorkout(activeLog);
 
                 if (success)
                 {
-                    LastCompletedLog = _activeLog;
-                    _workoutUiState.ProgressionHeadsUp = BuildProgressionHeadsUp(_activeLog);
+                    LastCompletedLog = activeLog;
+                    workoutUiState.ProgressionHeadsUp = BuildProgressionHeadsUp(activeLog);
                     IsWorkoutStarted = false;
                     ExerciseRows.Clear();
-                    _activeLog = new WorkoutLog { Date = DateTime.Now };
+                    activeLog = new WorkoutLog { Date = DateTime.Now };
                     WorkoutSessionTitle = string.Empty;
                     CurrentExerciseName = string.Empty;
                     CurrentTargetReps = null;
@@ -368,7 +399,7 @@ namespace VibeCoders.ViewModels
                     CurrentSetRepsInput = double.NaN;
                     CurrentSetWeightInput = double.NaN;
 
-                    _navigation.NavigateToClientDashboard(requestRefresh: true);
+                    navigation.NavigateToClientDashboard(requestRefresh: true);
                 }
                 else
                 {
@@ -391,24 +422,30 @@ namespace VibeCoders.ViewModels
         [RelayCommand]
         private void RepeatWorkout(int clientId)
         {
-            if (LastCompletedLog == null) return;
+            if (LastCompletedLog == null)
+            {
+                return;
+            }
 
-            var template = _storage.GetAvailableWorkouts(clientId)
+            var template = storage.GetAvailableWorkouts(clientId)
                 .FirstOrDefault(t => t.Id == LastCompletedLog.SourceTemplateId);
 
-            if (template == null) return;
+            if (template == null)
+            {
+                return;
+            }
 
             SelectedTemplate = template;
         }
 
         [ObservableProperty]
-        private ObservableCollection<Models.Notification> notifications = new();
+        private ObservableCollection<Models.Notification> notifications = new ();
 
         [RelayCommand]
         private void LoadNotifications(int clientId)
         {
             Notifications.Clear();
-            var list = _clientService.GetNotifications(clientId);
+            var list = clientService.GetNotifications(clientId);
             foreach (var n in list)
             {
                 Notifications.Add(n);
@@ -418,8 +455,12 @@ namespace VibeCoders.ViewModels
         [RelayCommand]
         private void ConfirmDeload(Models.Notification notification)
         {
-            if (notification == null) return;
-            _clientService.ConfirmDeload(notification);
+            if (notification == null)
+            {
+                return;
+            }
+
+            clientService.ConfirmDeload(notification);
             Notifications.Remove(notification);
         }
 
@@ -446,7 +487,7 @@ namespace VibeCoders.ViewModels
                 {
                     if (!set.IsCompleted)
                     {
-                        _currentPendingSet = set;
+                        currentPendingSet = set;
                         CurrentExerciseName = exercise.ExerciseName;
                         CurrentTargetReps = set.TargetReps;
                         CurrentSetNumber = set.SetIndex;
@@ -457,7 +498,7 @@ namespace VibeCoders.ViewModels
                 }
             }
 
-            _currentPendingSet = null;
+            currentPendingSet = null;
             CurrentExerciseName = "Workout complete";
             CurrentTargetReps = null;
             CurrentSetNumber = 0;
@@ -468,10 +509,13 @@ namespace VibeCoders.ViewModels
         [RelayCommand]
         private void CompleteCurrentSet()
         {
-            if (!IsWorkoutStarted || _currentPendingSet is null) return;
+            if (!IsWorkoutStarted || currentPendingSet is null)
+            {
+                return;
+            }
 
-            _currentPendingSet.ActualRepsValue = CurrentSetRepsInput;
-            _currentPendingSet.ActualWeightValue = CurrentSetWeightInput;
+            currentPendingSet.ActualRepsValue = CurrentSetRepsInput;
+            currentPendingSet.ActualWeightValue = CurrentSetWeightInput;
         }
     }
 
@@ -481,7 +525,7 @@ namespace VibeCoders.ViewModels
         [ObservableProperty]
         private double? previousBestWeight;
         public MuscleGroup MuscleGroup { get; }
-        public ObservableCollection<ActiveSetViewModel> Sets { get; } = new();
+        public ObservableCollection<ActiveSetViewModel> Sets { get; } = new ();
 
         [ObservableProperty]
         private bool isSystemAdjusted;
@@ -562,8 +606,16 @@ namespace VibeCoders.ViewModels
 
         private void TryAutoSave()
         {
-            if (IsCompleted) return;
-            if (!ActualReps.HasValue || !ActualWeight.HasValue) return;
+            if (IsCompleted)
+            {
+                return;
+            }
+
+            if (!ActualReps.HasValue || !ActualWeight.HasValue)
+            {
+                return;
+            }
+
             AutoSaveHandler?.Invoke(this);
         }
     }
