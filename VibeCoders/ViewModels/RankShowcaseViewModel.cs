@@ -90,7 +90,7 @@ public sealed partial class RankShowcaseViewModel : ObservableObject
         int currentIndex = -1;
         for (int i = 0; i < tiers.Count; i++)
         {
-            if (tiers[i].Level == currentLevel)
+            if (tiers[i].level == currentLevel)
             {
                 currentIndex = i;
                 break;
@@ -120,7 +120,7 @@ public sealed partial class RankShowcaseViewModel : ObservableObject
             : 100;
 
         int remaining = Math.Max(0, bandEnd - unlockedCount);
-        NextRankInfo  = $"Next: Level {next.Level}: {next.RankTitle} — {remaining} more achievement{(remaining == 1 ? "" : "s")} to go";
+        NextRankInfo  = $"Next: Level {next.level}: {next.rankTitle} — {remaining} more achievement{(remaining == 1 ? "" : "s")} to go";
     }
 
     [RelayCommand]
