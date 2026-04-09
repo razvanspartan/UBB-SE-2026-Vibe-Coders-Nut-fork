@@ -97,5 +97,5 @@ jobs:
 
           "issue_count=$issueCount" >> $env:GITHUB_OUTPUT
           if ($issueCount -gt 0) {
-            Write-Error "StyleCop found $issueCount issue(s) in modified files."
+            Write-Error "StyleCop found $issueCount issue(s) in modified files." -ErrorAction Continue
           }
