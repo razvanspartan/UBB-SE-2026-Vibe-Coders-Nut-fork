@@ -43,8 +43,8 @@
                             </StackPanel>
                             <Button Grid.Column="1"
                                     Content="Remove"
-                                    Command="{Binding DataContext.RemoveExerciseCommand, ElementName=Root}"
-                                    CommandParameter="{Binding}" />
+                                    Click="RemoveExercise_Click"
+                                    Tag="{x:Bind}" />
                         </Grid>
                     </DataTemplate>
                 </ListView.ItemTemplate>
