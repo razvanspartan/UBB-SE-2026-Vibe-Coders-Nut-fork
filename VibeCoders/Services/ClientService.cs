@@ -1,3 +1,5 @@
+#pragma warning disable IL2026
+
 namespace VibeCoders.Services
 {
     using System;

@@ -1,3 +1,5 @@
+#pragma warning disable MVVMTK0045
+
 namespace VibeCoders.ViewModels
 {
     using System.Collections.ObjectModel;
