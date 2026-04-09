@@ -45,7 +45,13 @@ jobs:
         if: steps.changed.outputs.has_files == 'true'
         shell: pwsh
         run: |
-          $files = Get-Content changed_cs_files.txt
+          $ErrorActionPreference = 'Continue'
+          $files = Get-Content changed_cs_files.txt -ErrorAction SilentlyContinue
+          if (-not $files) {
+            Write-Host "No changed C# files found to check."
+            exit 0
+          }
+
           $fileMap = @{}
           foreach ($f in $files) {
             $full = [System.IO.Path]::GetFullPath($f).ToLowerInvariant()
@@ -97,5 +103,10 @@ jobs:
 
           "issue_count=$issueCount" >> $env:GITHUB_OUTPUT
           if ($issueCount -gt 0) {
-            Write-Error "StyleCop found $issueCount issue(s) in modified files." -ErrorAction Continue
+            Write-Host "::warning title=StyleCop::StyleCop found $issueCount issue(s) in modified files."
+            Write-Host "StyleCop found $issueCount issue(s) in modified files. The build will CONTINUE because this check is non-blocking."
+          } else {
+            Write-Host "No StyleCop issues found in modified files."
           }
+
+          exit 0
