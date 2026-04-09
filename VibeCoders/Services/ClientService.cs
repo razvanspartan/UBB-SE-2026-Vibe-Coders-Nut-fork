@@ -11,6 +11,9 @@ namespace VibeCoders.Services
     using VibeCoders.Models;
     using VibeCoders.Models.Integration;
 
+    /// <summary>
+    /// Provides services for managing client-related data and operations, including workouts and nutrition.
+    /// </summary>
     public class ClientService
     {
         private const double DefaultMetValue = 5.0;
@@ -27,6 +30,15 @@ namespace VibeCoders.Services
         private readonly IAchievementUnlockedBus achievementBus;
         private readonly NutritionSyncOptions nutritionSyncOptions;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ClientService"/> class.
+        /// </summary>
+        /// <param name="storage">The data storage service.</param>
+        /// <param name="progressionService">The progression evaluation service.</param>
+        /// <param name="httpClientFactory">The HTTP client factory.</param>
+        /// <param name="evaluationEngine">The achievement evaluation engine.</param>
+        /// <param name="achievementBus">The achievement notification bus.</param>
+        /// <param name="nutritionSyncOptions">Options for nutrition synchronization.</param>
         public ClientService(
             IDataStorage storage,
             ProgressionService progressionService,
@@ -43,6 +55,11 @@ namespace VibeCoders.Services
             this.nutritionSyncOptions = nutritionSyncOptions;
         }
 
+        /// <summary>
+        /// Finalizes a workout by calculating meta-data and saving it to storage.
+        /// </summary>
+        /// <param name="workoutLog">The workout log to finalize.</param>
+        /// <returns>True if the operation was successful; otherwise, false.</returns>
         public bool FinalizeWorkout(WorkoutLog workoutLog)
         {
             if (workoutLog == null || workoutLog.Exercises == null)
@@ -74,6 +91,13 @@ namespace VibeCoders.Services
             }
         }
 
+        /// <summary>
+        /// Saves a set for a specific exercise in a workout log.
+        /// </summary>
+        /// <param name="workoutLog">The workout log containing the exercise.</param>
+        /// <param name="exerciseName">The name of the exercise.</param>
+        /// <param name="loggedSet">The set to save.</param>
+        /// <returns>True if the operation was successful; otherwise, false.</returns>
         public bool SaveSet(WorkoutLog workoutLog, string exerciseName, LoggedSet loggedSet)
         {
             if (workoutLog == null || loggedSet == null || string.IsNullOrWhiteSpace(exerciseName))
@@ -110,6 +134,11 @@ namespace VibeCoders.Services
             }
         }
 
+        /// <summary>
+        /// Modifies an existing workout log.
+        /// </summary>
+        /// <param name="updatedWorkoutLog">The updated workout log data.</param>
+        /// <returns>True if the update was successful; otherwise, false.</returns>
         public bool ModifyWorkout(WorkoutLog updatedWorkoutLog)
         {
             if (updatedWorkoutLog == null)
@@ -128,6 +157,12 @@ namespace VibeCoders.Services
             }
         }
 
+        /// <summary>
+        /// Synchronizes nutrition data with a remote endpoint.
+        /// </summary>
+        /// <param name="nutritionSyncPayload">The data to synchronize.</param>
+        /// <param name="cancellationToken">Cancellation token for the operation.</param>
+        /// <returns>A task representing the asynchronous operation, containing true if successful.</returns>
         public async Task<bool> SyncNutritionAsync(
             NutritionSyncPayload nutritionSyncPayload,
             CancellationToken cancellationToken = default)
@@ -148,6 +183,11 @@ namespace VibeCoders.Services
             }
         }
 
+        /// <summary>
+        /// Retrieves the currently active nutrition plan for a client.
+        /// </summary>
+        /// <param name="clientId">The client's ID.</param>
+        /// <returns>The active nutrition plan if found; otherwise, null.</returns>
         public NutritionPlan? GetActiveNutritionPlan(int clientId)
         {
             if (clientId <= 0)
@@ -180,6 +220,45 @@ namespace VibeCoders.Services
             {
                 System.Diagnostics.Debug.WriteLine($"Error loading active nutrition plan: {exception.Message}");
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// Retrieves notifications for a specific client.
+        /// </summary>
+        /// <param name="clientId">The client's ID.</param>
+        /// <returns>A list of notifications.</returns>
+        public List<Notification> GetNotifications(int clientId)
+        {
+            try
+            {
+                return this.storage.GetNotifications(clientId);
+            }
+            catch (Exception exception)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error loading notifications: {exception.Message}");
+                return new List<Notification>();
+            }
+        }
+
+        /// <summary>
+        /// Processes a confirmation for a deload recommendation.
+        /// </summary>
+        /// <param name="deloadNotification">The notification representing the deload recommendation.</param>
+        public void ConfirmDeload(Notification deloadNotification)
+        {
+            if (deloadNotification == null)
+            {
+                return;
+            }
+
+            try
+            {
+                this.progressionService.ProcessDeloadConfirmation(deloadNotification);
+            }
+            catch (Exception exception)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error confirming deload: {exception.Message}");
             }
         }
 
@@ -232,36 +311,6 @@ namespace VibeCoders.Services
             {
                 System.Diagnostics.Debug.WriteLine(
                     $"[ClientService] Achievement evaluation error for client {clientId}: {exception.Message}");
-            }
-        }
-
-        public List<Notification> GetNotifications(int clientId)
-        {
-            try
-            {
-                return this.storage.GetNotifications(clientId);
-            }
-            catch (Exception exception)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error loading notifications: {exception.Message}");
-                return new List<Notification>();
-            }
-        }
-
-        public void ConfirmDeload(Notification deloadNotification)
-        {
-            if (deloadNotification == null)
-            {
-                return;
-            }
-
-            try
-            {
-                this.progressionService.ProcessDeloadConfirmation(deloadNotification);
-            }
-            catch (Exception exception)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error confirming deload: {exception.Message}");
             }
         }
     }

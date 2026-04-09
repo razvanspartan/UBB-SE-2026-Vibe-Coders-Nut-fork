@@ -1,7 +1,3 @@
-#pragma warning disable SA1600 // Elements should be documented
-#pragma warning disable SA1601 // Partial elements should be documented
-#pragma warning disable MVVMTK0045
-
 namespace VibeCoders.ViewModels
 {
     using System;
@@ -17,6 +13,9 @@ namespace VibeCoders.ViewModels
     using VibeCoders.Models.Integration;
     using VibeCoders.Services;
 
+    /// <summary>
+    /// ViewModel for the client profile page, managing workout summaries, nutrition sync, and active plans.
+    /// </summary>
     public partial class ClientProfileViewModel : ObservableObject
     {
         private const int InvalidClientId = 0;
@@ -44,12 +43,21 @@ namespace VibeCoders.ViewModels
         [ObservableProperty]
         private string syncNutritionStatus = string.Empty;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ClientProfileViewModel"/> class.
+        /// </summary>
+        /// <param name="storage">The data storage service.</param>
+        /// <param name="clientService">The client service.</param>
         public ClientProfileViewModel(IDataStorage storage, ClientService clientService)
         {
             this.storage = storage;
             this.clientService = clientService;
         }
 
+        /// <summary>
+        /// Command to synchronize nutrition data for the currently loaded client.
+        /// </summary>
+        /// <returns>A task representing the asynchronous operation.</returns>
         [RelayCommand]
         private async Task SyncNutritionAsync()
         {
@@ -97,6 +105,10 @@ namespace VibeCoders.ViewModels
                 : "Sync failed — start your local nutrition API (see NutritionSyncOptions default URL) or check the network.";
         }
 
+        /// <summary>
+        /// Loads data for a specific client into the ViewModel.
+        /// </summary>
+        /// <param name="clientId">The client's ID.</param>
         public void LoadClientData(int clientId)
         {
             this.loadedClientId = clientId;

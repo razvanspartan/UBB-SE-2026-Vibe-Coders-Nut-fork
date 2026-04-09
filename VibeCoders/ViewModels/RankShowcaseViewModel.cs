@@ -1,7 +1,3 @@
-#pragma warning disable SA1600 // Elements should be documented
-#pragma warning disable SA1601 // Partial elements should be documented
-#pragma warning disable MVVMTK0045
-
 namespace VibeCoders.ViewModels
 {
     using System;
@@ -15,6 +11,9 @@ namespace VibeCoders.ViewModels
     using VibeCoders.Models;
     using VibeCoders.Services;
 
+    /// <summary>
+    /// ViewModel for the rank showcase view, managing client rank, levels, and progress.
+    /// </summary>
     public sealed partial class RankShowcaseViewModel : ObservableObject
     {
         private const string PlaceholderEmDash = "\u2014";
@@ -56,6 +55,12 @@ namespace VibeCoders.ViewModels
         [ObservableProperty]
         private bool hasNextRank;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RankShowcaseViewModel"/> class.
+        /// </summary>
+        /// <param name="analyticsStore">The workout analytics store.</param>
+        /// <param name="userSession">The user session service.</param>
+        /// <param name="dataStorage">The data storage service.</param>
         public RankShowcaseViewModel(
             IWorkoutAnalyticsStore analyticsStore,
             IUserSession userSession,
@@ -66,13 +71,24 @@ namespace VibeCoders.ViewModels
             this.dataStorage = dataStorage;
         }
 
+        /// <summary>
+        /// Gets the collection of achievements for the showcase.
+        /// </summary>
         public ObservableCollection<AchievementShowcaseItem> ShowcaseAchievements { get; } = new ObservableCollection<AchievementShowcaseItem>();
 
+        /// <summary>
+        /// Loads the rank and achievement data asynchronously.
+        /// </summary>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
         public Task LoadAsync(CancellationToken cancellationToken = default)
         {
             this.Load();
             return Task.CompletedTask;
         }
+
+        [RelayCommand]
+        private Task RefreshAsync() => this.LoadAsync(CancellationToken.None);
 
         private void Load()
         {
@@ -153,8 +169,5 @@ namespace VibeCoders.ViewModels
             int remainingAchievements = Math.Max(RankShowcaseViewModel.MinimumBounds, nextTierBandEnd - unlockedCount);
             this.NextRankInfo = $"Next: Level {nextTierTier.Level}: {nextTierTier.RankTitle} \u2014 {remainingAchievements} more achievement{(remainingAchievements == RankShowcaseViewModel.SingularThreshold ? string.Empty : "s")} to go";
         }
-
-        [RelayCommand]
-        private Task RefreshAsync() => this.LoadAsync(CancellationToken.None);
     }
 }

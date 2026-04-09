@@ -9,10 +9,19 @@ namespace VibeCoders.ViewModels
     using VibeCoders.Models;
     using VibeCoders.Services;
 
+    /// <summary>
+    /// Represents a day of the week for selection in the calendar integration view.
+    /// </summary>
     public class DaySelectionItem : ObservableObject
     {
         private bool isSelected;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DaySelectionItem"/> class.
+        /// </summary>
+        /// <param name="dayOfWeekIndex">The zero-based index of the day of the week (0=Sunday).</param>
+        /// <param name="dayName">The display name of the day.</param>
+        /// <param name="initialSelection">The initial selection state.</param>
         public DaySelectionItem(int dayOfWeekIndex, string dayName, bool initialSelection = false)
         {
             this.DayOfWeekIndex = dayOfWeekIndex;
@@ -20,10 +29,19 @@ namespace VibeCoders.ViewModels
             this.isSelected = initialSelection;
         }
 
+        /// <summary>
+        /// Gets the zero-based index of the day of the week.
+        /// </summary>
         public int DayOfWeekIndex { get; }
 
+        /// <summary>
+        /// Gets the display name of the day.
+        /// </summary>
         public string DayName { get; }
 
+        /// <summary>
+        /// Gets or sets a value indicating whether the day is selected.
+        /// </summary>
         public bool IsSelected
         {
             get => this.isSelected;
@@ -31,6 +49,9 @@ namespace VibeCoders.ViewModels
         }
     }
 
+    /// <summary>
+    /// ViewModel for the calendar integration page, managing workout selection and export.
+    /// </summary>
     public class CalendarIntegrationViewModel : ObservableObject
     {
         private const int TotalDaysInWeek = 7;
@@ -50,6 +71,12 @@ namespace VibeCoders.ViewModels
         private bool isLoading;
         private string generatedCalendarFileContent = string.Empty;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CalendarIntegrationViewModel"/> class.
+        /// </summary>
+        /// <param name="dataStorage">The data storage service.</param>
+        /// <param name="calendarExportService">The calendar export service.</param>
+        /// <param name="userSession">The user session service.</param>
         public CalendarIntegrationViewModel(
             IDataStorage dataStorage,
             ICalendarExportService calendarExportService,
@@ -67,42 +94,64 @@ namespace VibeCoders.ViewModels
             _ = this.LoadAvailableWorkoutsAsync();
         }
 
+        /// <summary>
+        /// Gets or sets the collection of available workout templates.
+        /// </summary>
         public ObservableCollection<WorkoutTemplate> AvailableWorkouts
         {
             get => this.availableWorkouts;
             set => this.SetProperty(ref this.availableWorkouts, value);
         }
 
+        /// <summary>
+        /// Gets or sets the currently selected workout template.
+        /// </summary>
         public WorkoutTemplate? SelectedWorkout
         {
             get => this.selectedWorkout;
             set => this.SetProperty(ref this.selectedWorkout, value);
         }
 
+        /// <summary>
+        /// Gets or sets the duration in weeks for the generated calendar.
+        /// </summary>
         public int DurationWeeks
         {
             get => this.durationWeeks;
             set => this.SetProperty(ref this.durationWeeks, value);
         }
 
+        /// <summary>
+        /// Gets or sets the collection of day selection items.
+        /// </summary>
         public ObservableCollection<DaySelectionItem> SelectedDays
         {
             get => this.selectedDays;
             set => this.SetProperty(ref this.selectedDays, value);
         }
 
+        /// <summary>
+        /// Gets or sets a value indicating whether data is currently loading.
+        /// </summary>
         public bool IsLoading
         {
             get => this.isLoading;
             set => this.SetProperty(ref this.isLoading, value);
         }
 
+        /// <summary>
+        /// Gets or sets the generated iCalendar content.
+        /// </summary>
         public string GeneratedCalendarFileContent
         {
             get => this.generatedCalendarFileContent;
             set => this.SetProperty(ref this.generatedCalendarFileContent, value);
         }
 
+        /// <summary>
+        /// Loads available workouts from the data storage asynchronously.
+        /// </summary>
+        /// <returns>A task representing the asynchronous operation.</returns>
         public async Task LoadAvailableWorkoutsAsync()
         {
             try
@@ -151,6 +200,10 @@ namespace VibeCoders.ViewModels
             }
         }
 
+        /// <summary>
+        /// Ensures that workouts are loaded, triggering a load if necessary.
+        /// </summary>
+        /// <returns>A task representing the asynchronous operation.</returns>
         public async Task EnsureWorkoutsLoadedAsync()
         {
             if (this.IsLoading || this.AvailableWorkouts.Count > 0)
@@ -161,6 +214,10 @@ namespace VibeCoders.ViewModels
             await this.LoadAvailableWorkoutsAsync();
         }
 
+        /// <summary>
+        /// Gets the indices of the currently selected days of the week.
+        /// </summary>
+        /// <returns>An array of day indices.</returns>
         public int[] GetSelectedDaysOfWeek()
         {
             return this.SelectedDays
@@ -169,6 +226,10 @@ namespace VibeCoders.ViewModels
                 .ToArray();
         }
 
+        /// <summary>
+        /// Validates the current input state of the ViewModel.
+        /// </summary>
+        /// <returns>An error message if validation fails; otherwise, null.</returns>
         public string? ValidateInput()
         {
             if (this.SelectedWorkout == null)
@@ -190,6 +251,10 @@ namespace VibeCoders.ViewModels
             return null;
         }
 
+        /// <summary>
+        /// Generates the iCalendar file content based on the current selections.
+        /// </summary>
+        /// <returns>A task representing the asynchronous operation, containing the generated content.</returns>
         public async Task<string> GenerateCalendarAsync()
         {
             var calendarFileContent = await Task.Run(() =>
@@ -216,6 +281,10 @@ namespace VibeCoders.ViewModels
             return calendarFileContent;
         }
 
+        /// <summary>
+        /// Toggles the selection state of a specific day of the week.
+        /// </summary>
+        /// <param name="dayOfWeekIndex">The index of the day to toggle.</param>
         public void ToggleDaySelection(int dayOfWeekIndex)
         {
             var daySelectionItem = this.SelectedDays.FirstOrDefault(item => item.DayOfWeekIndex == dayOfWeekIndex);

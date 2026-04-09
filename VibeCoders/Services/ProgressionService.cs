@@ -3,6 +3,9 @@ namespace VibeCoders.Services
     using VibeCoders.Models;
     using VibeCoders.Utils;
 
+    /// <summary>
+    /// Service responsible for evaluating workout progression and handling plateaus.
+    /// </summary>
     public class ProgressionService
     {
         private const double PlateauThreshold = 0.9;
@@ -10,11 +13,19 @@ namespace VibeCoders.Services
 
         private readonly IDataStorage storage;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ProgressionService"/> class.
+        /// </summary>
+        /// <param name="storage">The data storage service.</param>
         public ProgressionService(IDataStorage storage)
         {
             this.storage = storage;
         }
 
+        /// <summary>
+        /// Evaluates a completed workout log to determine if progression should be applied.
+        /// </summary>
+        /// <param name="workoutLog">The workout log to evaluate.</param>
         public void EvaluateWorkout(WorkoutLog workoutLog)
         {
             if (workoutLog?.Exercises == null)
@@ -28,6 +39,10 @@ namespace VibeCoders.Services
             }
         }
 
+        /// <summary>
+        /// Processes a confirmation for a deload recommendation based on a notification.
+        /// </summary>
+        /// <param name="notification">The notification containing deload details.</param>
         public void ProcessDeloadConfirmation(Notification notification)
         {
             if (notification == null)

@@ -1,8 +1,11 @@
-﻿namespace VibeCoders.Utils
+namespace VibeCoders.Utils
 {
     using System;
     using VibeCoders.Models;
 
+    /// <summary>
+    /// Utility class for progression-related calculations, such as weight increments and deloading.
+    /// </summary>
     public static class ProgressionUtils
     {
         private const double LegsIncrement = 5.0;
@@ -12,6 +15,12 @@
         private const double MinimumWeight = 0.0;
         private const int DefaultRatioResult = 0;
 
+        /// <summary>
+        /// Calculates the ratio of actual repetitions to target repetitions.
+        /// </summary>
+        /// <param name="actualReps">The number of repetitions actually performed.</param>
+        /// <param name="targetReps">The number of repetitions targeted.</param>
+        /// <returns>The performance ratio.</returns>
         public static double CalculateRatio(int actualReps, int targetReps)
         {
             if (targetReps <= 0)
@@ -22,6 +31,11 @@
             return (double)actualReps / targetReps;
         }
 
+        /// <summary>
+        /// Determines the appropriate weight increment based on the muscle group.
+        /// </summary>
+        /// <param name="muscleGroup">The muscle group targeted by the exercise.</param>
+        /// <returns>The weight increment in kilograms.</returns>
         public static double DetermineWeightIncrement(MuscleGroup muscleGroup)
         {
             switch (muscleGroup)
@@ -41,6 +55,11 @@
             }
         }
 
+        /// <summary>
+        /// Calculates the deloaded weight, typically 90% of the current weight, rounded to the nearest 0.5kg.
+        /// </summary>
+        /// <param name="currentWeight">The current weight.</param>
+        /// <returns>The deloaded weight.</returns>
         public static double CalculateDeload(double currentWeight)
         {
             double rawDeloadedWeight = currentWeight * ProgressionUtils.DeloadFactor;

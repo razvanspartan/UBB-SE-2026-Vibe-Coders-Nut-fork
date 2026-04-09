@@ -1,6 +1,3 @@
-#pragma warning disable SA1600 // Elements should be documented
-#pragma warning disable SA1601 // Partial elements should be documented
-
 namespace VibeCoders.Views
 {
     using System;
@@ -14,6 +11,9 @@ namespace VibeCoders.Views
     using VibeCoders.ViewModels;
     using Windows.Storage.Pickers;
 
+    /// <summary>
+    /// Interaction logic for the calendar integration page.
+    /// </summary>
     public sealed partial class CalendarIntegrationPage : Page
     {
         private const string IcsExtension = ".ics";
@@ -26,6 +26,9 @@ namespace VibeCoders.Views
 
         private readonly CalendarIntegrationViewModel? viewModel;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CalendarIntegrationPage"/> class.
+        /// </summary>
         public CalendarIntegrationPage()
         {
             this.InitializeComponent();

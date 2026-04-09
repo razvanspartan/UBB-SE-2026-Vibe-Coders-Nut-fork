@@ -1,6 +1,3 @@
-#pragma warning disable SA1600
-#pragma warning disable SA1601
-
 namespace VibeCoders.Views
 {
     using System.ComponentModel;
@@ -10,11 +7,17 @@ namespace VibeCoders.Views
     using VibeCoders.Services;
     using VibeCoders.ViewModels;
 
+    /// <summary>
+    /// Interaction logic for the client dashboard page.
+    /// </summary>
     public sealed partial class ClientDashboardPage : Page
     {
         private readonly CartesianChart chart;
         private readonly IAchievementUnlockedBus achievementBus;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ClientDashboardPage"/> class.
+        /// </summary>
         public ClientDashboardPage()
         {
             this.ViewModel = App.GetService<ClientDashboardViewModel>();
@@ -38,6 +41,9 @@ namespace VibeCoders.Views
             this.Unloaded += this.Page_Unloaded;
         }
 
+        /// <summary>
+        /// Gets the ViewModel for the client dashboard.
+        /// </summary>
         public ClientDashboardViewModel ViewModel { get; }
 
         private void SeeAllAchievements_Click(object sender, RoutedEventArgs routedEventArgs)

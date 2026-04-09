@@ -1,7 +1,3 @@
-#pragma warning disable SA1600 // Elements should be documented
-#pragma warning disable SA1601 // Partial elements should be documented
-#pragma warning disable MVVMTK0045
-
 namespace VibeCoders.ViewModels
 {
     using System;
@@ -22,9 +18,16 @@ namespace VibeCoders.ViewModels
     using VibeCoders.Models.Analytics;
     using VibeCoders.Services;
 
+    /// <summary>
+    /// ViewModel for the client dashboard, providing analytics, history, and achievement overviews.
+    /// </summary>
     public sealed partial class ClientDashboardViewModel : ObservableObject
     {
+        /// <summary>
+        /// The default number of items per page for workout history.
+        /// </summary>
         public const int DefaultPageSize = 5;
+
         private const int MaximumDisplayAchievements = 3;
         private const int DefaultGeometrySize = 12;
         private const int DefaultStrokeThickness = 3;
@@ -87,6 +90,13 @@ namespace VibeCoders.ViewModels
         [ObservableProperty]
         private bool showEmptyState = true;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ClientDashboardViewModel"/> class.
+        /// </summary>
+        /// <param name="store">The workout analytics store.</param>
+        /// <param name="dataStorage">The data storage service.</param>
+        /// <param name="session">The user session service.</param>
+        /// <param name="refreshBus">The analytics dashboard refresh bus.</param>
         public ClientDashboardViewModel(
             IWorkoutAnalyticsStore store,
             IDataStorage dataStorage,
@@ -100,19 +110,43 @@ namespace VibeCoders.ViewModels
             this.refreshBus.RefreshRequested += this.OnRefreshRequested;
         }
 
+        /// <summary>
+        /// Gets the collection of workout history items.
+        /// </summary>
         public ObservableCollection<WorkoutHistoryItemViewModel> HistoryItems { get; } = new ObservableCollection<WorkoutHistoryItemViewModel>();
 
+        /// <summary>
+        /// Gets the collection of recent achievements.
+        /// </summary>
         public ObservableCollection<AchievementShowcaseItem> RecentAchievements { get; } = new ObservableCollection<AchievementShowcaseItem>();
 
+        /// <summary>
+        /// Gets or sets the number of items per page.
+        /// </summary>
         public int PageSize { get; set; } = ClientDashboardViewModel.DefaultPageSize;
 
-        private int TotalPages =>
-            this.TotalCount == 0 ? 0 : (this.TotalCount + this.PageSize - 1) / this.PageSize;
-
+        /// <summary>
+        /// Gets the text displaying the current page and total pages.
+        /// </summary>
         public string PageDisplayText =>
             this.TotalPages == 0
                 ? string.Empty
                 : string.Create(CultureInfo.InvariantCulture, $"Page {this.CurrentPage + 1} of {this.TotalPages}");
+
+        private int TotalPages =>
+            this.TotalCount == 0 ? 0 : (this.TotalCount + this.PageSize - 1) / this.PageSize;
+
+        /// <summary>
+        /// Loads the initial data for the dashboard asynchronously.
+        /// </summary>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        public Task LoadInitialAsync() => this.LoadAllAsync();
+
+        /// <summary>
+        /// Reloads the achievements preview.
+        /// </summary>
+        public void ReloadAchievementsPreview() =>
+            this.LoadRecentAchievements((int)this.session.CurrentClientId);
 
         partial void OnCurrentPageChanged(int value) => this.OnPropertyChanged(nameof(this.PageDisplayText));
 
@@ -144,8 +178,6 @@ namespace VibeCoders.ViewModels
             this.CurrentPage--;
             await this.LoadHistoryPageAsync().ConfigureAwait(true);
         }
-
-        public Task LoadInitialAsync() => this.LoadAllAsync();
 
         private void OnRefreshRequested(object? sender, EventArgs eventArgs) => _ = this.LoadAllAsync();
 
@@ -213,9 +245,6 @@ namespace VibeCoders.ViewModels
                 this.IsLoadingHistory = false;
             }
         }
-
-        public void ReloadAchievementsPreview() =>
-            this.LoadRecentAchievements((int)this.session.CurrentClientId);
 
         private void LoadRecentAchievements(int clientId)
         {

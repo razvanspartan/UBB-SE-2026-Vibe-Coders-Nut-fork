@@ -1,10 +1,7 @@
-#pragma warning disable SA1600 // Elements should be documented
-#pragma warning disable SA1601 // Partial elements should be documented
-#pragma warning disable MVVMTK0045
-
 namespace VibeCoders.ViewModels
 {
     using System;
+    using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.ComponentModel;
     using System.Linq;
@@ -15,6 +12,9 @@ namespace VibeCoders.ViewModels
     using VibeCoders.Models;
     using VibeCoders.Services;
 
+    /// <summary>
+    /// ViewModel for the trainer dashboard, providing tools for client management, workout feedback, and routine construction.
+    /// </summary>
     public partial class TrainerDashboardViewModel : ObservableObject
     {
         private const double DefaultSets = 3.0;
@@ -50,6 +50,12 @@ namespace VibeCoders.ViewModels
         [ObservableProperty]
         private string feedbackErrorText = string.Empty;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TrainerDashboardViewModel"/> class.
+        /// </summary>
+        /// <param name="trainerService">The trainer service.</param>
+        /// <param name="navigationService">The navigation service.</param>
+        /// <param name="dataStorage">The data storage service.</param>
         public TrainerDashboardViewModel(
             TrainerService trainerService,
             INavigationService navigationService,
@@ -63,22 +69,49 @@ namespace VibeCoders.ViewModels
             this.LoadAvailableExercises();
         }
 
+        /// <summary>
+        /// Gets the collection of clients assigned to the trainer.
+        /// </summary>
         public ObservableCollection<Client> AssignedClients { get; } = new ObservableCollection<Client>();
 
+        /// <summary>
+        /// Gets the collection of workout logs for the currently selected client.
+        /// </summary>
         public ObservableCollection<WorkoutLog> SelectedClientLogs { get; } = new ObservableCollection<WorkoutLog>();
 
+        /// <summary>
+        /// Gets the collection of exercise display rows for the currently selected workout log.
+        /// </summary>
         public ObservableCollection<ExerciseDisplayRow> CurrentWorkoutDetails { get; } = new ObservableCollection<ExerciseDisplayRow>();
 
+        /// <summary>
+        /// Gets the collection of workout templates assigned by the trainer to the selected client.
+        /// </summary>
         public ObservableCollection<WorkoutTemplate> AssignedWorkouts { get; } = new ObservableCollection<WorkoutTemplate>();
 
+        /// <summary>
+        /// Gets the collection of exercises currently being added to a new routine.
+        /// </summary>
         public ObservableCollection<TemplateExercise> BuilderExercises { get; } = new ObservableCollection<TemplateExercise>();
 
+        /// <summary>
+        /// Gets the collection of available exercise names from the master catalog.
+        /// </summary>
         public ObservableCollection<string> AvailableExercises { get; } = new ObservableCollection<string>();
 
+        /// <summary>
+        /// Gets a value indicating whether there is a routine builder error.
+        /// </summary>
         public bool HasBuilderError => !string.IsNullOrEmpty(this.BuilderErrorText);
 
+        /// <summary>
+        /// Gets or sets the ID of the template currently being edited.
+        /// </summary>
         public int EditingTemplateId { get; set; }
 
+        /// <summary>
+        /// Gets or sets the currently selected client.
+        /// </summary>
         public Client? SelectedClient
         {
             get => this.selectedClient;
@@ -97,6 +130,9 @@ namespace VibeCoders.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets the currently selected workout log for viewing or feedback.
+        /// </summary>
         public WorkoutLog? SelectedWorkoutLog
         {
             get => this.selectedWorkoutLog;
@@ -113,6 +149,9 @@ namespace VibeCoders.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets the name of the new routine being built.
+        /// </summary>
         public string NewRoutineName
         {
             get => this.newRoutineName;
@@ -128,6 +167,9 @@ namespace VibeCoders.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets the name of the new exercise to be added to the routine.
+        /// </summary>
         public string? SelectedNewExercise
         {
             get => this.selectedNewExercise;
@@ -143,6 +185,9 @@ namespace VibeCoders.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets the number of sets for the new exercise in the builder.
+        /// </summary>
         public double NewExerciseSets
         {
             get => this.newExerciseSets;
@@ -158,6 +203,9 @@ namespace VibeCoders.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets the number of repetitions for the new exercise in the builder.
+        /// </summary>
         public double NewExerciseReps
         {
             get => this.newExerciseReps;
@@ -173,6 +221,9 @@ namespace VibeCoders.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets the target weight for the new exercise in the builder.
+        /// </summary>
         public double NewExerciseWeight
         {
             get => this.newExerciseWeight;
@@ -188,6 +239,9 @@ namespace VibeCoders.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets the start date for a new nutrition plan.
+        /// </summary>
         public DateTimeOffset PlanStartDate
         {
             get => this.planStartDate;
@@ -206,6 +260,9 @@ namespace VibeCoders.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets the end date for a new nutrition plan.
+        /// </summary>
         public DateTimeOffset PlanEndDate
         {
             get => this.planEndDate;
@@ -224,16 +281,28 @@ namespace VibeCoders.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets the error message for invalid date ranges, if any.
+        /// </summary>
         public string DateRangeError =>
             this.planEndDate <= this.planStartDate
                 ? TrainerDashboardViewModel.DateRangeErrorMessage
                 : string.Empty;
 
+        /// <summary>
+        /// Gets a value indicating whether the current date range selection is invalid.
+        /// </summary>
         public bool HasDateRangeError => this.planEndDate <= this.planStartDate;
 
+        /// <summary>
+        /// Gets a value indicating whether a nutrition plan can be assigned.
+        /// </summary>
         public bool CanAssignPlan =>
             this.selectedClient != null && this.planEndDate > this.planStartDate;
 
+        /// <summary>
+        /// Gets the status message for the last plan assignment.
+        /// </summary>
         public string AssignmentStatus
         {
             get => this.assignmentStatus;
@@ -249,11 +318,9 @@ namespace VibeCoders.ViewModels
             }
         }
 
-        partial void OnBuilderErrorTextChanged(string value)
-        {
-            this.OnPropertyChanged(nameof(this.HasBuilderError));
-        }
-
+        /// <summary>
+        /// Loads workout logs for the currently selected client.
+        /// </summary>
         public void LoadLogsForSelectedClient()
         {
             this.SelectedClientLogs.Clear();
@@ -274,6 +341,9 @@ namespace VibeCoders.ViewModels
             this.SelectedWorkoutLog = this.SelectedClientLogs.FirstOrDefault();
         }
 
+        /// <summary>
+        /// Loads workout templates assigned by the trainer for the selected client.
+        /// </summary>
         public void LoadAssignedWorkouts()
         {
             this.AssignedWorkouts.Clear();
@@ -290,6 +360,10 @@ namespace VibeCoders.ViewModels
             }
         }
 
+        /// <summary>
+        /// Prepares the routine builder for editing an existing template.
+        /// </summary>
+        /// <param name="template">The template to edit.</param>
         public void PrepareForEdit(WorkoutTemplate template)
         {
             this.EditingTemplateId = template.Id;
@@ -302,6 +376,11 @@ namespace VibeCoders.ViewModels
             }
         }
 
+        /// <summary>
+        /// Deletes a workout routine.
+        /// </summary>
+        /// <param name="template">The template to delete.</param>
+        /// <returns>True if the deletion was successful; otherwise, false.</returns>
         public bool DeleteRoutine(WorkoutTemplate template)
         {
             if (template == null)
@@ -318,16 +397,30 @@ namespace VibeCoders.ViewModels
             return isDeleteSuccessful;
         }
 
+        /// <summary>
+        /// Saves a workout routine template.
+        /// </summary>
+        /// <param name="template">The template to save.</param>
+        /// <returns>True if the operation was successful; otherwise, false.</returns>
         public bool SaveRoutine(WorkoutTemplate template)
         {
             return this.trainerService.SaveTrainerWorkout(template);
         }
 
+        /// <summary>
+        /// Adds a selected exercise to the routine builder.
+        /// </summary>
+        /// <param name="sender">The event sender.</param>
+        /// <param name="routedEventArgs">The event arguments.</param>
         public void AddExerciseToRoutine(object sender, RoutedEventArgs routedEventArgs)
         {
             this.AddExerciseToRoutineCore();
         }
 
+        /// <summary>
+        /// Removes a specific exercise from the routine builder.
+        /// </summary>
+        /// <param name="exercise">The exercise to remove.</param>
         public void RemoveExerciseFromRoutine(TemplateExercise exercise)
         {
             if (this.BuilderExercises.Contains(exercise))
@@ -336,9 +429,19 @@ namespace VibeCoders.ViewModels
             }
         }
 
+        /// <summary>
+        /// Saves the trainer's feedback for the selected workout log.
+        /// </summary>
+        /// <param name="sender">The event sender.</param>
+        /// <param name="routedEventArgs">The event arguments.</param>
         public void SaveCurrentFeedback(object sender, RoutedEventArgs routedEventArgs)
         {
             this.SaveCurrentFeedbackCore();
+        }
+
+        partial void OnBuilderErrorTextChanged(string value)
+        {
+            this.OnPropertyChanged(nameof(this.HasBuilderError));
         }
 
         [RelayCommand]
