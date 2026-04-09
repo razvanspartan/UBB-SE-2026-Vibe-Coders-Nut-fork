@@ -11,21 +11,23 @@ public sealed class TotalWorkoutsMilestoneEvaluator
         new WorkoutMilestone(Threshold: 100, Title: "Gym Legend",      Description: "Complete 100 total workouts."),
     ];
 
-    private readonly IReadOnlyList<WorkoutMilestone> _milestones;
+    private readonly IReadOnlyList<WorkoutMilestone> milestones;
 
     public TotalWorkoutsMilestoneEvaluator() : this(DefaultMilestones) { }
 
     public TotalWorkoutsMilestoneEvaluator(IReadOnlyList<WorkoutMilestone> milestones)
     {
-        _milestones = milestones ?? throw new ArgumentNullException(nameof(milestones));
+        this.milestones = milestones ?? throw new ArgumentNullException(nameof(milestones));
     }
 
     public IReadOnlyList<WorkoutMilestone> GetEarnedMilestones(int lifetimeWorkoutCount)
     {
         if (lifetimeWorkoutCount < 0)
+        {
             throw new ArgumentOutOfRangeException(nameof(lifetimeWorkoutCount), "Count cannot be negative.");
+        }
 
-        return _milestones
+        return milestones
             .Where(m => lifetimeWorkoutCount >= m.Threshold)
             .OrderBy(m => m.Threshold)
             .ToList();
@@ -33,14 +35,21 @@ public sealed class TotalWorkoutsMilestoneEvaluator
 
     public IReadOnlyList<WorkoutMilestone> GetNewlyEarnedMilestones(int previousCount, int newCount)
     {
-        if (previousCount < 0) throw new ArgumentOutOfRangeException(nameof(previousCount));
-        if (newCount < previousCount) throw new ArgumentOutOfRangeException(nameof(newCount), "New count cannot be less than previous count.");
+        if (previousCount < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(previousCount));
+        }
 
-        return _milestones
+        if (newCount < previousCount)
+        {
+            throw new ArgumentOutOfRangeException(nameof(newCount), "New count cannot be less than previous count.");
+        }
+
+        return milestones
             .Where(m => m.Threshold > previousCount && m.Threshold <= newCount)
             .OrderBy(m => m.Threshold)
             .ToList();
     }
 }
 
-public sealed record WorkoutMilestone(int Threshold, string Title, string Description);
+public sealed record WorkoutMilestone(int threshold, string title, string description);

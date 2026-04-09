@@ -9,7 +9,7 @@ public sealed class WeeklyVolumeCheck : IMilestoneCheck
 
     public WeeklyVolumeCheck(string achievementTitle, int requiredWorkoutsPerWeek)
     {
-        AchievementTitle       = achievementTitle;
+        AchievementTitle = achievementTitle;
         RequiredWorkoutsPerWeek = requiredWorkoutsPerWeek;
     }
 

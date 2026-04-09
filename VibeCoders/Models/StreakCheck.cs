@@ -9,7 +9,7 @@ public sealed class StreakCheck : IMilestoneCheck
 
     public StreakCheck(string achievementTitle, int requiredConsecutiveDays)
     {
-        AchievementTitle       = achievementTitle;
+        AchievementTitle = achievementTitle;
         RequiredConsecutiveDays = requiredConsecutiveDays;
     }
 

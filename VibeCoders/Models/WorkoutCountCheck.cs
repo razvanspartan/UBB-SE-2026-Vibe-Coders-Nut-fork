@@ -10,7 +10,7 @@ public sealed class WorkoutCountCheck : IMilestoneCheck
     public WorkoutCountCheck(string achievementTitle, int threshold)
     {
         AchievementTitle = achievementTitle;
-        Threshold        = threshold;
+        Threshold = threshold;
     }
 
     public bool IsMet(int clientId, IDataStorage storage)
