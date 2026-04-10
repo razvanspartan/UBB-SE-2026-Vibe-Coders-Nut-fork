@@ -9,7 +9,7 @@ public sealed class WorkoutLog
     public TimeSpan Duration { get; set; }
     public int SourceTemplateId { get; set; }
     public WorkoutType Type { get; set; }
-    public List<LoggedExercise> Exercises { get; set; } = new();
+    public List<LoggedExercise> Exercises { get; set; } = new ();
     public int TotalCaloriesBurned { get; set; }
     public float AverageMet { get; set; }
     public string IntensityTag { get; set; } = string.Empty;
