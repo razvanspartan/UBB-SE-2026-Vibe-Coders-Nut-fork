@@ -8,7 +8,7 @@ public sealed class LoggedExercise
 
     public int ParentTemplateExerciseId { get; set; }
 
-    public List<LoggedSet> Sets { get; set; } = new();
+    public List<LoggedSet> Sets { get; set; } = new ();
     public MuscleGroup TargetMuscles { get; set; }
     public float Met { get; set; }
     public int ExerciseCaloriesBurned { get; set; }
