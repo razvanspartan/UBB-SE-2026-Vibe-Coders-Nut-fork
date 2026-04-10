@@ -225,7 +225,7 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
 
         for (var i = 0; i < 4; i++)
         {
-            var weekStart = mondayThisWeek.AddDays((-21 + (i * 7)));
+            var weekStart = mondayThisWeek.AddDays(-21 + (i * 7));
             var weekEnd = weekStart.AddDays(7);
 
             var count = await ScalarLongAsync(conn, @"
