@@ -109,7 +109,10 @@ namespace VibeCoders.Services
 
             using (var check = new SqliteCommand("SELECT COUNT(1) FROM ACHIEVEMENT;", conn))
             {
-                if (Convert.ToInt32(check.ExecuteScalar()) > 0) return;
+                if (Convert.ToInt32(check.ExecuteScalar()) > 0)
+                {
+                    return;
+                }
             }
 
             void Insert(string title, string description, string criteria)
@@ -146,16 +149,16 @@ namespace VibeCoders.Services
 
                 using (var insertCmd = new SqliteCommand(insertSql, conn))
                 {
-                    insertCmd.Parameters.AddWithValue("@Title",       milestone.Title);
-                    insertCmd.Parameters.AddWithValue("@Description", milestone.Description);
-                    insertCmd.Parameters.AddWithValue("@Threshold",   milestone.Threshold);
+                    insertCmd.Parameters.AddWithValue("@Title",       milestone.title);
+                    insertCmd.Parameters.AddWithValue("@Description", milestone.description);
+                    insertCmd.Parameters.AddWithValue("@Threshold",   milestone.threshold);
                     insertCmd.ExecuteNonQuery();
                 }
 
                 using (var updateCmd = new SqliteCommand(updateSql, conn))
                 {
-                    updateCmd.Parameters.AddWithValue("@Title",     milestone.Title);
-                    updateCmd.Parameters.AddWithValue("@Threshold", milestone.Threshold);
+                    updateCmd.Parameters.AddWithValue("@Title",     milestone.title);
+                    updateCmd.Parameters.AddWithValue("@Threshold", milestone.threshold);
                     updateCmd.ExecuteNonQuery();
                 }
             }
@@ -217,7 +220,10 @@ namespace VibeCoders.Services
 
             using (var check = new SqliteCommand("SELECT COUNT(1) FROM \"USER\" WHERE username = 'TestTrainer';", conn))
             {
-                if (Convert.ToInt32(check.ExecuteScalar()) > 0) return;
+                if (Convert.ToInt32(check.ExecuteScalar()) > 0)
+                {
+                    return;
+                }
             }
 
             int trainerUserId;
@@ -297,10 +303,10 @@ namespace VibeCoders.Services
             AddSet(log1, "Barbell Squat",    1, 10, 100.0);
             AddSet(log1, "Barbell Squat",    2,  8, 105.0);
             AddSet(log1, "Barbell Squat",    3,  6, 110.0);
-            AddSet(log1, "Romanian Deadlift",1, 12,  80.0);
-            AddSet(log1, "Romanian Deadlift",2, 12,  80.0);
-            AddSet(log1, "Romanian Deadlift",3, 10,  85.0);
-            AddSet(log1, "Romanian Deadlift",4,  8,  90.0);
+            AddSet(log1, "Romanian Deadlift", 1, 12,  80.0);
+            AddSet(log1, "Romanian Deadlift", 2, 12,  80.0);
+            AddSet(log1, "Romanian Deadlift", 3, 10,  85.0);
+            AddSet(log1, "Romanian Deadlift", 4,  8,  90.0);
             AddSet(log1, "Calf Raises",      1, 15,  60.0);
             AddSet(log1, "Calf Raises",      2, 15,  60.0);
 

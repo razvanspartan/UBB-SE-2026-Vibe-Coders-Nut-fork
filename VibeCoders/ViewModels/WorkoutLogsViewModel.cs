@@ -1,10 +1,10 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using VibeCoders.Models;
 using VibeCoders.Services;
 
@@ -12,25 +12,25 @@ namespace VibeCoders.ViewModels
 {
     public sealed partial class WorkoutLogsViewModel : ObservableObject
     {
-        private readonly IDataStorage _storage;
-        private readonly INavigationService _navigation;
+        private readonly IDataStorage storage;
+        private readonly INavigationService navigation;
 
         public WorkoutLogsViewModel(IDataStorage storage, INavigationService navigation)
         {
-            _storage = storage;
-            _navigation = navigation;
+            this.storage = storage;
+            this.navigation = navigation;
         }
 
-        public ObservableCollection<WorkoutLogItemViewModel> Logs { get; } = new();
+        public ObservableCollection<WorkoutLogItemViewModel> Logs { get; } = new ();
 
         [ObservableProperty]
-        private bool isLoading;
+        public partial bool IsLoading { get; set; }
 
         [ObservableProperty]
-        private bool showEmptyState = true;
+        public partial bool ShowEmptyState { get; set; }
 
         [ObservableProperty]
-        private string errorMessage = string.Empty;
+        public partial string ErrorMessage { get; set; }
 
         [RelayCommand]
         private void LoadLogs(int clientId)
@@ -42,7 +42,7 @@ namespace VibeCoders.ViewModels
                 Logs.Clear();
                 ShowEmptyState = false;
 
-                var logs = _storage.GetWorkoutHistory(clientId);
+                var logs = storage.GetWorkoutHistory(clientId);
                 foreach (var log in logs)
                 {
                     Logs.Add(new WorkoutLogItemViewModel(log));
@@ -66,30 +66,40 @@ namespace VibeCoders.ViewModels
         [RelayCommand]
         private void StartWorkout(int clientId)
         {
-            _navigation.NavigateToActiveWorkout(clientId);
+            navigation.NavigateToActiveWorkout(clientId);
         }
 
         [RelayCommand]
         private void ToggleEditMode(WorkoutLogItemViewModel item)
         {
-            if (item == null) return;
+            if (item == null)
+            {
+                return;
+            }
 
             if (item.IsEditMode)
+            {
                 item.CancelEditMode();
+            }
             else
+            {
                 item.EnterEditMode();
+            }
         }
 
         [RelayCommand]
         private void SaveEditedLog(WorkoutLogItemViewModel item)
         {
-            if (item == null || !item.IsEditMode) return;
+            if (item == null || !item.IsEditMode)
+            {
+                return;
+            }
 
             try
             {
                 ErrorMessage = string.Empty;
                 var updated = item.BuildUpdatedWorkoutLog();
-                bool ok = _storage.UpdateWorkoutLog(updated);
+                bool ok = storage.UpdateWorkoutLog(updated);
                 if (!ok)
                 {
                     ErrorMessage = "Failed to save workout changes.";
@@ -108,7 +118,7 @@ namespace VibeCoders.ViewModels
 
     public sealed partial class WorkoutLogItemViewModel : ObservableObject
     {
-        private readonly WorkoutLog _log;
+        private readonly WorkoutLog log;
         public int Id { get; }
         public string WorkoutName { get; }
         public DateTime Date { get; }
@@ -117,17 +127,17 @@ namespace VibeCoders.ViewModels
 
         public string TotalDurationDisplay { get; }
 
-        public ObservableCollection<WorkoutLogExerciseSummary> Exercises { get; } = new();
+        public ObservableCollection<WorkoutLogExerciseSummary> Exercises { get; } = new ();
 
         [ObservableProperty]
-        private bool isExpanded;
+        public partial bool IsExpanded { get; set; }
 
         [ObservableProperty]
-        private bool isEditMode;
+        public partial bool IsEditMode { get; set; }
 
         public WorkoutLogItemViewModel(WorkoutLog log)
         {
-            _log = log;
+            this.log = log;
             Id = log.Id;
             WorkoutName = string.IsNullOrWhiteSpace(log.WorkoutName) ? "Workout" : log.WorkoutName;
             Date = log.Date;
@@ -156,14 +166,14 @@ namespace VibeCoders.ViewModels
 
         public void CancelEditMode()
         {
-            LoadExercisesFromLog(_log);
+            LoadExercisesFromLog(log);
             IsEditMode = false;
         }
 
         public void CommitEditMode()
         {
-            _log.Exercises = Exercises.Select(e => e.ToLoggedExercise(_log.Id)).ToList();
-            LoadExercisesFromLog(_log);
+            log.Exercises = Exercises.Select(e => e.ToLoggedExercise(log.Id)).ToList();
+            LoadExercisesFromLog(log);
             IsEditMode = false;
         }
 
@@ -171,19 +181,19 @@ namespace VibeCoders.ViewModels
         {
             var clone = new WorkoutLog
             {
-                Id = _log.Id,
-                ClientId = _log.ClientId,
-                WorkoutName = _log.WorkoutName,
-                Date = _log.Date,
-                Duration = _log.Duration,
-                SourceTemplateId = _log.SourceTemplateId,
-                Type = _log.Type,
-                TotalCaloriesBurned = _log.TotalCaloriesBurned,
-                AverageMet = _log.AverageMet,
-                IntensityTag = _log.IntensityTag,
-                Rating = _log.Rating,
-                TrainerNotes = _log.TrainerNotes,
-                Exercises = Exercises.Select(e => e.ToLoggedExercise(_log.Id)).ToList()
+                Id = log.Id,
+                ClientId = log.ClientId,
+                WorkoutName = log.WorkoutName,
+                Date = log.Date,
+                Duration = log.Duration,
+                SourceTemplateId = log.SourceTemplateId,
+                Type = log.Type,
+                TotalCaloriesBurned = log.TotalCaloriesBurned,
+                AverageMet = log.AverageMet,
+                IntensityTag = log.IntensityTag,
+                Rating = log.Rating,
+                TrainerNotes = log.TrainerNotes,
+                Exercises = Exercises.Select(e => e.ToLoggedExercise(log.Id)).ToList()
             };
 
             return clone;
@@ -193,7 +203,9 @@ namespace VibeCoders.ViewModels
         {
             Exercises.Clear();
             foreach (var exercise in log.Exercises)
+            {
                 Exercises.Add(new WorkoutLogExerciseSummary(exercise));
+            }
         }
     }
 
@@ -202,7 +214,7 @@ namespace VibeCoders.ViewModels
         public string ExerciseName { get; }
         public bool IsSystemAdjusted { get; }
         public string TooltipText { get; }
-        public ObservableCollection<WorkoutLogSetEditorViewModel> Sets { get; } = new();
+        public ObservableCollection<WorkoutLogSetEditorViewModel> Sets { get; } = new ();
 
         public int NumberOfSets => Sets.Count;
         public string RepsDisplay => Sets.Count > 0
@@ -259,10 +271,10 @@ namespace VibeCoders.ViewModels
         public int SetNumber { get; init; }
 
         [ObservableProperty]
-        private int? reps;
+        public partial int? Reps { get; set; }
 
         [ObservableProperty]
-        private double? weight;
+        public partial double? Weight { get; set; }
 
         public double RepsInput
         {

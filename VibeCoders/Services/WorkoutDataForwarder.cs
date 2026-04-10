@@ -4,8 +4,8 @@ namespace VibeCoders.Services;
 
 public sealed class WorkoutDataForwarder : IWorkoutDataForwarder
 {
-    private readonly IWorkoutAnalyticsStore _store;
-    private readonly IAnalyticsDashboardRefreshBus _refreshBus;
+    private readonly IWorkoutAnalyticsStore store;
+    private readonly IAnalyticsDashboardRefreshBus refreshBus;
 
     private const float LightThreshold = 3.0f;
     private const float ModerateThreshold = 6.0f;
@@ -18,8 +18,8 @@ public sealed class WorkoutDataForwarder : IWorkoutDataForwarder
         IWorkoutAnalyticsStore store,
         IAnalyticsDashboardRefreshBus refreshBus)
     {
-        _store = store;
-        _refreshBus = refreshBus;
+        this.store = store;
+        this.refreshBus = refreshBus;
     }
 
     public async Task<int> ForwardCompletedWorkoutAsync(
@@ -33,9 +33,9 @@ public sealed class WorkoutDataForwarder : IWorkoutDataForwarder
             log.IntensityTag = CalculateIntensityTag(log.AverageMet);
         }
 
-        var logId = await _store.SaveWorkoutAsync(log.ClientId, log, cancellationToken);
+        var logId = await store.SaveWorkoutAsync(log.ClientId, log, cancellationToken);
 
-        _refreshBus.RequestRefresh();
+        refreshBus.RequestRefresh();
 
         return logId;
     }
@@ -43,9 +43,15 @@ public sealed class WorkoutDataForwarder : IWorkoutDataForwarder
     private static string CalculateIntensityTag(float averageMet)
     {
         if (averageMet < LightThreshold)
+        {
             return LightIntensity;
+        }
+
         if (averageMet < ModerateThreshold)
+        {
             return ModerateIntensity;
+        }
+
         return IntenseIntensity;
     }
 }
