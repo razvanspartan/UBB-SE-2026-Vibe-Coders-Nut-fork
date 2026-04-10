@@ -6,13 +6,13 @@ public static class LevelingTierEvaluator
 {
     public static IReadOnlyList<LevelTier> DefaultTiers { get; } =
     [
-        new LevelTier(1, "Beginner",       0),
-        new LevelTier(2, "Trainee",        1),
-        new LevelTier(3, "Apprentice",     2),
-        new LevelTier(4, "Gym Novice",     3),
+        new LevelTier(1, "Beginner", 0),
+        new LevelTier(2, "Trainee", 1),
+        new LevelTier(3, "Apprentice", 2),
+        new LevelTier(4, "Gym Novice", 3),
         new LevelTier(5, "Gym Enthusiast", 5),
-        new LevelTier(6, "Athlete",        7),
-        new LevelTier(7, "Elite",         10),
+        new LevelTier(6, "Athlete", 7),
+        new LevelTier(7, "Elite", 10)
     ];
 
     public static LevelingResult Evaluate(int unlockedAchievements, IReadOnlyList<LevelTier>? tiers = null)
@@ -26,7 +26,7 @@ public static class LevelingTierEvaluator
         LevelTier? best = null;
         foreach (var tier in tiers)
         {
-            if (unlockedAchievements >= tier.MinAchievements)
+            if (unlockedAchievements >= tier.minAchievements)
             {
                 best = tier;
             }
@@ -34,15 +34,21 @@ public static class LevelingTierEvaluator
 
         return best is null
             ? new LevelingResult(0, "Unranked")
-            : new LevelingResult(best.Value.Level, best.Value.RankTitle);
+            : new LevelingResult(best.Value.level, best.Value.rankTitle);
     }
 }
 
-public readonly record struct LevelTier(int Level, string RankTitle, int MinAchievements)
+public readonly record struct LevelTier(int level, string rankTitle, int minAchievements)
 {
-    public override string ToString() =>
-        string.Format(CultureInfo.InvariantCulture,
-            "Level {0} {1} @ {2} achievements", Level, RankTitle, MinAchievements);
+    public override string ToString()
+    {
+        return string.Format(
+            CultureInfo.InvariantCulture,
+            "Level {0} {1} @ {2} achievements",
+            this.level,
+            this.rankTitle,
+            this.minAchievements);
+    }
 }
 
-public readonly record struct LevelingResult(int Level, string RankTitle);
+public readonly record struct LevelingResult(int level, string rankTitle);

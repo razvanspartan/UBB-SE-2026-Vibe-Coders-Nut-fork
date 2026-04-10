@@ -23,34 +23,45 @@ public sealed partial class RankShowcaseViewModel : ObservableObject
         IDataStorage data)
     {
         _analytics = analytics;
-        _session   = session;
-        _data      = data;
+        _session = session;
+        _data = data;
     }
 
-    [ObservableProperty] private int    displayLevel;
-    [ObservableProperty] private string rankTitle              = "\u2014";
-    [ObservableProperty] private string unlockedAchievementsDisplay = "0 achievements unlocked";
-    [ObservableProperty] private bool   isLoading;
+    [ObservableProperty]
+    private int displayLevel;
 
-    [ObservableProperty] private string levelDisplayLine = "Level \u2014";
+    [ObservableProperty]
+    private string rankTitle = "\u2014";
 
-    [ObservableProperty] private double progressPercent;
+    [ObservableProperty]
+    private string unlockedAchievementsDisplay = "0 achievements unlocked";
 
-    [ObservableProperty] private string nextRankInfo = string.Empty;
+    [ObservableProperty]
+    private bool isLoading;
 
-    [ObservableProperty] private bool hasNextRank;
+    [ObservableProperty]
+    private string levelDisplayLine = "Level \u2014";
+
+    [ObservableProperty]
+    private double progressPercent;
+
+    [ObservableProperty]
+    private string nextRankInfo = string.Empty;
+
+    [ObservableProperty]
+    private bool hasNextRank;
 
     public ObservableCollection<AchievementShowcaseItem> ShowcaseAchievements { get; } = new();
 
     public Task LoadAsync(CancellationToken cancellationToken = default)
     {
-        Load();
+        this.Load();
         return Task.CompletedTask;
     }
 
     private void Load()
     {
-        IsLoading = true;
+        this.IsLoading = true;
         try
         {
             var clientId = _session.CurrentClientId;
@@ -59,26 +70,31 @@ public sealed partial class RankShowcaseViewModel : ObservableObject
             int unlockedCount = 0;
             foreach (var item in showcase)
             {
-                if (item.IsUnlocked) unlockedCount++;
+                if (item.IsUnlocked)
+                {
+                    unlockedCount++;
+                }
             }
 
-            var tiers   = LevelingTierEvaluator.DefaultTiers;
-            var result  = LevelingTierEvaluator.Evaluate(unlockedCount, tiers);
+            var tiers = LevelingTierEvaluator.DefaultTiers;
+            var result = LevelingTierEvaluator.Evaluate(unlockedCount, tiers);
 
-            DisplayLevel        = result.Level;
-            RankTitle           = result.RankTitle;
-            LevelDisplayLine    = $"Level {result.Level}: {result.RankTitle}";
-            UnlockedAchievementsDisplay = $"{unlockedCount} achievement{(unlockedCount == 1 ? "" : "s")} unlocked";
+            this.DisplayLevel = result.level;
+            this.RankTitle = result.rankTitle;
+            this.LevelDisplayLine = $"Level {result.level}: {result.rankTitle}";
+            this.UnlockedAchievementsDisplay = $"{unlockedCount} achievement{(unlockedCount == 1 ? "" : "s")} unlocked";
 
-            ComputeNextRankProgress(unlockedCount, tiers, result.Level);
+            this.ComputeNextRankProgress(unlockedCount, tiers, result.level);
 
-            ShowcaseAchievements.Clear();
+            this.ShowcaseAchievements.Clear();
             foreach (var row in showcase)
-                ShowcaseAchievements.Add(row);
+            {
+                this.ShowcaseAchievements.Add(row);
+            }
         }
         finally
         {
-            IsLoading = false;
+            this.IsLoading = false;
         }
     }
 
@@ -90,7 +106,7 @@ public sealed partial class RankShowcaseViewModel : ObservableObject
         int currentIndex = -1;
         for (int i = 0; i < tiers.Count; i++)
         {
-            if (tiers[i].Level == currentLevel)
+            if (tiers[i].level == currentLevel)
             {
                 currentIndex = i;
                 break;
@@ -100,29 +116,29 @@ public sealed partial class RankShowcaseViewModel : ObservableObject
         int nextIndex = currentIndex + 1;
         if (currentIndex < 0 || nextIndex >= tiers.Count)
         {
-            HasNextRank     = false;
-            ProgressPercent = 100;
-            NextRankInfo    = "Max rank reached — keep going!";
+            this.HasNextRank = false;
+            this.ProgressPercent = 100;
+            this.NextRankInfo = "Max rank reached — keep going!";
             return;
         }
 
-        HasNextRank = true;
-        var current  = tiers[currentIndex];
-        var next     = tiers[nextIndex];
+        this.HasNextRank = true;
+        var current = tiers[currentIndex];
+        var next = tiers[nextIndex];
 
-        int bandStart = current.MinAchievements;
-        int bandEnd   = next.MinAchievements;
-        int earned    = unlockedCount - bandStart;
-        int needed    = bandEnd - bandStart;
+        int bandStart = current.minAchievements;
+        int bandEnd = next.minAchievements;
+        int earned = unlockedCount - bandStart;
+        int needed = bandEnd - bandStart;
 
-        ProgressPercent = needed > 0
+        this.ProgressPercent = needed > 0
             ? Math.Min(100, Math.Round(earned * 100.0 / needed, 1))
             : 100;
 
         int remaining = Math.Max(0, bandEnd - unlockedCount);
-        NextRankInfo  = $"Next: Level {next.Level}: {next.RankTitle} — {remaining} more achievement{(remaining == 1 ? "" : "s")} to go";
+        this.NextRankInfo = $"Next: Level {next.level}: {next.rankTitle} — {remaining} more achievement{(remaining == 1 ? "" : "s")} to go";
     }
 
     [RelayCommand]
-    private Task RefreshAsync() => LoadAsync(CancellationToken.None);
+    private Task RefreshAsync() => this.LoadAsync(CancellationToken.None);
 }

@@ -4,7 +4,7 @@ public static class ExerciseCalorieCalculator
 {
     private const double DefaultMet = 5.0;
 
-    private static readonly Dictionary<string, double> MetByExercise = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly Dictionary<string, double> MetByExercise = new (StringComparer.OrdinalIgnoreCase)
     {
         { "Bench Press",            5.0 },
         { "Incline Dumbbell Press", 5.0 },
