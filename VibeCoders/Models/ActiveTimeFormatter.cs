@@ -21,16 +21,20 @@ public static class ActiveTimeFormatter
     public static double ToDecimalHours(TimeSpan duration)
     {
         if (duration < TimeSpan.Zero)
+        {
             return 0.0;
+        }
 
         return duration.TotalHours;
     }
-     
+
     public static double ToDecimalHours(int durationSeconds)
     {
         if (durationSeconds <= 0)
+        {
             return 0.0;
+        }
 
         return durationSeconds / 3600.0;
-    } 
+    }
 }
