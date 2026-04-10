@@ -1,20 +1,13 @@
 ﻿namespace VibeCoders.Models;
 
-/// <summary>
-/// Defines the categories for system notifications.
-/// </summary>
 public enum NotificationType
 {
-    /// <summary>Informational message.</summary>
     Info,
 
-    /// <summary>Warning message.</summary>
     Warning,
 
-    /// <summary>Plateau alert.</summary>
     Plateau,
 
-    /// <summary>Overload alert.</summary>
     Overload
 }
 
