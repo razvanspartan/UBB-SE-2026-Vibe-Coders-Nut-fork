@@ -13,7 +13,7 @@ namespace VibeCoders.Services
                 VALUES
                     (@Title, @Message, @Type, @RelatedId, @DateCreated, @IsRead, @ClientId);";
 
-            using var conn = new SqliteConnection(_connectionString);
+            using var conn = new SqliteConnection(connectionString);
             conn.Open();
 
             using var cmd = new SqliteCommand(sql, conn);
@@ -45,7 +45,7 @@ namespace VibeCoders.Services
 
             var notifications = new List<Notification>();
 
-            using var conn = new SqliteConnection(_connectionString);
+            using var conn = new SqliteConnection(connectionString);
             conn.Open();
 
             using var cmd = new SqliteCommand(sql, conn);

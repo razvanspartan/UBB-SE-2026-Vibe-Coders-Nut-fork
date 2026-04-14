@@ -7,7 +7,7 @@ public partial class SqlDataStorage
 {
     public int GetConsecutiveWorkoutDayStreak(int clientId)
     {
-        using var conn = new SqliteConnection(_connectionString);
+        using var conn = new SqliteConnection(connectionString);
         conn.Open();
 
         const string sql = @"
@@ -60,7 +60,7 @@ public partial class SqlDataStorage
     {
         var list = new List<Achievement>();
 
-        using var conn = new SqliteConnection(_connectionString);
+        using var conn = new SqliteConnection(connectionString);
         conn.Open();
 
         const string sql = @"
@@ -108,7 +108,7 @@ public partial class SqlDataStorage
 
     public int GetWorkoutsInLastSevenDays(int clientId)
     {
-        using var conn = new SqliteConnection(_connectionString);
+        using var conn = new SqliteConnection(connectionString);
         conn.Open();
 
         const string sql = @"
@@ -127,7 +127,7 @@ public partial class SqlDataStorage
     {
         var list = new List<AchievementShowcaseItem>();
 
-        using var conn = new SqliteConnection(_connectionString);
+        using var conn = new SqliteConnection(connectionString);
         conn.Open();
 
         const string sql = @"
@@ -166,7 +166,7 @@ public partial class SqlDataStorage
 
     public int GetWorkoutCount(int clientId)
     {
-        using var conn = new SqliteConnection(_connectionString);
+        using var conn = new SqliteConnection(connectionString);
         conn.Open();
         using var cmd = new SqliteCommand(
             "SELECT COUNT(1) FROM WORKOUT_LOG WHERE client_id = @ClientId;", conn);
@@ -176,7 +176,7 @@ public partial class SqlDataStorage
 
     public int GetDistinctWorkoutDayCount(int clientId)
     {
-        using var conn = new SqliteConnection(_connectionString);
+        using var conn = new SqliteConnection(connectionString);
         conn.Open();
         using var cmd = new SqliteCommand(
             "SELECT COUNT(DISTINCT date(date)) FROM WORKOUT_LOG WHERE client_id = @ClientId;", conn);
@@ -186,7 +186,7 @@ public partial class SqlDataStorage
 
     public AchievementShowcaseItem? GetAchievementForClient(int achievementId, int clientId)
     {
-        using var conn = new SqliteConnection(_connectionString);
+        using var conn = new SqliteConnection(connectionString);
         conn.Open();
 
         const string sql = @"
@@ -219,7 +219,7 @@ public partial class SqlDataStorage
 
     public bool AwardAchievement(int clientId, int achievementId)
     {
-        using var conn = new SqliteConnection(_connectionString);
+        using var conn = new SqliteConnection(connectionString);
         conn.Open();
 
         const string checkSql = @"
