@@ -10,7 +10,7 @@ namespace VibeCoders.Services
         {
             var roster = new List<Client>();
 
-            using var conn = new SqliteConnection(_connectionString);
+            using var conn = new SqliteConnection(connectionString);
             conn.Open();
 
             string sql = @"
@@ -71,7 +71,7 @@ namespace VibeCoders.Services
                 VALUES
                     (@TemplateId, @Name, @MuscleGroup, @TargetSets, @TargetReps, @TargetWeight);";
 
-            using var conn = new SqliteConnection(_connectionString);
+            using var conn = new SqliteConnection(connectionString);
             conn.Open();
 
             using var transaction = conn.BeginTransaction();
@@ -133,7 +133,7 @@ namespace VibeCoders.Services
             const string deleteExercisesSql = "DELETE FROM TEMPLATE_EXERCISE WHERE workout_template_id = @Id;";
             const string deleteTemplateSql = "DELETE FROM WORKOUT_TEMPLATE WHERE workout_template_id = @Id;";
 
-            using var conn = new SqliteConnection(_connectionString);
+            using var conn = new SqliteConnection(connectionString);
             conn.Open();
             using var transaction = conn.BeginTransaction();
 

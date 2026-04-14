@@ -8,7 +8,7 @@ namespace VibeCoders.Services
         public double GetClientWeight(int clientId)
         {
             const string sql = "SELECT weight FROM CLIENT WHERE client_id = @ClientId LIMIT 1;";
-            using var conn = new SqliteConnection(_connectionString);
+            using var conn = new SqliteConnection(connectionString);
             conn.Open();
             using var cmd = new SqliteCommand(sql, conn);
             cmd.Parameters.AddWithValue("@ClientId", clientId);
@@ -34,7 +34,7 @@ namespace VibeCoders.Services
                      @TargetReps, @TargetWeight, @PerformanceRatio,
                      @IsSystemAdjusted, @AdjustmentNote);";
 
-            using var conn = new SqliteConnection(_connectionString);
+            using var conn = new SqliteConnection(connectionString);
             conn.Open();
 
             using var transaction = conn.BeginTransaction();
@@ -111,7 +111,7 @@ namespace VibeCoders.Services
 
             var logs = new List<WorkoutLog>();
 
-            using var conn = new SqliteConnection(_connectionString);
+            using var conn = new SqliteConnection(connectionString);
             conn.Open();
 
             using (var cmd = new SqliteCommand(sqlLogs, conn))
@@ -169,7 +169,7 @@ namespace VibeCoders.Services
                      @TargetReps, @TargetWeight, @PerformanceRatio,
                      @IsSystemAdjusted, @AdjustmentNote);";
 
-            using var conn = new SqliteConnection(_connectionString);
+            using var conn = new SqliteConnection(connectionString);
             conn.Open();
             using var transaction = conn.BeginTransaction();
 
@@ -247,7 +247,7 @@ namespace VibeCoders.Services
 
             var logs = new List<WorkoutLog>();
 
-            using var conn = new SqliteConnection(_connectionString);
+            using var conn = new SqliteConnection(connectionString);
             conn.Open();
 
             using (var cmd = new SqliteCommand(sql, conn))
@@ -267,17 +267,16 @@ namespace VibeCoders.Services
                                 SourceTemplateId = reader.IsDBNull(5) ? 0 : reader.GetInt32(5),
                                 Type = ParseWorkoutType(reader.IsDBNull(6) ? null : reader.GetString(6))
                             });
-                        }
-                    }
+                }
+            }
 
                     foreach (var log in logs)
-                        log.Exercises = LoadExercisesForLog(log.Id, conn);
-                    }
-
-                    return logs;
+            {
+                log.Exercises = LoadExercisesForLog(log.Id, conn);
+            }
+            return logs;
         }
-
-        public bool UpdateWorkoutLogFeedback(int workoutLogId, double rating, string notes)
+      public bool UpdateWorkoutLogFeedback(int workoutLogId, double rating, string notes)
         {
             const string sql = @"
                 UPDATE WORKOUT_LOG
@@ -285,7 +284,7 @@ namespace VibeCoders.Services
                     trainer_notes = @Notes
                 WHERE workout_log_id = @WorkoutLogId;";
 
-            using var conn = new SqliteConnection(_connectionString);
+            using var conn = new SqliteConnection(connectionString);
             conn.Open();
 
             using var cmd = new SqliteCommand(sql, conn);
@@ -375,7 +374,7 @@ namespace VibeCoders.Services
 
         public int GetTotalActiveTimeForClient(int clientId)
         {
-            using var conn = new SqliteConnection(_connectionString);
+            using var conn = new SqliteConnection(connectionString);
             conn.Open();
             using var cmd = new SqliteCommand(@"
                 SELECT COALESCE(SUM(

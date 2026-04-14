@@ -12,7 +12,7 @@ namespace VibeCoders.Services
                 INSERT INTO NUTRITION_PLAN (start_date, end_date)
                 VALUES (@StartDate, @EndDate);";
 
-            using var conn = new SqliteConnection(_connectionString);
+            using var conn = new SqliteConnection(connectionString);
             conn.Open();
 
             using var cmd = new SqliteCommand(sql, conn);
@@ -32,7 +32,7 @@ namespace VibeCoders.Services
 
             string serializedIngredients = JsonSerializer.Serialize(meal.Ingredients);
 
-            using var conn = new SqliteConnection(_connectionString);
+            using var conn = new SqliteConnection(connectionString);
             conn.Open();
 
             using var cmd = new SqliteCommand(sql, conn);
@@ -49,7 +49,7 @@ namespace VibeCoders.Services
                 INSERT OR IGNORE INTO CLIENT_NUTRITION_PLAN (client_id, nutrition_plan_id)
                 VALUES (@ClientId, @PlanId);";
 
-            using var conn = new SqliteConnection(_connectionString);
+            using var conn = new SqliteConnection(connectionString);
             conn.Open();
 
             using var cmd = new SqliteCommand(sql, conn);
@@ -63,7 +63,9 @@ namespace VibeCoders.Services
             int planId = InsertNutritionPlan(plan);
 
             foreach (Meal meal in plan.Meals)
+            {
                 InsertMeal(meal, planId);
+            }
 
             AssignNutritionPlanToClient(clientId, planId);
         }
@@ -80,10 +82,10 @@ namespace VibeCoders.Services
 
             var plans = new List<NutritionPlan>();
 
-            using var conn = new SqliteConnection(_connectionString);
+            using var conn = new SqliteConnection(connectionString);
             conn.Open();
 
-            using var cmd    = new SqliteCommand(sql, conn);
+            using var cmd = new SqliteCommand(sql, conn);
             cmd.Parameters.AddWithValue("@ClientId", clientId);
 
             using var reader = cmd.ExecuteReader();
@@ -91,14 +93,16 @@ namespace VibeCoders.Services
             {
                 plans.Add(new NutritionPlan
                 {
-                    PlanId    = reader.GetInt32(0),
+                    PlanId = reader.GetInt32(0),
                     StartDate = DateTime.Parse(reader.GetString(1)),
-                    EndDate   = DateTime.Parse(reader.GetString(2))
+                    EndDate = DateTime.Parse(reader.GetString(2))
                 });
             }
 
             foreach (NutritionPlan plan in plans)
+            {
                 plan.Meals = GetMealsForPlan(plan.PlanId);
+            }
 
             return plans;
         }
@@ -113,10 +117,10 @@ namespace VibeCoders.Services
 
             var meals = new List<Meal>();
 
-            using var conn = new SqliteConnection(_connectionString);
+            using var conn = new SqliteConnection(connectionString);
             conn.Open();
 
-            using var cmd    = new SqliteCommand(sql, conn);
+            using var cmd = new SqliteCommand(sql, conn);
             cmd.Parameters.AddWithValue("@PlanId", nutritionPlanId);
 
             using var reader = cmd.ExecuteReader();

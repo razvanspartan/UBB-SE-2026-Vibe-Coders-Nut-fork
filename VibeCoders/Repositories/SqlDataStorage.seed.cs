@@ -7,7 +7,7 @@ namespace VibeCoders.Services
     {
         public void SeedPrebuiltWorkouts()
         {
-            using var conn = new SqliteConnection(_connectionString);
+            using var conn = new SqliteConnection(connectionString);
             conn.Open();
 
             SeedTemplate(conn, "HIIT Fat Burner", new[]
@@ -104,7 +104,7 @@ namespace VibeCoders.Services
 
         public void SeedAchievementCatalog()
         {
-            using var conn = new SqliteConnection(_connectionString);
+            using var conn = new SqliteConnection(connectionString);
             conn.Open();
 
             using (var check = new SqliteCommand("SELECT COUNT(1) FROM ACHIEVEMENT;", conn))
@@ -133,7 +133,7 @@ namespace VibeCoders.Services
 
         public void SeedWorkoutMilestoneAchievements()
         {
-            using var conn = new SqliteConnection(_connectionString);
+            using var conn = new SqliteConnection(connectionString);
             conn.Open();
 
             foreach (var milestone in TotalWorkoutsMilestoneEvaluator.DefaultMilestones)
@@ -166,7 +166,7 @@ namespace VibeCoders.Services
 
         public void SeedEvaluationEngineAchievements()
         {
-            using var conn = new SqliteConnection(_connectionString);
+            using var conn = new SqliteConnection(connectionString);
             conn.Open();
 
             void Upsert(string title, string description, string criteria)
@@ -215,7 +215,7 @@ namespace VibeCoders.Services
 
         public void SeedTestData()
         {
-            using var conn = new SqliteConnection(_connectionString);
+            using var conn = new SqliteConnection(connectionString);
             conn.Open();
 
             using (var check = new SqliteCommand("SELECT COUNT(1) FROM \"USER\" WHERE username = 'TestTrainer';", conn))

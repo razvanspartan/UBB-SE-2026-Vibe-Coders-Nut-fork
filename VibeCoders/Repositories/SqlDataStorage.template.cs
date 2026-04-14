@@ -46,7 +46,7 @@ namespace VibeCoders.Services
 
             var templates = new List<WorkoutTemplate>();
 
-            using var conn = new SqliteConnection(_connectionString);
+            using var conn = new SqliteConnection(connectionString);
             conn.Open();
 
             using (var cmd = new SqliteCommand(sql, conn))
@@ -92,7 +92,7 @@ namespace VibeCoders.Services
                 FROM TEMPLATE_EXERCISE
                 WHERE id = @Id;";
 
-            using var conn = new SqliteConnection(_connectionString);
+            using var conn = new SqliteConnection(connectionString);
             conn.Open();
 
             using var cmd = new SqliteCommand(sql, conn);
@@ -123,7 +123,7 @@ namespace VibeCoders.Services
                 SET target_weight = @NewWeight
                 WHERE id = @Id;";
 
-            using var conn = new SqliteConnection(_connectionString);
+            using var conn = new SqliteConnection(connectionString);
             conn.Open();
 
             using var cmd = new SqliteCommand(sql, conn);
@@ -138,7 +138,7 @@ namespace VibeCoders.Services
             const string sql = "SELECT name FROM EXERCISE ORDER BY name ASC;";
             var list = new List<string>();
 
-            using var conn = new SqliteConnection(_connectionString);
+            using var conn = new SqliteConnection(connectionString);
             conn.Open();
 
             using var cmd = new SqliteCommand(sql, conn);
