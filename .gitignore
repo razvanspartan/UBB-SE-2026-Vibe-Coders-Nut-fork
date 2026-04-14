@@ -16,3 +16,4 @@ obj/
 
 # VS Code settings
 .vscode/
+/VibeCoders/ViewModels/RankShowcaseViewModel.cs
