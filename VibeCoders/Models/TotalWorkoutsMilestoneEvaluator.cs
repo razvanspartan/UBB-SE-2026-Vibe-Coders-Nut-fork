@@ -13,7 +13,10 @@ public sealed class TotalWorkoutsMilestoneEvaluator
 
     private readonly IReadOnlyList<WorkoutMilestone> milestones;
 
-    public TotalWorkoutsMilestoneEvaluator() : this(DefaultMilestones) { }
+    public TotalWorkoutsMilestoneEvaluator()
+        : this(DefaultMilestones)
+    {
+    }
 
     public TotalWorkoutsMilestoneEvaluator(IReadOnlyList<WorkoutMilestone> milestones)
     {

@@ -132,20 +132,19 @@ namespace VibeCoders.Services
                         TrainerNotes = reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
                         WorkoutName = reader.IsDBNull(7) ? string.Empty : reader.GetString(7),
                         Type = ParseWorkoutType(reader.IsDBNull(8) ? null : reader.GetString(8)),
-                        ClientId = clientId
-                    });
-                }
-            }
+                                        ClientId = clientId
+                                    });
+                                }
+                            }
 
             foreach (var log in logs)
             {
                 log.Exercises = LoadExercisesForLog(log.Id, conn);
             }
+                            return logs;
+                        }
 
-            return logs;
-        }
-
-        public bool UpdateWorkoutLog(WorkoutLog log)
+                        public bool UpdateWorkoutLog(WorkoutLog log)
         {
             const string updateLog = @"
                 UPDATE WORKOUT_LOG
@@ -258,25 +257,24 @@ namespace VibeCoders.Services
                 using var reader = cmd.ExecuteReader();
                 while (reader.Read())
                 {
-                    logs.Add(new WorkoutLog
-                    {
-                        Id = reader.GetInt32(0),
-                        ClientId = reader.GetInt32(1),
-                        Date = DateTime.Parse(reader.GetString(2)),
-                        Duration = TimeSpan.Parse(reader.GetString(3)),
-                        TotalCaloriesBurned = reader.IsDBNull(4) ? 0 : reader.GetInt32(4),
-                        SourceTemplateId = reader.IsDBNull(5) ? 0 : reader.GetInt32(5),
-                        Type = ParseWorkoutType(reader.IsDBNull(6) ? null : reader.GetString(6))
-                    });
-                }
-            }
+                            logs.Add(new WorkoutLog
+                            {
+                                Id = reader.GetInt32(0),
+                                ClientId = reader.GetInt32(1),
+                                Date = DateTime.Parse(reader.GetString(2)),
+                                Duration = TimeSpan.Parse(reader.GetString(3)),
+                                TotalCaloriesBurned = reader.IsDBNull(4) ? 0 : reader.GetInt32(4),
+                                SourceTemplateId = reader.IsDBNull(5) ? 0 : reader.GetInt32(5),
+                                Type = ParseWorkoutType(reader.IsDBNull(6) ? null : reader.GetString(6))
+                            });
+                        }
+                    }
 
-            foreach (var log in logs)
-            {
-                log.Exercises = LoadExercisesForLog(log.Id, conn);
-            }
+                    foreach (var log in logs)
+                        log.Exercises = LoadExercisesForLog(log.Id, conn);
+                    }
 
-            return logs;
+                    return logs;
         }
 
         public bool UpdateWorkoutLogFeedback(int workoutLogId, double rating, string notes)

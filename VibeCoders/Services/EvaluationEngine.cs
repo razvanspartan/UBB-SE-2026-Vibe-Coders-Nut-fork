@@ -9,12 +9,16 @@ public sealed class EvaluationEngine
     private readonly IDataStorage storage;
     private readonly IReadOnlyList<VibeCoders.Domain.IMilestoneCheck> checks;
 
-    public EvaluationEngine(IDataStorage storage) : this(storage, BuildDefaultChecks()) { }
+    public EvaluationEngine(IDataStorage storage) : this(storage, BuildDefaultChecks())
+    {
+    }
 
     public EvaluationEngine(IDataStorage storage, IReadOnlyList<VibeCoders.Domain.IMilestoneCheck> checks)
     {
         this.storage = storage;
-        this.checks  = checks;
+
+        this.checks = checks;
+
     }
 
     private static IReadOnlyList<VibeCoders.Domain.IMilestoneCheck> BuildDefaultChecks()
@@ -43,13 +47,26 @@ public sealed class EvaluationEngine
 
             foreach (var check in checks)
             {
-                if (!catalog.TryGetValue(check.AchievementTitle, out var item)) continue;
-                if (item.IsUnlocked) continue;
+                if (!catalog.TryGetValue(check.AchievementTitle, out var item))
+                {
+                    continue;
+                }
 
-                if (!check.IsMet(clientId, storage)) continue;
+                if (item.IsUnlocked)
+                {
+                    continue;
+                }
+
+                if (!check.IsMet(clientId, storage))
+                {
+                    continue;
+                }
 
                 bool awarded = storage.AwardAchievement(clientId, item.AchievementId);
-                if (!awarded) continue;
+                if (!awarded)
+                {
+                    continue;
+                }
 
                 newlyUnlocked.Add(check.AchievementTitle);
                 Debug.WriteLine(

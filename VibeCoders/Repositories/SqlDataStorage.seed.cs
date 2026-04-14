@@ -303,7 +303,9 @@ namespace VibeCoders.Services
             AddSet(log1, "Barbell Squat",    1, 10, 100.0);
             AddSet(log1, "Barbell Squat",    2,  8, 105.0);
             AddSet(log1, "Barbell Squat",    3,  6, 110.0);
+
             AddSet(log1, "Romanian Deadlift", 1, 12, 80.0);
+
             AddSet(log1, "Romanian Deadlift", 2, 12,  80.0);
             AddSet(log1, "Romanian Deadlift", 3, 10,  85.0);
             AddSet(log1, "Romanian Deadlift", 4,  8,  90.0);
