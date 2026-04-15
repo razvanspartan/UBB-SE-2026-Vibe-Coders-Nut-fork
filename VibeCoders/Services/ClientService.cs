@@ -1,16 +1,16 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Json;
-using System.Threading;
-using System.Threading.Tasks;
-using VibeCoders.Domain;
-using VibeCoders.Models;
-using VibeCoders.Models.Integration;
-
 namespace VibeCoders.Services
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Net.Http;
+    using System.Net.Http.Json;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using VibeCoders.Domain;
+    using VibeCoders.Models;
+    using VibeCoders.Models.Integration;
+
     public sealed class ClientService
     {
         private readonly IDataStorage storage;
@@ -203,8 +203,8 @@ namespace VibeCoders.Services
             log.TotalCaloriesBurned = log.Exercises.Sum(e => e.ExerciseCaloriesBurned);
             log.AverageMet = (float)log.Exercises.Average(e => e.Met);
             log.IntensityTag = log.AverageMet < 3.0f ? "light"
-                             : log.AverageMet < 6.0f ? "moderate"
-                             : "intense";
+                : log.AverageMet < 6.0f ? "moderate"
+                : "intense";
         }
 
         private void RunAchievementEvaluation(int clientId)
@@ -263,3 +263,4 @@ namespace VibeCoders.Services
         }
     }
 }
+

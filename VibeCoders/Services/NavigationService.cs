@@ -1,108 +1,110 @@
-using Microsoft.UI.Xaml.Controls;
-using VibeCoders.Views;
-
-namespace VibeCoders.Services;
-
-public sealed class NavigationService : INavigationService
+namespace VibeCoders.Services
 {
-    private Frame? frame;
-    private readonly IAnalyticsDashboardRefreshBus refreshBus;
+    using Microsoft.UI.Xaml.Controls;
+    using VibeCoders.Views;
 
-    public NavigationService(IAnalyticsDashboardRefreshBus refreshBus)
+    public sealed class NavigationService : INavigationService
     {
-        this.refreshBus = refreshBus;
-    }
+        private Frame? frame;
+        private readonly IAnalyticsDashboardRefreshBus refreshBus;
 
-    public void AttachFrame(Frame frame)
-    {
-        this.frame = frame;
-    }
-
-    public void NavigateToClientDashboard(bool requestRefresh)
-    {
-        if (frame is null)
+        public NavigationService(IAnalyticsDashboardRefreshBus refreshBus)
         {
-            return;
+            this.refreshBus = refreshBus;
         }
 
-        frame.Navigate(typeof(ClientDashboardPage));
-
-        if (requestRefresh)
+        public void AttachFrame(Frame frame)
         {
-            refreshBus.RequestRefresh();
-        }
-    }
-
-    public void NavigateToCalendarIntegration()
-    {
-        if (frame is null)
-        {
-            return;
+            this.frame = frame;
         }
 
-        frame.Navigate(typeof(CalendarIntegrationPage));
-    }
-
-    public void NavigateToRankShowcase()
-    {
-        if (frame is null)
+        public void NavigateToClientDashboard(bool requestRefresh)
         {
-            return;
+            if (frame is null)
+            {
+                return;
+            }
+
+            frame.Navigate(typeof(ClientDashboardPage));
+
+            if (requestRefresh)
+            {
+                refreshBus.RequestRefresh();
+            }
         }
 
-        frame.Navigate(typeof(RankShowcasePage));
-    }
-
-    public void NavigateToActiveWorkout(int clientId = 0)
-    {
-        if (frame is null)
+        public void NavigateToCalendarIntegration()
         {
-            return;
+            if (frame is null)
+            {
+                return;
+            }
+
+            frame.Navigate(typeof(CalendarIntegrationPage));
         }
 
-        frame.Navigate(typeof(ActiveWorkoutPage), clientId);
-    }
-
-    public void NavigateToWorkoutLogs()
-    {
-        if (frame is null)
+        public void NavigateToRankShowcase()
         {
-            return;
+            if (frame is null)
+            {
+                return;
+            }
+
+            frame.Navigate(typeof(RankShowcasePage));
         }
 
-        frame.Navigate(typeof(WorkoutLogsPage));
-    }
-
-    public void GoBack()
-    {
-        if (frame is null)
+        public void NavigateToActiveWorkout(int clientId = 0)
         {
-            return;
+            if (frame is null)
+            {
+                return;
+            }
+
+            frame.Navigate(typeof(ActiveWorkoutPage), clientId);
         }
 
-        if (frame.CanGoBack)
+        public void NavigateToWorkoutLogs()
         {
-            frame.GoBack();
-        }
-    }
+            if (frame is null)
+            {
+                return;
+            }
 
-    public void NavigateToTrainerDashboard()
-    {
-        if (frame is null)
-        {
-            return;
+            frame.Navigate(typeof(WorkoutLogsPage));
         }
 
-        frame.Navigate(typeof(TrainerDashboardView));
-    }
-
-    public void NavigateToClientProfile(int clientId)
-    {
-        if (frame is null)
+        public void GoBack()
         {
-            return;
+            if (frame is null)
+            {
+                return;
+            }
+
+            if (frame.CanGoBack)
+            {
+                frame.GoBack();
+            }
         }
 
-        frame.Navigate(typeof(ClientProfileView), clientId);
+        public void NavigateToTrainerDashboard()
+        {
+            if (frame is null)
+            {
+                return;
+            }
+
+            frame.Navigate(typeof(TrainerDashboardView));
+        }
+
+        public void NavigateToClientProfile(int clientId)
+        {
+            if (frame is null)
+            {
+                return;
+            }
+
+            frame.Navigate(typeof(ClientProfileView), clientId);
+        }
     }
 }
+
