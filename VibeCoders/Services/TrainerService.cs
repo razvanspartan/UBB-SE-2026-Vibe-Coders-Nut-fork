@@ -1,69 +1,84 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using VibeCoders.Models;
 
-namespace VibeCoders.Services
+namespace VibeCoders.Services;
+
+public sealed class TrainerService
 {
-    public class TrainerService
+    private readonly IDataStorage storage;
+
+    public TrainerService(IDataStorage storage)
     {
-       
-        public IDataStorage DataStorage { get; }
+        this.storage = storage;
+    }
 
-     
-        public TrainerService(IDataStorage storage)
+    public List<Client> GetAssignedClients(int trainerId)
+    {
+        return storage.GetTrainerClient(trainerId);
+    }
+
+    public List<WorkoutLog> GetClientWorkoutHistory(int clientId)
+    {
+        return storage.GetWorkoutHistory(clientId);
+    }
+
+    public bool SaveWorkoutFeedback(WorkoutLog log)
+    {
+        if (log is null)
         {
-            DataStorage = storage;
+            return false;
         }
 
-        
-        public List<Client> GetAssignedClients(int trainerId)
+        return storage.UpdateWorkoutLogFeedback(log.Id, log.Rating, log.TrainerNotes);
+    }
+
+    public void AssignWorkout(Client client, WorkoutLog workout)
+    {
+        throw new NotImplementedException("Workout assignment coming in Slice 2!");
+    }
+
+    public List<WorkoutTemplate> GetAvailableWorkouts(int clientId)
+    {
+        return storage.GetAvailableWorkouts(clientId);
+    }
+
+    public bool DeleteWorkoutTemplate(int templateId)
+    {
+        return storage.DeleteWorkoutTemplate(templateId);
+    }
+
+    public bool SaveTrainerWorkout(WorkoutTemplate template)
+    {
+        if (template is null)
         {
-            
-            return DataStorage.GetTrainerClient(trainerId);
+            return false;
         }
 
-        public List<WorkoutLog> GetClientWorkoutHistory(int clientId)
+        return storage.SaveTrainerWorkout(template);
+    }
+
+    public List<string> GetAllExerciseNames()
+    {
+        return storage.GetAllExerciseNames();
+    }
+
+    public bool AssignNutritionPlan(NutritionPlan plan, int clientId)
+    {
+        if (plan is null)
         {
-            
-            return DataStorage.GetWorkoutHistory(clientId);
+            return false;
         }
 
-        public bool SaveWorkoutFeedback(WorkoutLog log)
+        if (clientId <= 0)
         {
-            if (log == null) return false;
-
-            return DataStorage.UpdateWorkoutLogFeedback(log.Id, log.Rating, log.TrainerNotes);
+            return false;
         }
 
-        public void assignWorkout(Client client, WorkoutLog workout)
-        {
-            throw new NotImplementedException("Workout assignment coming in Slice 2!");
-        }
-
-        public bool SaveTrainerWorkout(WorkoutTemplate template)
-        {
-            if (template == null) return false;
-
-            return DataStorage.SaveTrainerWorkout(template);
-        }
-
-        public List<string> GetPredefinedExercises()
-        {
-            return DataStorage.GetAllExerciseNames();
-        }
-
-        public bool AssignNutritionPlan(NutritionPlan plan, int clientId)
-        {
-            if (plan == null)
-                return false;
-            if (clientId <= 0)
-                return false;
-
-            DataStorage.SaveNutritionPlanForClient(plan, clientId);
-            return true;
-        }
+        storage.SaveNutritionPlanForClient(plan, clientId);
+        return true;
     }
 }

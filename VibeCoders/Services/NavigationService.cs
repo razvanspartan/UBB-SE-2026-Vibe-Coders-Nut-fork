@@ -5,74 +5,104 @@ namespace VibeCoders.Services;
 
 public sealed class NavigationService : INavigationService
 {
-    private Frame? _frame;
-    private readonly IAnalyticsDashboardRefreshBus _refreshBus;
+    private Frame? frame;
+    private readonly IAnalyticsDashboardRefreshBus refreshBus;
 
     public NavigationService(IAnalyticsDashboardRefreshBus refreshBus)
     {
-        _refreshBus = refreshBus;
+        this.refreshBus = refreshBus;
     }
 
     public void AttachFrame(Frame frame)
     {
-        _frame = frame;
+        this.frame = frame;
     }
 
     public void NavigateToClientDashboard(bool requestRefresh)
     {
-        if (_frame is null) return;
-        _frame.Navigate(typeof(ClientDashboardPage));
-        if (requestRefresh) _refreshBus.RequestRefresh();
+        if (frame is null)
+        {
+            return;
+        }
+
+        frame.Navigate(typeof(ClientDashboardPage));
+
+        if (requestRefresh)
+        {
+            refreshBus.RequestRefresh();
+        }
     }
 
     public void NavigateToCalendarIntegration()
     {
-        if (_frame is null) return;
-        _frame.Navigate(typeof(CalendarIntegrationPage));
+        if (frame is null)
+        {
+            return;
+        }
+
+        frame.Navigate(typeof(CalendarIntegrationPage));
     }
 
     public void NavigateToRankShowcase()
     {
-        if (_frame is null) return;
-        _frame.Navigate(typeof(RankShowcasePage));
+        if (frame is null)
+        {
+            return;
+        }
+
+        frame.Navigate(typeof(RankShowcasePage));
     }
 
     public void NavigateToActiveWorkout(int clientId = 0)
     {
-        if (_frame is null) return;
-        _frame.Navigate(typeof(ActiveWorkoutPage), clientId);
+        if (frame is null)
+        {
+            return;
+        }
+
+        frame.Navigate(typeof(ActiveWorkoutPage), clientId);
     }
 
     public void NavigateToWorkoutLogs()
     {
-        if (_frame is null) return;
-        _frame.Navigate(typeof(WorkoutLogsPage));
+        if (frame is null)
+        {
+            return;
+        }
+
+        frame.Navigate(typeof(WorkoutLogsPage));
     }
 
     public void GoBack()
     {
-        if (_frame is null) return;
-        if (_frame.CanGoBack) _frame.GoBack();
+        if (frame is null)
+        {
+            return;
+        }
+
+        if (frame.CanGoBack)
+        {
+            frame.GoBack();
+        }
     }
 
     public void NavigateToTrainerDashboard()
     {
-        if (_frame is null)
+        if (frame is null)
         {
             return;
         }
 
-        _frame?.Navigate(typeof(Views.TrainerDashboardView));
-
+        frame.Navigate(typeof(TrainerDashboardView));
     }
 
     public void NavigateToClientProfile(int clientId)
     {
-        if (_frame == null)
+        if (frame is null)
         {
             return;
         }
-        _frame.Navigate(typeof(ClientProfileView), clientId);
-    }
 
+        frame.Navigate(typeof(ClientProfileView), clientId);
+    }
 }
