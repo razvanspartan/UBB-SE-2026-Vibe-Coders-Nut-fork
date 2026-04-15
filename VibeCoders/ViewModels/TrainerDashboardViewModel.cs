@@ -43,6 +43,8 @@ public sealed partial class TrainerDashboardViewModel : ObservableObject
     public ObservableCollection<TemplateExercise> BuilderExercises { get; } = new ();
     public ObservableCollection<string> AvailableExercises { get; } = new ();
 
+#pragma warning disable MVVMTK0045
+
     [ObservableProperty]
     private string builderErrorText = string.Empty;
 
@@ -58,6 +60,8 @@ public sealed partial class TrainerDashboardViewModel : ObservableObject
 
     [ObservableProperty]
     private string feedbackErrorText = string.Empty;
+
+#pragma warning restore MVVMTK0045
 
     public int EditingTemplateId { get; set; }
 
@@ -402,8 +406,6 @@ public sealed partial class TrainerDashboardViewModel : ObservableObject
     private void LoadAvailableExercises()
     {
         AvailableExercises.Clear();
-
-        // AICI AM CORECTAT: Folosim metoda pass-through pentru a prelua numele
         foreach (var name in trainerService.GetAllExerciseNames())
         {
             AvailableExercises.Add(name);
