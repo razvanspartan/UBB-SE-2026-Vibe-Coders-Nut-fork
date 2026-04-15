@@ -123,27 +123,29 @@ namespace VibeCoders.Services
                 {
                     logs.Add(new WorkoutLog
                     {
-                        Id                  = reader.GetInt32(0),
-                        Date                = DateTime.Parse(reader.GetString(1)),
-                        Duration            = TimeSpan.Parse(reader.GetString(2)),
+                        Id = reader.GetInt32(0),
+                        Date = DateTime.Parse(reader.GetString(1)),
+                        Duration = TimeSpan.Parse(reader.GetString(2)),
                         TotalCaloriesBurned = reader.IsDBNull(3) ? 0 : reader.GetInt32(3),
                         SourceTemplateId = reader.IsDBNull(4) ? 0 : reader.GetInt32(4),
                         Rating = reader.IsDBNull(5) ? -1 : Convert.ToDouble(reader.GetInt32(5)),
                         TrainerNotes = reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
                         WorkoutName = reader.IsDBNull(7) ? string.Empty : reader.GetString(7),
                         Type = ParseWorkoutType(reader.IsDBNull(8) ? null : reader.GetString(8)),
-                        ClientId = clientId
-                    });
-                }
-            }
+                                        ClientId = clientId
+                                    });
+                                }
+                            }
 
-            foreach (var log in logs)
-                log.Exercises = LoadExercisesForLog(log.Id, conn);
+                            foreach (var log in logs)
+                            {
+                                log.Exercises = LoadExercisesForLog(log.Id, conn);
+                            }
 
-            return logs;
-        }
+                            return logs;
+                        }
 
-        public bool UpdateWorkoutLog(WorkoutLog log)
+                        public bool UpdateWorkoutLog(WorkoutLog log)
         {
             const string updateLog = @"
                 UPDATE WORKOUT_LOG
@@ -256,23 +258,25 @@ namespace VibeCoders.Services
                 using var reader = cmd.ExecuteReader();
                 while (reader.Read())
                 {
-                    logs.Add(new WorkoutLog
+                            logs.Add(new WorkoutLog
+                            {
+                                Id = reader.GetInt32(0),
+                                ClientId = reader.GetInt32(1),
+                                Date = DateTime.Parse(reader.GetString(2)),
+                                Duration = TimeSpan.Parse(reader.GetString(3)),
+                                TotalCaloriesBurned = reader.IsDBNull(4) ? 0 : reader.GetInt32(4),
+                                SourceTemplateId = reader.IsDBNull(5) ? 0 : reader.GetInt32(5),
+                                Type = ParseWorkoutType(reader.IsDBNull(6) ? null : reader.GetString(6))
+                            });
+                        }
+                    }
+
+                    foreach (var log in logs)
                     {
-                        Id                  = reader.GetInt32(0),
-                        ClientId            = reader.GetInt32(1),
-                        Date                = DateTime.Parse(reader.GetString(2)),
-                        Duration            = TimeSpan.Parse(reader.GetString(3)),
-                        TotalCaloriesBurned = reader.IsDBNull(4) ? 0 : reader.GetInt32(4),
-                        SourceTemplateId    = reader.IsDBNull(5) ? 0 : reader.GetInt32(5),
-                        Type                = ParseWorkoutType(reader.IsDBNull(6) ? null : reader.GetString(6))
-                    });
-                }
-            }
+                        log.Exercises = LoadExercisesForLog(log.Id, conn);
+                    }
 
-            foreach (var log in logs)
-                log.Exercises = LoadExercisesForLog(log.Id, conn);
-
-            return logs;
+                    return logs;
         }
 
         public bool UpdateWorkoutLogFeedback(int workoutLogId, double rating, string notes)
@@ -333,7 +337,7 @@ namespace VibeCoders.Services
             while (reader.Read())
             {
                 string dbMuscleString = reader.IsDBNull(10) ? "OTHER" : reader.GetString(10);
-                string exerciseName   = reader.GetString(1);
+                string exerciseName = reader.GetString(1);
 
                 Enum.TryParse<MuscleGroup>(dbMuscleString, true, out var parsedMuscleGroup);
 
@@ -341,12 +345,12 @@ namespace VibeCoders.Services
                 {
                     exercise = new LoggedExercise
                     {
-                        WorkoutLogId     = workoutLogId,
-                        ExerciseName     = exerciseName,
+                        WorkoutLogId = workoutLogId,
+                        ExerciseName = exerciseName,
                         PerformanceRatio = reader.IsDBNull(7) ? 0 : reader.GetDouble(7),
                         IsSystemAdjusted = !reader.IsDBNull(8) && reader.GetInt32(8) != 0,
-                        AdjustmentNote   = reader.IsDBNull(9) ? string.Empty : reader.GetString(9),
-                        TargetMuscles    = parsedMuscleGroup,
+                        AdjustmentNote = reader.IsDBNull(9) ? string.Empty : reader.GetString(9),
+                        TargetMuscles = parsedMuscleGroup,
                         ParentTemplateExerciseId = reader.IsDBNull(11) ? 0 : reader.GetInt32(11)
                     };
                     exerciseMap[exerciseName] = exercise;
@@ -355,16 +359,16 @@ namespace VibeCoders.Services
                 int setIndex = reader.GetInt32(2) + 1;
                 exercise.Sets.Add(new LoggedSet
                 {
-                    Id           = reader.GetInt32(0),
+                    Id = reader.GetInt32(0),
                     WorkoutLogId = workoutLogId,
                     ExerciseName = exerciseName,
-                    SetIndex     = setIndex,
-                    SetNumber    = setIndex,
-                    ActualReps   = reader.IsDBNull(3) ? null : reader.GetInt32(3),
+                    SetIndex = setIndex,
+                    SetNumber = setIndex,
+                    ActualReps = reader.IsDBNull(3) ? null : reader.GetInt32(3),
                     ActualWeight = reader.IsDBNull(4) ? null : reader.GetDouble(4),
-                    TargetReps   = reader.IsDBNull(5) ? null : reader.GetInt32(5),
+                    TargetReps = reader.IsDBNull(5) ? null : reader.GetInt32(5),
                     TargetWeight = reader.IsDBNull(6) ? null : reader.GetDouble(6),
-                    Exercise     = exercise
+                    Exercise = exercise
                 });
             }
 

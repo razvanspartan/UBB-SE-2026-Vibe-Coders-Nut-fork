@@ -7,23 +7,26 @@ namespace VibeCoders.Services;
 
 public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
 {
-    private readonly string _connectionString;
-    private readonly SemaphoreSlim _initLock = new(1, 1);
-    private bool _initialized;
+    private readonly string connectionString;
+    private readonly SemaphoreSlim initLock = new (1, 1);
+    private bool initialized;
 
     public SqlWorkoutAnalyticsStore(string connectionString)
     {
-        _connectionString = connectionString;
+        this.connectionString = connectionString;
     }
 
     public async Task EnsureCreatedAsync(CancellationToken cancellationToken = default)
     {
-        await _initLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await initLock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            if (_initialized) return;
+            if (initialized)
+            {
+                return;
+            }
 
-            await using var conn = new SqliteConnection(_connectionString);
+            await using var conn = new SqliteConnection(connectionString);
             await conn.OpenAsync(cancellationToken).ConfigureAwait(false);
 
             await using (var cmd = new SqliteCommand(@"
@@ -40,11 +43,11 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
                 await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
             }
 
-            _initialized = true;
+            initialized = true;
         }
         finally
         {
-            _initLock.Release();
+            initLock.Release();
         }
     }
 
@@ -56,9 +59,11 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
 
         int cid = log.ClientId > 0 ? log.ClientId : (int)clientId;
         if (cid <= 0)
+        {
             throw new InvalidOperationException("Workout log must have a positive client id.");
+        }
 
-        await using var conn = new SqliteConnection(_connectionString);
+        await using var conn = new SqliteConnection(connectionString);
         await conn.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var tx = conn.BeginTransaction();
 
@@ -130,7 +135,7 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
     {
         await EnsureCreatedAsync(cancellationToken).ConfigureAwait(false);
 
-        await using var conn = new SqliteConnection(_connectionString);
+        await using var conn = new SqliteConnection(connectionString);
         await conn.OpenAsync(cancellationToken).ConfigureAwait(false);
 
         var total = await ScalarLongAsync(conn, @"
@@ -139,7 +144,7 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
             WHERE wl.client_id = @cid;",
             "@cid", clientId, cancellationToken).ConfigureAwait(false);
 
-        var today       = DateOnly.FromDateTime(DateTime.Today);
+        var today = DateOnly.FromDateTime(DateTime.Today);
         var windowStart = today.AddDays(-6);
 
         var activeSeconds = await ScalarLongAsync(conn, @"
@@ -171,14 +176,16 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
             prefCmd.Parameters.AddWithValue("@cid", clientId);
             await using var reader = await prefCmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
             if (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+            {
                 preferred = reader.GetString(0);
+            }
         }
 
         return new DashboardSummary
         {
-            TotalWorkouts                = (int)Math.Min(int.MaxValue, total),
+            TotalWorkouts = (int)Math.Min(int.MaxValue, total),
             TotalActiveTimeLastSevenDays = TimeSpan.FromSeconds(activeSeconds),
-            PreferredWorkoutName         = preferred
+            PreferredWorkoutName = preferred
         };
     }
 
@@ -187,7 +194,7 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
     {
         await EnsureCreatedAsync(cancellationToken).ConfigureAwait(false);
 
-        await using var conn = new SqliteConnection(_connectionString);
+        await using var conn = new SqliteConnection(connectionString);
         await conn.OpenAsync(cancellationToken).ConfigureAwait(false);
 
         var totalSeconds = await ScalarLongAsync(conn, @"
@@ -209,17 +216,17 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
     {
         await EnsureCreatedAsync(cancellationToken).ConfigureAwait(false);
 
-        var today          = DateOnly.FromDateTime(DateTime.Today);
+        var today = DateOnly.FromDateTime(DateTime.Today);
         var mondayThisWeek = GetMondayOfWeek(today);
-        var buckets        = new List<ConsistencyWeekBucket>(4);
+        var buckets = new List<ConsistencyWeekBucket>(4);
 
-        await using var conn = new SqliteConnection(_connectionString);
+        await using var conn = new SqliteConnection(connectionString);
         await conn.OpenAsync(cancellationToken).ConfigureAwait(false);
 
         for (var i = 0; i < 4; i++)
         {
-            var weekStart = mondayThisWeek.AddDays(-21 + i * 7);
-            var weekEnd   = weekStart.AddDays(7);
+            var weekStart = mondayThisWeek.AddDays(-21 + (i * 7));
+            var weekEnd = weekStart.AddDays(7);
 
             var count = await ScalarLongAsync(conn, @"
                 SELECT COUNT(*)
@@ -234,7 +241,7 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
 
             buckets.Add(new ConsistencyWeekBucket
             {
-                WeekStart    = weekStart,
+                WeekStart = weekStart,
                 WorkoutCount = (int)count
             });
         }
@@ -245,12 +252,19 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
     public async Task<WorkoutHistoryPageResult> GetWorkoutHistoryPageAsync(
         long clientId, int pageIndex, int pageSize, CancellationToken cancellationToken = default)
     {
-        if (pageIndex < 0)  pageIndex = 0;
-        if (pageSize  <= 0) pageSize  = 10;
+        if (pageIndex < 0)
+        {
+            pageIndex = 0;
+        }
+
+        if (pageSize <= 0)
+        {
+            pageSize = 10;
+        }
 
         await EnsureCreatedAsync(cancellationToken).ConfigureAwait(false);
 
-        await using var conn = new SqliteConnection(_connectionString);
+        await using var conn = new SqliteConnection(connectionString);
         await conn.OpenAsync(cancellationToken).ConfigureAwait(false);
 
         var total = await ScalarLongAsync(conn, @"
@@ -283,19 +297,19 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
         {
             items.Add(new WorkoutHistoryRow
             {
-                Id                  = reader.GetInt32(0),
-                WorkoutName         = reader.GetString(1),
-                LogDate             = DateTime.Parse(reader.GetString(2)),
-                DurationSeconds     = ParseDurationToSeconds(reader.IsDBNull(3) ? null : reader.GetString(3)),
+                Id = reader.GetInt32(0),
+                WorkoutName = reader.GetString(1),
+                LogDate = DateTime.Parse(reader.GetString(2)),
+                DurationSeconds = ParseDurationToSeconds(reader.IsDBNull(3) ? null : reader.GetString(3)),
                 TotalCaloriesBurned = reader.GetInt32(4),
-                IntensityTag        = reader.GetString(5)
+                IntensityTag = reader.GetString(5)
             });
         }
 
         return new WorkoutHistoryPageResult
         {
             TotalCount = (int)Math.Min(int.MaxValue, total),
-            Items      = items
+            Items = items
         };
     }
 
@@ -304,14 +318,14 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
     {
         await EnsureCreatedAsync(cancellationToken).ConfigureAwait(false);
 
-        await using var conn = new SqliteConnection(_connectionString);
+        await using var conn = new SqliteConnection(connectionString);
         await conn.OpenAsync(cancellationToken).ConfigureAwait(false);
 
         string? workoutName;
         DateTime logDate;
-        int      duration;
-        int      totalCalories;
-        string   intensityTag;
+        int duration;
+        int totalCalories;
+        string intensityTag;
 
         await using (var head = new SqliteCommand(@"
             SELECT
@@ -328,17 +342,20 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
             head.Parameters.AddWithValue("@cid", clientId);
 
             await using var r = await head.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
-            if (!await r.ReadAsync(cancellationToken).ConfigureAwait(false)) return null;
+            if (!await r.ReadAsync(cancellationToken).ConfigureAwait(false))
+            {
+                return null;
+            }
 
-            workoutName   = r.GetString(0);
-            logDate       = DateTime.Parse(r.GetString(1));
-            duration      = ParseDurationToSeconds(r.IsDBNull(2) ? null : r.GetString(2));
+            workoutName = r.GetString(0);
+            logDate = DateTime.Parse(r.GetString(1));
+            duration = ParseDurationToSeconds(r.IsDBNull(2) ? null : r.GetString(2));
             totalCalories = r.GetInt32(3);
-            intensityTag  = r.GetString(4);
+            intensityTag = r.GetString(4);
         }
 
         var exerciseCalories = new List<ExerciseCalorieInfo>();
-        var sets             = new List<WorkoutSetRow>();
+        var sets = new List<WorkoutSetRow>();
 
         await using (var setsCmd = new SqliteCommand(@"
             SELECT exercise_name, sets, reps, weight
@@ -358,8 +375,8 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
                 sets.Add(new WorkoutSetRow
                 {
                     ExerciseName = exName,
-                    SetIndex     = setIndex,
-                    ActualReps   = sr.IsDBNull(2) ? null : sr.GetInt32(2),
+                    SetIndex = setIndex,
+                    ActualReps = sr.IsDBNull(2) ? null : sr.GetInt32(2),
                     ActualWeight = sr.IsDBNull(3) ? null : sr.GetDouble(3)
                 });
 
@@ -376,29 +393,37 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
 
                 exerciseCalories.Add(new ExerciseCalorieInfo
                 {
-                    ExerciseName    = exName,
-                    CaloriesBurned  = calories
+                    ExerciseName = exName,
+                    CaloriesBurned = calories
                 });
             }
         }
 
         return new WorkoutSessionDetail
         {
-            WorkoutLogId        = workoutLogId,
-            WorkoutName         = workoutName,
-            LogDate             = logDate,
-            DurationSeconds     = duration,
+            WorkoutLogId = workoutLogId,
+            WorkoutName = workoutName,
+            LogDate = logDate,
+            DurationSeconds = duration,
             TotalCaloriesBurned = totalCalories,
-            IntensityTag        = intensityTag,
-            Sets                = sets,
-            ExerciseCalories    = exerciseCalories
+            IntensityTag = intensityTag,
+            Sets = sets,
+            ExerciseCalories = exerciseCalories
         };
     }
 
     private static int ParseDurationToSeconds(string? duration)
     {
-        if (string.IsNullOrWhiteSpace(duration)) return 0;
-        if (TimeSpan.TryParse(duration, out var ts)) return (int)ts.TotalSeconds;
+        if (string.IsNullOrWhiteSpace(duration))
+        {
+            return 0;
+        }
+
+        if (TimeSpan.TryParse(duration, out var ts))
+        {
+            return (int)ts.TotalSeconds;
+        }
+
         return 0;
     }
 
@@ -428,7 +453,7 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
 
     internal static DateOnly GetMondayOfWeek(DateOnly date)
     {
-        var dow    = date.DayOfWeek;
+        var dow = date.DayOfWeek;
         var offset = dow == DayOfWeek.Sunday ? 6 : (int)dow - (int)DayOfWeek.Monday;
         return date.AddDays(-offset);
     }

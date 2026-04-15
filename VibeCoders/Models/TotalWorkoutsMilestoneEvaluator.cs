@@ -4,11 +4,11 @@ public sealed class TotalWorkoutsMilestoneEvaluator
 {
     public static IReadOnlyList<WorkoutMilestone> DefaultMilestones { get; } =
     [
-        new WorkoutMilestone(threshold: 1, title: "First Rep", description: "Complete your first workout."),
-        new WorkoutMilestone(threshold: 10, title: "Getting Serious", description: "Complete 10 total workouts."),
-        new WorkoutMilestone(threshold: 25, title: "Gym Regular", description: "Complete 25 total workouts."),
-        new WorkoutMilestone(threshold: 50, title: "Iron Warrior", description: "Complete 50 total workouts."),
-        new WorkoutMilestone(threshold: 100, title: "Gym Legend", description: "Complete 100 total workouts.")
+        new WorkoutMilestone(threshold: 1,   title: "First Rep",       description: "Complete your first workout."),
+        new WorkoutMilestone(threshold: 10,  title: "Getting Serious", description: "Complete 10 total workouts."),
+        new WorkoutMilestone(threshold: 25,  title: "Gym Regular",     description: "Complete 25 total workouts."),
+        new WorkoutMilestone(threshold: 50,  title: "Iron Warrior",    description: "Complete 50 total workouts."),
+        new WorkoutMilestone(threshold: 100, title: "Gym Legend",      description: "Complete 100 total workouts."),
     ];
 
     private readonly IReadOnlyList<WorkoutMilestone> milestones;
@@ -31,6 +31,7 @@ public sealed class TotalWorkoutsMilestoneEvaluator
         }
 
         return this.milestones
+        return milestones
             .Where(m => lifetimeWorkoutCount >= m.threshold)
             .OrderBy(m => m.threshold)
             .ToList();
@@ -49,6 +50,7 @@ public sealed class TotalWorkoutsMilestoneEvaluator
         }
 
         return this.milestones
+        return milestones
             .Where(m => m.threshold > previousCount && m.threshold <= newCount)
             .OrderBy(m => m.threshold)
             .ToList();

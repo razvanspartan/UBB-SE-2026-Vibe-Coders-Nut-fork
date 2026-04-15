@@ -12,15 +12,15 @@ namespace VibeCoders.ViewModels
     {
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        public ObservableCollection<MuscleGroup> MuscleGroups { get; } = new(Enum.GetValues<MuscleGroup>());
+        public ObservableCollection<MuscleGroup> MuscleGroups { get; } = new (Enum.GetValues<MuscleGroup>());
 
-        private string _workoutName = string.Empty;
+        private string workoutName_ = string.Empty;
         public string WorkoutName
         {
-            get => _workoutName;
+            get => workoutName_;
             set
             {
-                _workoutName = value;
+                workoutName_ = value;
                 OnPropertyChanged(nameof(WorkoutName));
             }
         }
@@ -28,35 +28,35 @@ namespace VibeCoders.ViewModels
         public ObservableCollection<TemplateExercise> Exercises { get; } = new ObservableCollection<TemplateExercise>();
         public ObservableCollection<string> AvailableExercises { get; } = new ObservableCollection<string>();
 
-        private string? _selectedNewExercise;
+        private string? selectedNewExercise_;
         public string? SelectedNewExercise
         {
-            get => _selectedNewExercise;
+            get => selectedNewExercise_;
             set
             {
-                _selectedNewExercise = value;
+                selectedNewExercise_ = value;
                 OnPropertyChanged(nameof(SelectedNewExercise));
             }
         }
 
-        private double _newExerciseSets = 3;
+        private double newExerciseSets_ = 3;
         public double NewExerciseSets
         {
-            get => _newExerciseSets;
+            get => newExerciseSets_;
             set
             {
-                _newExerciseSets = value;
+                newExerciseSets_ = value;
                 OnPropertyChanged(nameof(NewExerciseSets));
             }
         }
 
-        private double _newExerciseReps = 10;
+        private double newExerciseReps_ = 10;
         public double NewExerciseReps
         {
-            get => _newExerciseReps;
+            get => newExerciseReps_;
             set
             {
-                _newExerciseReps = value;
+                newExerciseReps_ = value;
                 OnPropertyChanged(nameof(NewExerciseReps));
             }
         }
@@ -66,7 +66,7 @@ namespace VibeCoders.ViewModels
         public ICommand RemoveExerciseCommand { get; }
         public ICommand SaveWorkoutCommand { get; }
 
-        private readonly IDataStorage _dataStorage;
+        private readonly IDataStorage dataStorage_;
 
         public int ClientId { get; set; }
 
@@ -74,7 +74,7 @@ namespace VibeCoders.ViewModels
 
         public CreateWorkoutViewModel(IDataStorage dataStorage)
         {
-            _dataStorage = dataStorage;
+            dataStorage_ = dataStorage;
 
             AddExerciseCommand = new RelayCommand(AddExercise);
             RemoveExerciseCommand = new RelayCommand<TemplateExercise>(RemoveExercise);
@@ -86,7 +86,9 @@ namespace VibeCoders.ViewModels
         private void AddExercise()
         {
             if (string.IsNullOrWhiteSpace(SelectedNewExercise))
+            {
                 return;
+            }
 
             Exercises.Add(new TemplateExercise
             {
@@ -102,14 +104,18 @@ namespace VibeCoders.ViewModels
         private void RemoveExercise(TemplateExercise? exercise)
         {
             if (exercise == null)
+            {
                 return;
-
+            }
             Exercises.Remove(exercise);
         }
 
         private void SaveWorkout()
         {
-            if (string.IsNullOrWhiteSpace(WorkoutName) || Exercises.Count == 0) return;
+            if (string.IsNullOrWhiteSpace(WorkoutName) || Exercises.Count == 0)
+            {
+                return;
+            }
 
             var newWorkout = new WorkoutTemplate
             {
@@ -119,9 +125,11 @@ namespace VibeCoders.ViewModels
             };
 
             foreach (var exercise in Exercises)
+            {
                 newWorkout.AddExercise(exercise);
+            }
 
-            _dataStorage.SaveTrainerWorkout(newWorkout);
+            dataStorage_.SaveTrainerWorkout(newWorkout);
             WorkoutSaved?.Invoke();
         }
 
@@ -134,7 +142,7 @@ namespace VibeCoders.ViewModels
         {
             AvailableExercises.Clear();
 
-            foreach (var name in _dataStorage.GetAllExerciseNames())
+            foreach (var name in dataStorage_.GetAllExerciseNames())
             {
                 AvailableExercises.Add(name);
             }

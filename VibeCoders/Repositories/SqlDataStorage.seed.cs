@@ -132,6 +132,10 @@ public partial class SqlDataStorage
                 updateCmd.Parameters.AddWithValue("@Description", description);
                 updateCmd.Parameters.AddWithValue("@Criteria", criteria);
                 updateCmd.ExecuteNonQuery();
+                if (Convert.ToInt32(check.ExecuteScalar()) > 0)
+                {
+                    return;
+                }
             }
         }
 
@@ -180,6 +184,32 @@ public partial class SqlDataStorage
         {
             cmd.Parameters.AddWithValue("@UserId", trainerUserId);
             cmd.ExecuteNonQuery();
+            foreach (var milestone in TotalWorkoutsMilestoneEvaluator.DefaultMilestones)
+            {
+                const string insertSql = @"
+                    INSERT OR IGNORE INTO ACHIEVEMENT (title, description, threshold_workouts)
+                    VALUES (@Title, @Description, @Threshold);";
+
+                const string updateSql = @"
+                    UPDATE ACHIEVEMENT
+                    SET threshold_workouts = @Threshold
+                    WHERE title = @Title AND threshold_workouts IS NULL;";
+
+                using (var insertCmd = new SqliteCommand(insertSql, conn))
+                {
+                    insertCmd.Parameters.AddWithValue("@Title",       milestone.title);
+                    insertCmd.Parameters.AddWithValue("@Description", milestone.description);
+                    insertCmd.Parameters.AddWithValue("@Threshold",   milestone.threshold);
+                    insertCmd.ExecuteNonQuery();
+                }
+
+                using (var updateCmd = new SqliteCommand(updateSql, conn))
+                {
+                    updateCmd.Parameters.AddWithValue("@Title",     milestone.title);
+                    updateCmd.Parameters.AddWithValue("@Threshold", milestone.threshold);
+                    updateCmd.ExecuteNonQuery();
+                }
+            }
         }
 
         using (var idCmd = new SqliteCommand("SELECT last_insert_rowid();", conn))
@@ -240,6 +270,13 @@ public partial class SqlDataStorage
             cmd.Parameters.AddWithValue("@Weight", weight);
             cmd.ExecuteNonQuery();
         }
+        using (var check = new SqliteCommand("SELECT COUNT(1) FROM \"USER\" WHERE username = 'TestTrainer';", conn))
+          {
+              if (Convert.ToInt32(check.ExecuteScalar()) > 0)
+              {
+                  return;
+              }
+          }
 
         int log1 = CreateLog(DateTime.Now, "01:15:00", 450);
         AddSet(log1, "Barbell Squat", 1, 10, 100.0);
@@ -328,6 +365,31 @@ public partial class SqlDataStorage
             exerciseCmd.Parameters.AddWithValue("@Sets", sets);
             exerciseCmd.Parameters.AddWithValue("@Reps", reps);
             exerciseCmd.ExecuteNonQuery();
+            int log1 = CreateLog(DateTime.Now, "01:15:00", 450);
+            AddSet(log1, "Barbell Squat",    1, 10, 100.0);
+            AddSet(log1, "Barbell Squat",    2,  8, 105.0);
+            AddSet(log1, "Barbell Squat",    3,  6, 110.0);
+            AddSet(log1, "Romanian Deadlift", 1, 12,  80.0);
+            AddSet(log1, "Romanian Deadlift", 2, 12,  80.0);
+            AddSet(log1, "Romanian Deadlift", 3, 10,  85.0);
+            AddSet(log1, "Romanian Deadlift", 4,  8,  90.0);
+            AddSet(log1, "Calf Raises",      1, 15,  60.0);
+            AddSet(log1, "Calf Raises",      2, 15,  60.0);
+
+            int log2 = CreateLog(DateTime.Now.AddDays(-3), "00:55:00", 320);
+            AddSet(log2, "Bench Press",    1, 10, 80.0);
+            AddSet(log2, "Bench Press",    2,  8, 85.0);
+            AddSet(log2, "Bench Press",    3,  8, 85.0);
+            AddSet(log2, "Overhead Press", 1, 10, 40.0);
+            AddSet(log2, "Overhead Press", 2, 10, 40.0);
+
+            int log3 = CreateLog(DateTime.Now.AddDays(-7), "01:05:00", 400);
+            AddSet(log3, "Pull-ups",    1, 12,  0.0);
+            AddSet(log3, "Pull-ups",    2, 10,  0.0);
+            AddSet(log3, "Pull-ups",    3,  8,  0.0);
+            AddSet(log3, "Barbell Row", 1, 10, 60.0);
+            AddSet(log3, "Barbell Row", 2, 10, 60.0);
+            AddSet(log3, "Barbell Row", 3,  8, 65.0);
         }
     }
 }
