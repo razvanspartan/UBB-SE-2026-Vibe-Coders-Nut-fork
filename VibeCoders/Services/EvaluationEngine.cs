@@ -4,7 +4,7 @@ using VibeCoders.Models;
 
 namespace VibeCoders.Services;
 
-public sealed class EvaluationEngine
+public sealed class EvaluationEngine : IEvaluationEngine
 {
     private readonly IDataStorage storage;
     private readonly IReadOnlyList<VibeCoders.Domain.IMilestoneCheck> checks;

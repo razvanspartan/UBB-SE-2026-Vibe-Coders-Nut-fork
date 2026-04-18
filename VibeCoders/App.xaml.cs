@@ -113,8 +113,8 @@ public partial class App : Application
         services.AddHttpClient();
 
         services.AddSingleton<ProgressionService>();
-        services.AddSingleton<ClientService>();
-        services.AddSingleton<EvaluationEngine>();
+        services.AddSingleton<IClientService, ClientService>();
+        services.AddSingleton<IEvaluationEngine, EvaluationEngine>();
         services.AddSingleton<TrainerService>();
 
         services.AddTransient<ClientDashboardViewModel>();

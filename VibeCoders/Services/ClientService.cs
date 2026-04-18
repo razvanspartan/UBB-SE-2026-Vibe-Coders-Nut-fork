@@ -6,12 +6,12 @@ using VibeCoders.Models.Integration;
 
 namespace VibeCoders.Services
 {
-    public class ClientService
+    public class ClientService : IClientService
     {
         private readonly IDataStorage _storage;
         private readonly ProgressionService _progressionService;
         private readonly IHttpClientFactory _httpClientFactory;
-        private readonly EvaluationEngine _evaluationEngine;
+        private readonly IEvaluationEngine _evaluationEngine;
         private readonly IAchievementUnlockedBus _achievementBus;
         private readonly NutritionSyncOptions _nutritionSync;
 
@@ -19,7 +19,7 @@ namespace VibeCoders.Services
             IDataStorage storage,
             ProgressionService progressionService,
             IHttpClientFactory httpClientFactory,
-            EvaluationEngine evaluationEngine,
+            IEvaluationEngine evaluationEngine,
             IAchievementUnlockedBus achievementBus,
             NutritionSyncOptions nutritionSync)
         {

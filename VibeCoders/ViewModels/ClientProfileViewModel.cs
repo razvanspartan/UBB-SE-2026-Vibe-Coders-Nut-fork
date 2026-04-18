@@ -14,7 +14,7 @@ namespace VibeCoders.ViewModels;
 public partial class ClientProfileViewModel : ObservableObject
 {
     private readonly IDataStorage _storage;
-    private readonly ClientService _clientService;
+    private readonly IClientService _clientService;
     private int _loadedClientId;
 
     [ObservableProperty]
@@ -32,7 +32,7 @@ public partial class ClientProfileViewModel : ObservableObject
     [ObservableProperty]
     private string syncNutritionStatus = string.Empty;
 
-    public ClientProfileViewModel(IDataStorage storage, ClientService clientService)
+    public ClientProfileViewModel(IDataStorage storage, IClientService clientService)
     {
         _storage = storage;
         _clientService = clientService;
