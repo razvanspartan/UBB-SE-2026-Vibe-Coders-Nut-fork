@@ -17,7 +17,31 @@ public static class WorkoutLogFactory
             Exercises = new List<LoggedExercise>()
         };
     }
-
+    public static WorkoutLog CreateModerateIntensityWorkoutLog(int clientId = 1)
+    {
+        var exercises = new List<LoggedExercise>
+        {
+            new LoggedExercise
+            {
+                ExerciseName = "Jogging",
+                Met = 5.0f, // Moderate threshold
+                ExerciseCaloriesBurned = 200,
+                TargetMuscles = MuscleGroup.LEGS
+            },
+            new LoggedExercise
+            {
+                ExerciseName = "Push-ups",
+                Met = 6.0f, // Moderate threshold
+                ExerciseCaloriesBurned = 150,
+                TargetMuscles = MuscleGroup.CHEST
+            }
+        };
+        var log = CreateEmptyWorkoutLog(clientId);
+        log.WorkoutName = "Moderate Cardio and Strength";
+        log.Exercises = exercises;
+        log.Type = WorkoutType.CUSTOM;
+        return log;
+    }
     public static WorkoutLog CreateHighIntensityWorkoutLog(int clientId = 1)
     {
         var exercises = new List<LoggedExercise>
