@@ -62,7 +62,6 @@ public sealed partial class WorkoutHistoryItemViewModel : ObservableObject
 
     [ObservableProperty]
     public partial bool IsLoadingDetail { get; set; }
-#pragma warning restore SA1309 // Field names should not begin with underscore
 
     partial void OnIsExpandedChanged(bool value)
     {

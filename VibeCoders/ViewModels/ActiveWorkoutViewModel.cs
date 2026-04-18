@@ -197,10 +197,10 @@ namespace VibeCoders.ViewModels
         }
 
         [ObservableProperty]
-        private ObservableCollection<WorkoutTemplate> availableWorkouts = new ();
+        public partial ObservableCollection<WorkoutTemplate> AvailableWorkouts { get; set; } = new ();
 
         [ObservableProperty]
-        private ObservableCollection<WorkoutTemplate> customWorkouts = new ();
+        public partial ObservableCollection<WorkoutTemplate> CustomWorkouts { get; set; } = new ();
 
         [ObservableProperty]
         public partial bool HasCustomWorkouts { get; set; }
@@ -322,7 +322,7 @@ namespace VibeCoders.ViewModels
         }
 
         [ObservableProperty]
-        private ObservableCollection<ActiveExerciseViewModel> exerciseRows = new ();
+        public partial ObservableCollection<ActiveExerciseViewModel> ExerciseRows { get; set; } = new ();
 
         [ObservableProperty]
         public partial bool IsWorkoutStarted { get; set; }
@@ -438,8 +438,7 @@ namespace VibeCoders.ViewModels
         }
 
         [ObservableProperty]
-        private ObservableCollection<Models.Notification> notifications = new ();
-#pragma warning restore SA1309 // Field names should not begin with underscore
+        public partial ObservableCollection<Models.Notification> Notifications { get; set; } = new ();
 
         [RelayCommand]
         private void LoadNotifications(int clientId)
@@ -531,7 +530,7 @@ namespace VibeCoders.ViewModels
         public partial bool IsSystemAdjusted { get; set; }
 
         [ObservableProperty]
-        private string adjustmentNote = string.Empty;
+        public partial string AdjustmentNote { get; set; } = string.Empty;
 #pragma warning restore SA1309 // Field names should not begin with underscore
 
         public ActiveExerciseViewModel(TemplateExercise template, Action<ActiveSetViewModel> autoSaveSet)
@@ -572,8 +571,7 @@ namespace VibeCoders.ViewModels
         public partial bool IsCompleted { get; set; }
 
         [ObservableProperty]
-        private bool isFocused;
-#pragma warning restore SA1309 // Field names should not begin with underscore
+        public partial bool IsFocused { get; set; }
 
         public Action<ActiveSetViewModel>? AutoSaveHandler { get; set; }
 
