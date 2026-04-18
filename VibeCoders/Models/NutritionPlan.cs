@@ -6,5 +6,5 @@ public class NutritionPlan
     public DateTime StartDate { get; set; } = DateTime.Today;
     public DateTime EndDate { get; set; } = DateTime.Today.AddDays(30);
 
-    public List<Meal> Meals { get; set; } = new ();
+    public List<Meal> Meals { get; set; } = new();
 }

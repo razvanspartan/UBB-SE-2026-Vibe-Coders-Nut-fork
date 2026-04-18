@@ -196,10 +196,10 @@ namespace VibeCoders.ViewModels
         }
 
         [ObservableProperty]
-        public partial ObservableCollection<WorkoutTemplate> AvailableWorkouts { get; set; } = new ();
+        public partial ObservableCollection<WorkoutTemplate> AvailableWorkouts { get; set; } = new();
 
         [ObservableProperty]
-        public partial ObservableCollection<WorkoutTemplate> CustomWorkouts { get; set; } = new ();
+        public partial ObservableCollection<WorkoutTemplate> CustomWorkouts { get; set; } = new();
 
         [ObservableProperty]
         public partial bool HasCustomWorkouts { get; set; }
@@ -321,7 +321,7 @@ namespace VibeCoders.ViewModels
         }
 
         [ObservableProperty]
-        public partial ObservableCollection<ActiveExerciseViewModel> ExerciseRows { get; set; } = new ();
+        public partial ObservableCollection<ActiveExerciseViewModel> ExerciseRows { get; set; } = new();
 
         [ObservableProperty]
         public partial bool IsWorkoutStarted { get; set; }
@@ -437,7 +437,7 @@ namespace VibeCoders.ViewModels
         }
 
         [ObservableProperty]
-        public partial ObservableCollection<Models.Notification> Notifications { get; set; } = new ();
+        public partial ObservableCollection<Models.Notification> Notifications { get; set; } = new();
 
         [RelayCommand]
         private void LoadNotifications(int clientId)
@@ -523,7 +523,7 @@ namespace VibeCoders.ViewModels
         [ObservableProperty]
         public partial double? PreviousBestWeight { get; set; }
         public MuscleGroup MuscleGroup { get; }
-        public ObservableCollection<ActiveSetViewModel> Sets { get; } = new ();
+        public ObservableCollection<ActiveSetViewModel> Sets { get; } = new();
 
         [ObservableProperty]
         public partial bool IsSystemAdjusted { get; set; }

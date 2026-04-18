@@ -21,7 +21,7 @@ namespace VibeCoders.ViewModels
             this.navigation = navigation;
         }
 
-        public ObservableCollection<WorkoutLogItemViewModel> Logs { get; } = new ();
+        public ObservableCollection<WorkoutLogItemViewModel> Logs { get; } = new();
 
         [ObservableProperty]
         public partial bool IsLoading { get; set; }
@@ -127,7 +127,7 @@ namespace VibeCoders.ViewModels
 
         public string TotalDurationDisplay { get; }
 
-        public ObservableCollection<WorkoutLogExerciseSummary> Exercises { get; } = new ();
+        public ObservableCollection<WorkoutLogExerciseSummary> Exercises { get; } = new();
 
         [ObservableProperty]
         public partial bool IsExpanded { get; set; }
@@ -214,7 +214,7 @@ namespace VibeCoders.ViewModels
         public string ExerciseName { get; }
         public bool IsSystemAdjusted { get; }
         public string TooltipText { get; }
-        public ObservableCollection<WorkoutLogSetEditorViewModel> Sets { get; } = new ();
+        public ObservableCollection<WorkoutLogSetEditorViewModel> Sets { get; } = new();
 
         public int NumberOfSets => Sets.Count;
         public string RepsDisplay => Sets.Count > 0

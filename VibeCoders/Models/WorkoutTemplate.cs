@@ -1,4 +1,4 @@
-﻿namespace VibeCoders.Models
+namespace VibeCoders.Models
 {
     public class WorkoutTemplate
     {
@@ -7,7 +7,7 @@
         public string Name { get; set; } = string.Empty;
         public WorkoutType Type { get; set; }
 
-        private readonly List<TemplateExercise> exercises = new ();
+        private readonly List<TemplateExercise> exercises = new();
 
         public void AddExercise(TemplateExercise exercise)
         {

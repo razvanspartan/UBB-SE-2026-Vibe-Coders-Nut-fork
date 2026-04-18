@@ -53,8 +53,8 @@ public sealed partial class WorkoutHistoryItemViewModel : ObservableObject
         }
     }
 
-    public ObservableCollection<ExerciseSetGroupViewModel> ExerciseSetGroups { get; } = new ();
-    public ObservableCollection<ExerciseCalorieInfo> ExerciseCalories { get; } = new ();
+    public ObservableCollection<ExerciseSetGroupViewModel> ExerciseSetGroups { get; } = new();
+    public ObservableCollection<ExerciseCalorieInfo> ExerciseCalories { get; } = new();
 
     [ObservableProperty]
     public partial bool IsExpanded { get; set; }
@@ -129,7 +129,7 @@ public sealed partial class WorkoutHistoryItemViewModel : ObservableObject
 public sealed class ExerciseSetGroupViewModel
 {
     public string ExerciseName { get; init; } = string.Empty;
-    public ObservableCollection<SetDetailRowViewModel> Sets { get; } = new ();
+    public ObservableCollection<SetDetailRowViewModel> Sets { get; } = new();
 }
 
 public sealed class SetDetailRowViewModel
