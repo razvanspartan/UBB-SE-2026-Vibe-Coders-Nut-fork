@@ -19,10 +19,7 @@ namespace VibeCoders.ViewModels
         private System.Timers.Timer? restTimer_;
         private DispatcherTimer? elapsedTimer_;
         private TimeSpan elapsedWorkout_;
-<<<<<<< HEAD
-=======
         private const int HourInSeconds = 3600;
->>>>>>> cfefc74aee32b39b5baf383c9182290a9dd00184
 
         public ActiveWorkoutViewModel(
             IClientService clientService,
@@ -200,17 +197,10 @@ namespace VibeCoders.ViewModels
         }
 
         [ObservableProperty]
-<<<<<<< HEAD
         private ObservableCollection<WorkoutTemplate> availableWorkouts = new ();
 
         [ObservableProperty]
         private ObservableCollection<WorkoutTemplate> customWorkouts = new ();
-=======
-        public partial ObservableCollection<WorkoutTemplate> AvailableWorkouts { get; set; } = new ();
-
-        [ObservableProperty]
-        public partial ObservableCollection<WorkoutTemplate> CustomWorkouts { get; set; } = new ();
->>>>>>> cfefc74aee32b39b5baf383c9182290a9dd00184
 
         [ObservableProperty]
         public partial bool HasCustomWorkouts { get; set; }
@@ -332,11 +322,7 @@ namespace VibeCoders.ViewModels
         }
 
         [ObservableProperty]
-<<<<<<< HEAD
         private ObservableCollection<ActiveExerciseViewModel> exerciseRows = new ();
-=======
-        public partial ObservableCollection<ActiveExerciseViewModel> ExerciseRows { get; set; } = new ();
->>>>>>> cfefc74aee32b39b5baf383c9182290a9dd00184
 
         [ObservableProperty]
         public partial bool IsWorkoutStarted { get; set; }
@@ -452,12 +438,8 @@ namespace VibeCoders.ViewModels
         }
 
         [ObservableProperty]
-<<<<<<< HEAD
         private ObservableCollection<Models.Notification> notifications = new ();
 #pragma warning restore SA1309 // Field names should not begin with underscore
-=======
-        public partial ObservableCollection<Models.Notification> Notifications { get; set; } = new ();
->>>>>>> cfefc74aee32b39b5baf383c9182290a9dd00184
 
         [RelayCommand]
         private void LoadNotifications(int clientId)
@@ -549,11 +531,7 @@ namespace VibeCoders.ViewModels
         public partial bool IsSystemAdjusted { get; set; }
 
         [ObservableProperty]
-<<<<<<< HEAD
         private string adjustmentNote = string.Empty;
-=======
-        public partial string AdjustmentNote { get; set; } = string.Empty;
->>>>>>> cfefc74aee32b39b5baf383c9182290a9dd00184
 #pragma warning restore SA1309 // Field names should not begin with underscore
 
         public ActiveExerciseViewModel(TemplateExercise template, Action<ActiveSetViewModel> autoSaveSet)
@@ -594,12 +572,8 @@ namespace VibeCoders.ViewModels
         public partial bool IsCompleted { get; set; }
 
         [ObservableProperty]
-<<<<<<< HEAD
         private bool isFocused;
 #pragma warning restore SA1309 // Field names should not begin with underscore
-=======
-        public partial bool IsFocused { get; set; }
->>>>>>> cfefc74aee32b39b5baf383c9182290a9dd00184
 
         public Action<ActiveSetViewModel>? AutoSaveHandler { get; set; }
 

@@ -31,12 +31,8 @@ namespace VibeCoders.ViewModels
         public partial bool ShowEmptyState { get; set; }
 
         [ObservableProperty]
-<<<<<<< HEAD
         private string errorMessage = string.Empty;
 #pragma warning restore SA1309 // Field names should not begin with underscore
-=======
-        public partial string ErrorMessage { get; set; }
->>>>>>> cfefc74aee32b39b5baf383c9182290a9dd00184
 
         [RelayCommand]
         private void LoadLogs(int clientId)
@@ -283,12 +279,8 @@ namespace VibeCoders.ViewModels
         public partial int? Reps { get; set; }
 
         [ObservableProperty]
-<<<<<<< HEAD
         private double? weight;
 #pragma warning restore SA1309 // Field names should not begin with underscore
-=======
-        public partial double? Weight { get; set; }
->>>>>>> cfefc74aee32b39b5baf383c9182290a9dd00184
 
         public double RepsInput
         {
