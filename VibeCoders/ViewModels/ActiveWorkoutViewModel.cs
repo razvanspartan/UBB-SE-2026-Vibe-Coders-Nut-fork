@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Dispatching;
@@ -11,9 +8,9 @@ using VibeCoders.Services;
 
 namespace VibeCoders.ViewModels
 {
-    public sealed partial class ActiveWorkoutViewModel : ObservableObject
+    public partial class ActiveWorkoutViewModel : ObservableObject
     {
-        private readonly ClientService clientService_;
+        private readonly IClientService clientService_;
         private readonly IDataStorage storage_;
         private readonly INavigationService navigation_;
         private readonly WorkoutUiState workoutUiState_;
@@ -22,9 +19,13 @@ namespace VibeCoders.ViewModels
         private System.Timers.Timer? restTimer_;
         private DispatcherTimer? elapsedTimer_;
         private TimeSpan elapsedWorkout_;
+<<<<<<< HEAD
+=======
+        private const int HourInSeconds = 3600;
+>>>>>>> cfefc74aee32b39b5baf383c9182290a9dd00184
 
         public ActiveWorkoutViewModel(
-            ClientService clientService,
+            IClientService clientService,
             IDataStorage storage,
             INavigationService navigation,
             WorkoutUiState workoutUiState)
@@ -53,9 +54,9 @@ namespace VibeCoders.ViewModels
                 {
                     seconds = 0;
                 }
-                if (seconds > 3600)
+                if (seconds > HourInSeconds)
                 {
-                    seconds = 3600; // Cap at 1 hour
+                    seconds = HourInSeconds; // Cap at 1 hour
                 }
 
                 StartRestTimer(seconds);
@@ -105,31 +106,31 @@ namespace VibeCoders.ViewModels
 
         #pragma warning disable SA1309 // Field names should not begin with underscore
         [ObservableProperty]
-        private int restTimeRemaining;
+        public partial int RestTimeRemaining { get; set; }
 
         [ObservableProperty]
-        private bool isResting;
+        public partial bool IsResting { get; set; }
 
         [ObservableProperty]
-        private string workoutElapsedDisplay = "00:00";
+        public partial string WorkoutElapsedDisplay { get; set; } = "00:00";
 
         [ObservableProperty]
-        private string workoutSessionTitle = string.Empty;
+        public partial string WorkoutSessionTitle { get; set; } = string.Empty;
 
         [ObservableProperty]
-        private string currentExerciseName = string.Empty;
+        public partial string CurrentExerciseName { get; set; } = string.Empty;
 
         [ObservableProperty]
-        private int? currentTargetReps;
+        public partial int? CurrentTargetReps { get; set; }
 
         [ObservableProperty]
-        private int currentSetNumber;
+        public partial int CurrentSetNumber { get; set; }
 
         [ObservableProperty]
-        private double currentSetRepsInput = double.NaN;
+        public partial double CurrentSetRepsInput { get; set; } = double.NaN;
 
         [ObservableProperty]
-        private double currentSetWeightInput = double.NaN;
+        public partial double CurrentSetWeightInput { get; set; } = double.NaN;
 
         partial void OnIsWorkoutStartedChanged(bool value)
         {
@@ -199,22 +200,29 @@ namespace VibeCoders.ViewModels
         }
 
         [ObservableProperty]
+<<<<<<< HEAD
         private ObservableCollection<WorkoutTemplate> availableWorkouts = new ();
 
         [ObservableProperty]
         private ObservableCollection<WorkoutTemplate> customWorkouts = new ();
+=======
+        public partial ObservableCollection<WorkoutTemplate> AvailableWorkouts { get; set; } = new ();
 
         [ObservableProperty]
-        private bool hasCustomWorkouts;
+        public partial ObservableCollection<WorkoutTemplate> CustomWorkouts { get; set; } = new ();
+>>>>>>> cfefc74aee32b39b5baf383c9182290a9dd00184
 
         [ObservableProperty]
-        private WorkoutTemplate? selectedTemplate;
+        public partial bool HasCustomWorkouts { get; set; }
 
         [ObservableProperty]
-        private bool isLoadingWorkouts;
+        public partial WorkoutTemplate? SelectedTemplate { get; set; }
 
         [ObservableProperty]
-        private string selectedGoal = string.Empty;
+        public partial bool IsLoadingWorkouts { get; set; }
+
+        [ObservableProperty]
+        public partial string SelectedGoal { get; set; } = string.Empty;
 
         public void LoadCustomWorkouts(int clientId)
         {
@@ -324,16 +332,20 @@ namespace VibeCoders.ViewModels
         }
 
         [ObservableProperty]
+<<<<<<< HEAD
         private ObservableCollection<ActiveExerciseViewModel> exerciseRows = new ();
+=======
+        public partial ObservableCollection<ActiveExerciseViewModel> ExerciseRows { get; set; } = new ();
+>>>>>>> cfefc74aee32b39b5baf383c9182290a9dd00184
 
         [ObservableProperty]
-        private bool isWorkoutStarted;
+        public partial bool IsWorkoutStarted { get; set; }
 
         [ObservableProperty]
-        private bool isFinishing;
+        public partial bool IsFinishing { get; set; }
 
         [ObservableProperty]
-        private string errorMessage = string.Empty;
+        public partial string ErrorMessage { get; set; } = string.Empty;
 
         [RelayCommand]
         private void SaveSet(ActiveSetViewModel setViewModel)
@@ -440,8 +452,12 @@ namespace VibeCoders.ViewModels
         }
 
         [ObservableProperty]
+<<<<<<< HEAD
         private ObservableCollection<Models.Notification> notifications = new ();
 #pragma warning restore SA1309 // Field names should not begin with underscore
+=======
+        public partial ObservableCollection<Models.Notification> Notifications { get; set; } = new ();
+>>>>>>> cfefc74aee32b39b5baf383c9182290a9dd00184
 
         [RelayCommand]
         private void LoadNotifications(int clientId)
@@ -525,15 +541,19 @@ namespace VibeCoders.ViewModels
         public string ExerciseName { get; }
 #pragma warning disable SA1309 // Field names should not begin with underscore
         [ObservableProperty]
-        private double? previousBestWeight;
+        public partial double? PreviousBestWeight { get; set; }
         public MuscleGroup MuscleGroup { get; }
         public ObservableCollection<ActiveSetViewModel> Sets { get; } = new ();
 
         [ObservableProperty]
-        private bool isSystemAdjusted;
+        public partial bool IsSystemAdjusted { get; set; }
 
         [ObservableProperty]
+<<<<<<< HEAD
         private string adjustmentNote = string.Empty;
+=======
+        public partial string AdjustmentNote { get; set; } = string.Empty;
+>>>>>>> cfefc74aee32b39b5baf383c9182290a9dd00184
 #pragma warning restore SA1309 // Field names should not begin with underscore
 
         public ActiveExerciseViewModel(TemplateExercise template, Action<ActiveSetViewModel> autoSaveSet)
@@ -565,17 +585,21 @@ namespace VibeCoders.ViewModels
 
 #pragma warning disable SA1309 // Field names should not begin with underscore
         [ObservableProperty]
-        private int? actualReps;
+        public partial int? ActualReps { get; set; }
 
         [ObservableProperty]
-        private double? actualWeight;
+        public partial double? ActualWeight { get; set; }
 
         [ObservableProperty]
-        private bool isCompleted;
+        public partial bool IsCompleted { get; set; }
 
         [ObservableProperty]
+<<<<<<< HEAD
         private bool isFocused;
 #pragma warning restore SA1309 // Field names should not begin with underscore
+=======
+        public partial bool IsFocused { get; set; }
+>>>>>>> cfefc74aee32b39b5baf383c9182290a9dd00184
 
         public Action<ActiveSetViewModel>? AutoSaveHandler { get; set; }
 

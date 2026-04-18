@@ -58,10 +58,10 @@ public sealed partial class WorkoutHistoryItemViewModel : ObservableObject
 
 #pragma warning disable SA1309 // Field names should not begin with underscore
     [ObservableProperty]
-    private bool isExpanded;
+    public partial bool IsExpanded { get; set; }
 
     [ObservableProperty]
-    private bool isLoadingDetail;
+    public partial bool IsLoadingDetail { get; set; }
 #pragma warning restore SA1309 // Field names should not begin with underscore
 
     partial void OnIsExpandedChanged(bool value)
@@ -136,7 +136,8 @@ public sealed class ExerciseSetGroupViewModel
 
 public sealed class SetDetailRowViewModel
 {
+    private const string EmDash = "—";
     public int SetNumber { get; init; }
-    public string RepsDisplay { get; init; } = "\u2014";
-    public string WeightDisplay { get; init; } = "\u2014";
+    public string RepsDisplay { get; init; } = EmDash;
+    public string WeightDisplay { get; init; } = EmDash;
 }
