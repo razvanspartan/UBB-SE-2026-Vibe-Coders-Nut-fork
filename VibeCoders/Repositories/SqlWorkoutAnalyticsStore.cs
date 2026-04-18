@@ -75,11 +75,11 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
                 VALUES
                     (@clientId, @tmpl, @date, @dur, @cal, NULL, @intensity);", conn, tx))
             {
-                insertLog.Parameters.AddWithValue("@clientId",  cid);
-                insertLog.Parameters.AddWithValue("@tmpl",      log.SourceTemplateId);
-                insertLog.Parameters.AddWithValue("@date",      log.Date.ToString("o"));
-                insertLog.Parameters.AddWithValue("@dur",       log.Duration.ToString());
-                insertLog.Parameters.AddWithValue("@cal",       log.TotalCaloriesBurned);
+                insertLog.Parameters.AddWithValue("@clientId", cid);
+                insertLog.Parameters.AddWithValue("@tmpl", log.SourceTemplateId);
+                insertLog.Parameters.AddWithValue("@date", log.Date.ToString("o"));
+                insertLog.Parameters.AddWithValue("@dur", log.Duration.ToString());
+                insertLog.Parameters.AddWithValue("@cal", log.TotalCaloriesBurned);
                 insertLog.Parameters.AddWithValue("@intensity", log.IntensityTag ?? string.Empty);
                 await insertLog.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
             }
@@ -106,16 +106,16 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
                             (@lid, @ex, @si, @ar, @aw, @tr, @tw, @ratio, @adjusted, @note);",
                         conn, tx);
 
-                    insertSet.Parameters.AddWithValue("@lid",      logId);
-                    insertSet.Parameters.AddWithValue("@ex",       exercise.ExerciseName);
-                    insertSet.Parameters.AddWithValue("@si",       set.SetIndex);
-                    insertSet.Parameters.AddWithValue("@ar",       (object?)set.ActualReps ?? DBNull.Value);
-                    insertSet.Parameters.AddWithValue("@aw",       (object?)set.ActualWeight ?? DBNull.Value);
-                    insertSet.Parameters.AddWithValue("@tr",       (object?)set.TargetReps ?? DBNull.Value);
-                    insertSet.Parameters.AddWithValue("@tw",       (object?)set.TargetWeight ?? DBNull.Value);
-                    insertSet.Parameters.AddWithValue("@ratio",    exercise.PerformanceRatio);
+                    insertSet.Parameters.AddWithValue("@lid", logId);
+                    insertSet.Parameters.AddWithValue("@ex", exercise.ExerciseName);
+                    insertSet.Parameters.AddWithValue("@si", set.SetIndex);
+                    insertSet.Parameters.AddWithValue("@ar", (object?)set.ActualReps ?? DBNull.Value);
+                    insertSet.Parameters.AddWithValue("@aw", (object?)set.ActualWeight ?? DBNull.Value);
+                    insertSet.Parameters.AddWithValue("@tr", (object?)set.TargetReps ?? DBNull.Value);
+                    insertSet.Parameters.AddWithValue("@tw", (object?)set.TargetWeight ?? DBNull.Value);
+                    insertSet.Parameters.AddWithValue("@ratio", exercise.PerformanceRatio);
                     insertSet.Parameters.AddWithValue("@adjusted", exercise.IsSystemAdjusted ? 1 : 0);
-                    insertSet.Parameters.AddWithValue("@note",     exercise.AdjustmentNote);
+                    insertSet.Parameters.AddWithValue("@note", exercise.AdjustmentNote);
                     await insertSet.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
                 }
             }
@@ -160,7 +160,7 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
               AND date(wl.date) <= @end;",
             "@cid", clientId,
             "@start", windowStart.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-            "@end",   today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+            "@end", today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
             cancellationToken).ConfigureAwait(false);
 
         string? preferred = null;
@@ -234,9 +234,9 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
                 WHERE wl.client_id = @cid
                   AND date(wl.date) >= @start
                   AND date(wl.date) <  @end;",
-                "@cid",   clientId,
+                "@cid", clientId,
                 "@start", weekStart.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-                "@end",   weekEnd.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                "@end", weekEnd.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
                 cancellationToken).ConfigureAwait(false);
 
             buckets.Add(new ConsistencyWeekBucket
@@ -287,7 +287,7 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
             ORDER BY wl.date DESC, wl.workout_log_id DESC
             LIMIT @take OFFSET @skip;", conn);
 
-        cmd.Parameters.AddWithValue("@cid",  clientId);
+        cmd.Parameters.AddWithValue("@cid", clientId);
         cmd.Parameters.AddWithValue("@skip", pageIndex * pageSize);
         cmd.Parameters.AddWithValue("@take", pageSize);
 
@@ -338,7 +338,7 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
             LEFT JOIN WORKOUT_TEMPLATE wt ON wt.workout_template_id = wl.workout_id
             WHERE wl.workout_log_id = @id AND wl.client_id = @cid;", conn))
         {
-            head.Parameters.AddWithValue("@id",  workoutLogId);
+            head.Parameters.AddWithValue("@id", workoutLogId);
             head.Parameters.AddWithValue("@cid", clientId);
 
             await using var r = await head.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);

@@ -4,7 +4,7 @@ public static class ExerciseCalorieCalculator
 {
     private const double DefaultMet = 5.0;
 
-    private static readonly Dictionary<string, double> MetByExercise = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly Dictionary<string, double> MetByExercise = new (StringComparer.OrdinalIgnoreCase)
     {
         { "Bench Press",            5.0 },
         { "Incline Dumbbell Press", 5.0 },
@@ -21,7 +21,7 @@ public static class ExerciseCalorieCalculator
     public static double GetMet(string exerciseName) =>
         MetByExercise.TryGetValue(exerciseName, out var met) ? met : DefaultMet;
 
-    public static int Calculate(double met, double weightKg, TimeSpan durationSlice)
+    public static int CalculateCalories(double met, double weightKg, TimeSpan durationSlice)
     {
         return (int)Math.Round(met * weightKg * durationSlice.TotalHours);
     }

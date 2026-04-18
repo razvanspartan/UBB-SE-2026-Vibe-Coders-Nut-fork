@@ -20,6 +20,8 @@ public sealed partial class ClientProfileView : Page
         base.OnNavigatedTo(e);
 
         if (e.Parameter is int clientId)
+        {
             ViewModel.LoadClientData(clientId);
+        }
     }
 }

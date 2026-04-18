@@ -9,21 +9,25 @@ namespace VibeCoders;
 
 public sealed partial class MainWindow : Window
 {
-    private readonly NavigationService _navigationService;
-    private readonly IAchievementUnlockedBus _achievementBus;
+    private readonly NavigationService navigationService;
+    private readonly IAchievementUnlockedBus achievementBus;
 
     public MainWindow(NavigationService navigationService, IAchievementUnlockedBus achievementBus)
     {
         InitializeComponent();
-        _navigationService = navigationService;
-        _achievementBus = achievementBus;
-        _achievementBus.AchievementUnlocked += OnAchievementUnlocked;
-        _navigationService.AttachFrame(ContentFrame);
+        this.navigationService = navigationService;
+        this.achievementBus = achievementBus;
+        this.achievementBus.AchievementUnlocked += OnAchievementUnlocked;
+        this.navigationService.AttachFrame(ContentFrame);
 
         var placementDone = false;
         Activated += (_, _) =>
         {
-            if (placementDone) return;
+            if (placementDone)
+            {
+                return;
+            }
+
             placementDone = true;
             ApplyInitialPlacement();
         };
@@ -96,26 +100,24 @@ public sealed partial class MainWindow : Window
 
             if (tag == "Dashboard")
             {
-                _navigationService.NavigateToClientDashboard(requestRefresh: true);
+                navigationService.NavigateToClientDashboard(requestRefresh: true);
             }
             else if (tag == "WorkoutLogs")
             {
-                _navigationService.NavigateToWorkoutLogs();
+                navigationService.NavigateToWorkoutLogs();
             }
             else if (tag == "Calendar")
             {
-                _navigationService.NavigateToCalendarIntegration();
+                navigationService.NavigateToCalendarIntegration();
             }
             else if (tag == "Rank")
             {
-                _navigationService.NavigateToRankShowcase();
+                navigationService.NavigateToRankShowcase();
             }
-
             else if (tag == "TrainerDashboard")
             {
-                _navigationService.NavigateToTrainerDashboard();
+                navigationService.NavigateToTrainerDashboard();
             }
-
         }
     }
 }

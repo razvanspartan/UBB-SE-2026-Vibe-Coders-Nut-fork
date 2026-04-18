@@ -21,7 +21,9 @@ public sealed partial class AchievementsPage : Page
     {
         base.OnNavigatedTo(e);
         if (e.Parameter is int clientId)
+        {
             ClientId = clientId;
+        }
     }
 
     private void Page_Loaded(object sender, RoutedEventArgs e)

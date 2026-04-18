@@ -5,7 +5,7 @@ namespace VibeCoders.Views;
 
 public sealed partial class FocusModeView : Page
 {
-    private readonly ContentDialog _hostDialog;
+    private readonly ContentDialog hostDialog;
 
     public ActiveWorkoutViewModel ViewModel { get; }
 
@@ -14,11 +14,11 @@ public sealed partial class FocusModeView : Page
         InitializeComponent();
         ViewModel = vm;
         DataContext = vm;
-        _hostDialog = hostDialog;
+        this.hostDialog = hostDialog;
     }
 
     private void ExitButton_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
-        _hostDialog.Hide();
+        hostDialog.Hide();
     }
 }

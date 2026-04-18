@@ -10,7 +10,7 @@ namespace VibeCoders.Services
         {
             var roster = new List<Client>();
 
-            using var conn = new SqliteConnection(_connectionString);
+            using var conn = new SqliteConnection(connectionString);
             conn.Open();
 
             string sql = @"
@@ -32,15 +32,17 @@ namespace VibeCoders.Services
             {
                 var client = new Client
                 {
-                    Id       = reader.GetInt32(0),
+                    Id = reader.GetInt32(0),
                     Username = reader.GetString(1),
-                    Weight   = reader.IsDBNull(2) ? 0 : reader.GetDouble(2),
-                    Height   = reader.IsDBNull(3) ? 0 : reader.GetDouble(3),
+                    Weight = reader.IsDBNull(2) ? 0 : reader.GetDouble(2),
+                    Height = reader.IsDBNull(3) ? 0 : reader.GetDouble(3),
                     WorkoutLog = new List<WorkoutLog>()
                 };
 
                 if (!reader.IsDBNull(4))
+                {
                     client.WorkoutLog.Add(new WorkoutLog { Date = DateTime.Parse(reader.GetString(4)) });
+                }
 
                 roster.Add(client);
             }
@@ -69,7 +71,7 @@ namespace VibeCoders.Services
                 VALUES
                     (@TemplateId, @Name, @MuscleGroup, @TargetSets, @TargetReps, @TargetWeight);";
 
-            using var conn = new SqliteConnection(_connectionString);
+            using var conn = new SqliteConnection(connectionString);
             conn.Open();
 
             using var transaction = conn.BeginTransaction();
@@ -129,9 +131,9 @@ namespace VibeCoders.Services
         public bool DeleteWorkoutTemplate(int templateId)
         {
             const string deleteExercisesSql = "DELETE FROM TEMPLATE_EXERCISE WHERE workout_template_id = @Id;";
-            const string deleteTemplateSql  = "DELETE FROM WORKOUT_TEMPLATE WHERE workout_template_id = @Id;";
+            const string deleteTemplateSql = "DELETE FROM WORKOUT_TEMPLATE WHERE workout_template_id = @Id;";
 
-            using var conn = new SqliteConnection(_connectionString);
+            using var conn = new SqliteConnection(connectionString);
             conn.Open();
             using var transaction = conn.BeginTransaction();
 

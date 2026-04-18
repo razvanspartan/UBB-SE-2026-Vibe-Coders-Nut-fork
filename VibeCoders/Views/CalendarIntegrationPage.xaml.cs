@@ -11,44 +11,46 @@ namespace VibeCoders.Views
 {
     public sealed partial class CalendarIntegrationPage : Page
     {
-        private CalendarIntegrationViewModel? _viewModel;
+        private CalendarIntegrationViewModel? viewModel;
 
         public CalendarIntegrationPage()
         {
             this.InitializeComponent();
-            
-            _viewModel = App.GetService<CalendarIntegrationViewModel>();
-            this.DataContext = _viewModel;
-            
+
+            viewModel = App.GetService<CalendarIntegrationViewModel>();
+            this.DataContext = viewModel;
+
             this.Loaded += async (s, e) =>
             {
                 GenerateCalendarButton.Click += GenerateCalendarButton_Click;
 
-                if (_viewModel != null)
+                if (viewModel != null)
                 {
-                    await _viewModel.EnsureWorkoutsLoadedAsync();
+                    await viewModel.EnsureWorkoutsLoadedAsync();
                 }
             };
         }
 
         private async void GenerateCalendarButton_Click(object sender, RoutedEventArgs e)
         {
-            if (_viewModel == null)
+            if (viewModel == null)
+            {
                 return;
+            }
 
             try
             {
                 GenerateCalendarButton.IsEnabled = false;
-                
-                string? validationError = _viewModel.ValidateInput();
+
+                string? validationError = viewModel.ValidateInput();
                 if (validationError != null)
                 {
                     ShowError(validationError);
                     return;
                 }
 
-                var icsContent = await _viewModel.GenerateCalendarAsync();
-                
+                var icsContent = await viewModel.GenerateCalendarAsync();
+
                 if (string.IsNullOrEmpty(icsContent))
                 {
                     ShowError("Failed to generate calendar file. Please try again.");
@@ -58,8 +60,8 @@ namespace VibeCoders.Views
                 var savePicker = new FileSavePicker();
                 savePicker.SuggestedStartLocation = PickerLocationId.Downloads;
                 savePicker.FileTypeChoices.Add("iCalendar", new System.Collections.Generic.List<string> { ".ics" });
-                
-                var window = (Application.Current as App)?._window;
+
+                var window = (Application.Current as App)?.Window;
                 if (window == null)
                 {
                     ShowError("Unable to access app window for save dialog.");
@@ -74,16 +76,16 @@ namespace VibeCoders.Views
                 }
 
                 WinRT.Interop.InitializeWithWindow.Initialize(savePicker, hWnd);
-                
+
                 var file = await savePicker.PickSaveFileAsync();
-                
+
                 if (file == null)
                 {
                     return;
                 }
 
                 await Windows.Storage.FileIO.WriteTextAsync(file, icsContent);
-                
+
                 ShowSuccess($"Calendar file '{file.Name}' saved successfully! You can now import it into your calendar application.");
             }
             catch (InvalidOperationException ex)
@@ -133,7 +135,7 @@ namespace VibeCoders.Views
 
         private async Task<string?> SaveToDownloadsFallbackAsync()
         {
-            if (_viewModel == null || string.IsNullOrEmpty(_viewModel.GeneratedIcsContent))
+            if (viewModel == null || string.IsNullOrEmpty(viewModel.GeneratedIcsContent))
             {
                 return null;
             }
@@ -145,7 +147,7 @@ namespace VibeCoders.Views
                     "Downloads");
                 Directory.CreateDirectory(downloadsPath);
 
-                var safeWorkoutName = (_viewModel.SelectedWorkout?.Name ?? "Workout")
+                var safeWorkoutName = (viewModel.SelectedWorkout?.Name ?? "Workout")
                     .Replace(" ", "-")
                     .Replace("/", "-")
                     .Replace("\\", "-");
@@ -153,7 +155,7 @@ namespace VibeCoders.Views
                 var fileName = $"{safeWorkoutName}-{DateTime.Now:yyyyMMdd-HHmmss}.ics";
                 var fullPath = Path.Combine(downloadsPath, fileName);
 
-                await File.WriteAllTextAsync(fullPath, _viewModel.GeneratedIcsContent);
+                await File.WriteAllTextAsync(fullPath, viewModel.GeneratedIcsContent);
                 return fullPath;
             }
             catch

@@ -8,7 +8,6 @@ namespace VibeCoders.Models
 {
     public class Client : User
     {
-        
         public double Weight { get; set; }
         public double Height { get; set; }
         public List<WorkoutLog> WorkoutLog { get; set; } = new List<WorkoutLog>();
@@ -18,13 +17,10 @@ namespace VibeCoders.Models
 
         public void SetWorkout(WorkoutLog workout)
         {
-            
         }
 
-        public void ModifyWorkout(WorkoutLog OldWorkout, WorkoutLog NewWorkout)
+        public void ModifyWorkout(WorkoutLog oldWorkout, WorkoutLog newWorkout)
         {
-            
         }
-
     }
 }

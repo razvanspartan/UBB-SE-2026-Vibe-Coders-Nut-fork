@@ -5,13 +5,13 @@ namespace VibeCoders.Services
 {
     public partial class SqlDataStorage : IDataStorage
     {
-        private readonly string _connectionString = DatabasePaths.GetConnectionString();
+        private readonly string connectionString = DatabasePaths.GetConnectionString();
 
         public void EnsureSchemaCreated()
         {
             string sql = LoadSchemaSql();
 
-            using var conn = new SqliteConnection(_connectionString);
+            using var conn = new SqliteConnection(connectionString);
             conn.Open();
 
             using var cmd = new SqliteCommand(sql, conn);
@@ -31,7 +31,9 @@ namespace VibeCoders.Services
             using var checkCmd = new SqliteCommand(checkSql, conn);
             var exists = checkCmd.ExecuteScalar() is not null;
             if (exists)
+            {
                 return;
+            }
 
             using var alterCmd = new SqliteCommand(@"
                 ALTER TABLE WORKOUT_LOG

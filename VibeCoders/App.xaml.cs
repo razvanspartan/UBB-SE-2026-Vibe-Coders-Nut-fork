@@ -13,8 +13,8 @@ namespace VibeCoders;
 
 public partial class App : Application
 {
-    private static IServiceProvider? _services;
-    public Window? _window;
+    private static IServiceProvider? servicesProvider;
+    public Window? Window;
 
     public App()
     {
@@ -25,14 +25,14 @@ public partial class App : Application
     {
         var services = new ServiceCollection();
         ConfigureServices(services);
-        _services = services.BuildServiceProvider();
+        servicesProvider = services.BuildServiceProvider();
 
-        var navService = (NavigationService)_services.GetRequiredService<INavigationService>();
-        var achievementBus = _services.GetRequiredService<IAchievementUnlockedBus>();
+        var navService = (NavigationService)servicesProvider.GetRequiredService<INavigationService>();
+        var achievementBus = servicesProvider.GetRequiredService<IAchievementUnlockedBus>();
 
         try
         {
-            var storage = _services.GetRequiredService<IDataStorage>();
+            var storage = servicesProvider.GetRequiredService<IDataStorage>();
             if (storage is SqlDataStorage sql)
             {
                 sql.EnsureSchemaCreated();
@@ -49,40 +49,50 @@ public partial class App : Application
         }
 
         TrySyncDemoClientSession();
-        _window = new MainWindow(navService, achievementBus);
-        _window.Activate();
+        Window = new MainWindow(navService, achievementBus);
+        Window.Activate();
 
         navService.NavigateToClientDashboard(requestRefresh: true);
     }
 
-    public static T GetService<T>() where T : notnull
+    public static T GetService<T>()
+        where T : notnull
     {
-        if (_services is null)
+        if (servicesProvider is null)
         {
             throw new InvalidOperationException(
                 "Service provider is not initialized. Ensure OnLaunched has run.");
         }
 
-        return _services.GetRequiredService<T>();
+        return servicesProvider.GetRequiredService<T>();
     }
 
     private void TrySyncDemoClientSession()
     {
-        if (_services is null) return;
+        if (servicesProvider is null)
+        {
+            return;
+        }
 
         try
         {
-            var storage = _services.GetRequiredService<IDataStorage>();
-            var session = _services.GetRequiredService<IUserSession>();
-            var user    = storage.LoadUser("TestClient");
-            if (user is null) return;
+            var storage = servicesProvider.GetRequiredService<IDataStorage>();
+            var session = servicesProvider.GetRequiredService<IUserSession>();
+            var user = storage.LoadUser("TestClient");
+            if (user is null)
+            {
+                return;
+            }
 
             var roster = storage.GetTrainerClient(1);
             var client = roster.FirstOrDefault(c =>
                 string.Equals(c.Username, "TestClient", StringComparison.OrdinalIgnoreCase));
-            if (client is null) return;
+            if (client is null)
+            {
+                return;
+            }
 
-            session.CurrentUserId   = user.Id;
+            session.CurrentUserId = user.Id;
             session.CurrentClientId = client.Id;
         }
         catch (Exception ex)
