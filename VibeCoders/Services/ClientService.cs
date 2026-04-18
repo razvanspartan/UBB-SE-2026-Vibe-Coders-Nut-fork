@@ -6,14 +6,14 @@ using VibeCoders.Models.Integration;
 
 namespace VibeCoders.Services
 {
-    public class ClientService
+    public class ClientService : IClientService
     {
-        private readonly IDataStorage _storage;
-        private readonly ProgressionService _progressionService;
-        private readonly IHttpClientFactory _httpClientFactory;
-        private readonly EvaluationEngine _evaluationEngine;
-        private readonly IAchievementUnlockedBus _achievementBus;
-        private readonly NutritionSyncOptions _nutritionSync;
+        private readonly IDataStorage storage;
+        private readonly ProgressionService progressionService;
+        private readonly IHttpClientFactory httpClientFactory;
+        private readonly EvaluationEngine evaluationEngine;
+        private readonly IAchievementUnlockedBus achievementBus;
+        private readonly NutritionSyncOptions nutritionSync;
 
         public ClientService(
             IDataStorage storage,
@@ -23,29 +23,35 @@ namespace VibeCoders.Services
             IAchievementUnlockedBus achievementBus,
             NutritionSyncOptions nutritionSync)
         {
-            _storage            = storage;
-            _progressionService = progressionService;
-            _httpClientFactory  = httpClientFactory;
-            _evaluationEngine   = evaluationEngine;
-            _achievementBus     = achievementBus;
-            _nutritionSync      = nutritionSync;
+            this.storage = storage;
+            this.progressionService = progressionService;
+            this.httpClientFactory = httpClientFactory;
+            this.evaluationEngine = evaluationEngine;
+            this.achievementBus = achievementBus;
+            this.nutritionSync = nutritionSync;
         }
 
         private const double DefaultMet = 5.0;
 
         public bool FinalizeWorkout(WorkoutLog log)
         {
-            if (log == null || log.Exercises == null) return false;
+            if (log == null || log.Exercises == null)
+            {
+                return false;
+            }
 
             try
             {
                 log.Date = DateTime.Now;
-                _progressionService.EvaluateWorkout(log);
+                progressionService.EvaluateWorkout(log);
 
                 ComputeCalories(log);
 
-                bool isSaved = _storage.SaveWorkoutLog(log);
-                if (!isSaved) return false;
+                bool isSaved = storage.SaveWorkoutLog(log);
+                if (!isSaved)
+                {
+                    return false;
+                }
 
                 RunAchievementEvaluation(log.ClientId);
 
@@ -61,7 +67,9 @@ namespace VibeCoders.Services
         public bool SaveSet(WorkoutLog log, string exerciseName, LoggedSet set)
         {
             if (log == null || set == null || string.IsNullOrWhiteSpace(exerciseName))
+            {
                 return false;
+            }
 
             try
             {
@@ -94,11 +102,14 @@ namespace VibeCoders.Services
 
         public bool ModifyWorkout(WorkoutLog updatedLog)
         {
-            if (updatedLog == null) return false;
+            if (updatedLog == null)
+            {
+                return false;
+            }
 
             try
             {
-                return _storage.SaveWorkoutLog(updatedLog);
+                return storage.SaveWorkoutLog(updatedLog);
             }
             catch (Exception ex)
             {
@@ -113,9 +124,9 @@ namespace VibeCoders.Services
         {
             try
             {
-                var client = _httpClientFactory.CreateClient();
+                var client = httpClientFactory.CreateClient();
                 var response = await client
-                    .PostAsJsonAsync(_nutritionSync.Endpoint, payload, cancellationToken)
+                    .PostAsJsonAsync(nutritionSync.Endpoint, payload, cancellationToken)
                     .ConfigureAwait(false);
 
                 return response.IsSuccessStatusCode;
@@ -130,21 +141,27 @@ namespace VibeCoders.Services
         public NutritionPlan? GetActiveNutritionPlan(int clientId)
         {
             if (clientId <= 0)
+            {
                 return null;
+            }
 
             try
             {
-                var plans = _storage.GetNutritionPlansForClient(clientId);
+                var plans = storage.GetNutritionPlansForClient(clientId);
                 var today = DateTime.Today;
                 NutritionPlan? best = null;
 
                 foreach (var plan in plans)
                 {
                     if (plan.StartDate.Date > today || plan.EndDate.Date < today)
+                    {
                         continue;
+                    }
 
                     if (best == null || plan.StartDate > best.StartDate)
+                    {
                         best = plan;
+                    }
                 }
 
                 return best;
@@ -158,15 +175,20 @@ namespace VibeCoders.Services
 
         private void ComputeCalories(WorkoutLog log)
         {
-            if (log.Exercises.Count == 0 || log.Duration == TimeSpan.Zero) return;
+            if (log.Exercises.Count == 0 || log.Duration == TimeSpan.Zero)
+            {
+                return;
+            }
 
-            double weightKg = _storage.GetClientWeight(log.ClientId);
+            double weightKg = storage.GetClientWeight(log.ClientId);
             TimeSpan durationPerExercise = log.Duration / log.Exercises.Count;
 
             foreach (var exercise in log.Exercises)
             {
                 if (exercise.Met <= 0)
+                {
                     exercise.Met = (float)ExerciseCalorieCalculator.GetMet(exercise.ExerciseName);
+                }
 
                 exercise.ExerciseCaloriesBurned = ExerciseCalorieCalculator.Calculate(exercise.Met, weightKg, durationPerExercise);
             }
@@ -182,16 +204,18 @@ namespace VibeCoders.Services
         {
             try
             {
-                var newlyUnlocked = _evaluationEngine.Evaluate(clientId);
+                var newlyUnlocked = evaluationEngine.Evaluate(clientId);
 
                 foreach (var title in newlyUnlocked)
                 {
-                    var catalog = _storage.GetAchievementShowcaseForClient(clientId);
-                    var item    = catalog.FirstOrDefault(
+                    var catalog = storage.GetAchievementShowcaseForClient(clientId);
+                    var item = catalog.FirstOrDefault(
                         a => string.Equals(a.Title, title, StringComparison.OrdinalIgnoreCase));
 
                     if (item != null)
-                        _achievementBus.NotifyUnlocked(item);
+                    {
+                        achievementBus.NotifyUnlocked(item);
+                    }
                 }
             }
             catch (Exception ex)
@@ -205,7 +229,7 @@ namespace VibeCoders.Services
         {
             try
             {
-                return _storage.GetNotifications(clientId);
+                return storage.GetNotifications(clientId);
             }
             catch (Exception ex)
             {
@@ -216,11 +240,14 @@ namespace VibeCoders.Services
 
         public void ConfirmDeload(Notification notification)
         {
-            if (notification == null) return;
+            if (notification == null)
+            {
+                return;
+            }
 
             try
             {
-                _progressionService.ProcessDeloadConfirmation(notification);
+                progressionService.ProcessDeloadConfirmation(notification);
             }
             catch (Exception ex)
             {

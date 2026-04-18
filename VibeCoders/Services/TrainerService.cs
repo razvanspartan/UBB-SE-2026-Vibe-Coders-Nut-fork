@@ -7,45 +7,46 @@ using VibeCoders.Models;
 
 namespace VibeCoders.Services
 {
-    public class TrainerService
+    public class TrainerService : ITrainerService
     {
-       
         public IDataStorage DataStorage { get; }
 
-     
         public TrainerService(IDataStorage storage)
         {
             DataStorage = storage;
         }
 
-        
         public List<Client> GetAssignedClients(int trainerId)
         {
-            
             return DataStorage.GetTrainerClient(trainerId);
         }
 
         public List<WorkoutLog> GetClientWorkoutHistory(int clientId)
         {
-            
             return DataStorage.GetWorkoutHistory(clientId);
         }
 
         public bool SaveWorkoutFeedback(WorkoutLog log)
         {
-            if (log == null) return false;
+            if (log == null)
+            {
+                return false;
+            }
 
             return DataStorage.UpdateWorkoutLogFeedback(log.Id, log.Rating, log.TrainerNotes);
         }
 
-        public void assignWorkout(Client client, WorkoutLog workout)
+        public void AssignWorkout(Client client, WorkoutLog workout)
         {
             throw new NotImplementedException("Workout assignment coming in Slice 2!");
         }
 
         public bool SaveTrainerWorkout(WorkoutTemplate template)
         {
-            if (template == null) return false;
+            if (template == null)
+            {
+                return false;
+            }
 
             return DataStorage.SaveTrainerWorkout(template);
         }
@@ -58,9 +59,14 @@ namespace VibeCoders.Services
         public bool AssignNutritionPlan(NutritionPlan plan, int clientId)
         {
             if (plan == null)
+            {
                 return false;
+            }
+
             if (clientId <= 0)
+            {
                 return false;
+            }
 
             DataStorage.SaveNutritionPlanForClient(plan, clientId);
             return true;
