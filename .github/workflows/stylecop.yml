@@ -67,13 +67,7 @@ jobs:
           foreach ($line in Get-Content build-output.log) {
             if ($line -match '^\s*(.+?)\((\d+),(\d+)\):\s+(warning|error)\s+([A-Z]+\d+):\s+(.+?)(?:\s+\[.+?\])?\s*$') {
               $fileFull = [System.IO.Path]::GetFullPath($Matches[1].Trim()).ToLowerInvariant()
-              # Try exact match first, then try with forward slashes normalized
               $relPath = $fileMap[$fileFull]
-              if (-not $relPath) {
-                # Try alternative path formats
-                $altPath = $fileFull -replace '\\', '/'
-                $relPath = $fileMap.Keys | Where-Object { ($_ -replace '\\', '/') -eq $altPath } | ForEach-Object { $fileMap[$_] }
-              }
 
               if ($relPath) {
                 $ln  = $Matches[2]

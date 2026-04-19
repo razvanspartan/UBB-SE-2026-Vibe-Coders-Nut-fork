@@ -88,6 +88,7 @@ public partial class App : Application
 
         services.AddHttpClient();
 
+        services.AddSingleton(new VibeCoders.Models.Integration.NutritionSyncOptions { Endpoint = "http://localhost:5000/api/nutrition/sync" });
         services.AddSingleton<ProgressionService>();
         services.AddSingleton<ClientService>();
         services.AddSingleton<EvaluationEngine>();
