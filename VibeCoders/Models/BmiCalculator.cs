@@ -1,7 +1,3 @@
-// <copyright file="BmiCalculator.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
-// </copyright>
-
 namespace VibeCoders.Domain;
 
 public static class BmiCalculator

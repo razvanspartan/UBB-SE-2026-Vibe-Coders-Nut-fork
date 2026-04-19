@@ -1,7 +1,3 @@
-// <copyright file="ActiveWorkoutViewModel.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
-// </copyright>
-
 namespace VibeCoders.ViewModels
 {
     using System.Collections.ObjectModel;

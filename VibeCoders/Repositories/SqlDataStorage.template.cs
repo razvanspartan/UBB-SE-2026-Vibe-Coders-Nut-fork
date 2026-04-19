@@ -1,7 +1,3 @@
-// <copyright file="SqlDataStorage.template.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
-// </copyright>
-
 namespace VibeCoders.Services
 {
     using Microsoft.Data.Sqlite;

@@ -1,7 +1,3 @@
-// <copyright file="SqlDataStorage.achievements.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
-// </copyright>
-
 using Microsoft.Data.Sqlite;
 using VibeCoders.Models;
 

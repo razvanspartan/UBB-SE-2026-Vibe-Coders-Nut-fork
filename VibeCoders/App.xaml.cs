@@ -1,7 +1,3 @@
-// <copyright file="App.xaml.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
-// </copyright>
-
 namespace VibeCoders;
 
 using System;

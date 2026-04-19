@@ -1,7 +1,3 @@
-// <copyright file="SqlWorkoutAnalyticsStore.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
-// </copyright>
-
 using System.Globalization;
 using Microsoft.Data.Sqlite;
 using VibeCoders.Models;

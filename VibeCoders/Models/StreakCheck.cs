@@ -1,7 +1,3 @@
-// <copyright file="StreakCheck.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
-// </copyright>
-
 using VibeCoders.Services;
 
 namespace VibeCoders.Domain;
