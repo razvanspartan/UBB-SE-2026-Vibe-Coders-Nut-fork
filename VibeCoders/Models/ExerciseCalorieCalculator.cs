@@ -2,9 +2,9 @@ namespace VibeCoders.Domain;
 
 public static class ExerciseCalorieCalculator
 {
-    private const double DefaultMet = 5.0;
+    private const double DefaultMetabolicEquivalent = 5.0;
 
-    private static readonly Dictionary<string, double> MetByExercise = new (StringComparer.OrdinalIgnoreCase)
+    private static readonly Dictionary<string, double> MetabolicEquivalentByExercise = new (StringComparer.OrdinalIgnoreCase)
     {
         { "Bench Press",            5.0 },
         { "Incline Dumbbell Press", 5.0 },
@@ -18,11 +18,11 @@ public static class ExerciseCalorieCalculator
         { "Tricep Pushdowns",       2.5 },
     };
 
-    public static double GetMet(string exerciseName) =>
-        MetByExercise.TryGetValue(exerciseName, out var met) ? met : DefaultMet;
+    public static double GetMetabolicEquivalent(string exerciseName) =>
+        MetabolicEquivalentByExercise.TryGetValue(exerciseName, out var met) ? met : DefaultMetabolicEquivalent;
 
-    public static int CalculateCalories(double met, double weightKg, TimeSpan durationSlice)
+    public static int CalculateCalories(double metabolicEquivalent, double weightKg, TimeSpan durationSlice)
     {
-        return (int)Math.Round(met * weightKg * durationSlice.TotalHours);
+        return (int)Math.Round(metabolicEquivalent * weightKg * durationSlice.TotalHours);
     }
 }

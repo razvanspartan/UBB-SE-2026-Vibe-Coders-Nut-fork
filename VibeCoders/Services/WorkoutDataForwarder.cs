@@ -29,8 +29,8 @@ public sealed class WorkoutDataForwarder : IWorkoutDataForwarder
 
         if (log.Exercises.Count > 0)
         {
-            log.AverageMet = log.Exercises.Average(e => e.Met);
-            log.IntensityTag = CalculateIntensityTag(log.AverageMet);
+            log.AverageMetabolicEquivalent = log.Exercises.Average(e => e.MetabolicEquivalent);
+            log.IntensityTag = CalculateIntensityTag(log.AverageMetabolicEquivalent);
         }
 
         var logId = await store.SaveWorkoutAsync(log.ClientId, log, cancellationToken);
@@ -40,14 +40,14 @@ public sealed class WorkoutDataForwarder : IWorkoutDataForwarder
         return logId;
     }
 
-    private static string CalculateIntensityTag(float averageMet)
+    private static string CalculateIntensityTag(float averageMetabolicEquivalent)
     {
-        if (averageMet < LightThreshold)
+        if (averageMetabolicEquivalent < LightThreshold)
         {
             return LightIntensity;
         }
 
-        if (averageMet < ModerateThreshold)
+        if (averageMetabolicEquivalent < ModerateThreshold)
         {
             return ModerateIntensity;
         }
