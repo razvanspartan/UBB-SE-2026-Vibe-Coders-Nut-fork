@@ -127,8 +127,8 @@ public sealed class EvaluationEngine
         var current = tiers[currentIndex];
         var next = tiers[nextIndex];
 
-        int bandStart = current.MinAchievements;
-        int bandEnd = next.MinAchievements;
+        int bandStart = current.minimumAchievements;
+        int bandEnd = next.minimumAchievements;
         int earned = unlockedCount - bandStart;
         int needed = bandEnd - bandStart;
 
