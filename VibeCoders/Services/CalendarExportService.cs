@@ -1,11 +1,12 @@
+namespace VibeCoders.Services
+
 using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Text;
-using System.Threading.Tasks;   
+using System.Threading.Tasks;
 using VibeCoders.Models;
 
-namespace VibeCoders.Services   
 {
     public class CalendarExportService : ICalendarExportService
     {

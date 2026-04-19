@@ -1,9 +1,9 @@
+namespace VibeCoders.Services;
+
 using System.Globalization;
 using Microsoft.Data.Sqlite;
 using VibeCoders.Models;
 using VibeCoders.Models.Analytics;
-
-namespace VibeCoders.Services;
 
 public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
 {
