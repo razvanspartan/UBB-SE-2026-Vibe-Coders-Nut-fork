@@ -1,17 +1,21 @@
-using Microsoft.Data.Sqlite;
-using VibeCoders.Models;
-using User = VibeCoders.Models.User;
+// <copyright file="SqlDataStorage.Trainer.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
 namespace VibeCoders.Services
 {
+    using Microsoft.Data.Sqlite;
+    using VibeCoders.Models;
+    using User = VibeCoders.Models.User;
+
     public partial class SqlDataStorage : IDataStorage
     {
         public List<Client> GetTrainerClient(int trainerId)
         {
             var roster = new List<Client>();
 
-            using var conn = new SqliteConnection(connectionString);
-            conn.Open();
+            using var connection = new SqliteConnection(this.connectionString);
+            connection.Open();
 
             string sql = @"
                 SELECT
@@ -24,10 +28,10 @@ namespace VibeCoders.Services
                 JOIN ""USER"" u ON c.user_id = u.id
                 WHERE c.trainer_id = @TrainerId;";
 
-            using var cmd = new SqliteCommand(sql, conn);
-            cmd.Parameters.AddWithValue("@TrainerId", trainerId);
+            using var command = new SqliteCommand(sql, connection);
+            command.Parameters.AddWithValue("@TrainerId", trainerId);
 
-            using var reader = cmd.ExecuteReader();
+            using var reader = command.ExecuteReader();
             while (reader.Read())
             {
                 var client = new Client
@@ -36,7 +40,7 @@ namespace VibeCoders.Services
                     Username = reader.GetString(1),
                     Weight = reader.IsDBNull(2) ? 0 : reader.GetDouble(2),
                     Height = reader.IsDBNull(3) ? 0 : reader.GetDouble(3),
-                    WorkoutLog = new List<WorkoutLog>()
+                    WorkoutLog = new List<WorkoutLog>(),
                 };
 
                 if (!reader.IsDBNull(4))
@@ -71,10 +75,10 @@ namespace VibeCoders.Services
                 VALUES
                     (@TemplateId, @Name, @MuscleGroup, @TargetSets, @TargetReps, @TargetWeight);";
 
-            using var conn = new SqliteConnection(connectionString);
-            conn.Open();
+            using var connection = new SqliteConnection(this.connectionString);
+            connection.Open();
 
-            using var transaction = conn.BeginTransaction();
+            using var transaction = connection.BeginTransaction();
 
             try
             {
@@ -82,48 +86,48 @@ namespace VibeCoders.Services
 
                 if (templateId == 0)
                 {
-                    using var cmd = new SqliteCommand(insertTemplateSql, conn, transaction);
-                    cmd.Parameters.AddWithValue("@ClientId", template.ClientId);
-                    cmd.Parameters.AddWithValue("@Name", template.Name);
-                    cmd.Parameters.AddWithValue("@Type", SerializeWorkoutType(template.Type));
-                    cmd.ExecuteNonQuery();
+                    using var command = new SqliteCommand(insertTemplateSql, connection, transaction);
+                    command.Parameters.AddWithValue("@ClientId", template.ClientId);
+                    command.Parameters.AddWithValue("@Name", template.Name);
+                    command.Parameters.AddWithValue("@Type", SerializeWorkoutType(template.Type));
+                    command.ExecuteNonQuery();
 
-                    using var idCmd = new SqliteCommand("SELECT last_insert_rowid();", conn, transaction);
+                    using var idCmd = new SqliteCommand("SELECT last_insert_rowid();", connection, transaction);
                     templateId = Convert.ToInt32(idCmd.ExecuteScalar());
                     template.Id = templateId;
                 }
                 else
                 {
-                    using var cmd = new SqliteCommand(updateTemplateSql, conn, transaction);
-                    cmd.Parameters.AddWithValue("@TemplateId", templateId);
-                    cmd.Parameters.AddWithValue("@Name", template.Name);
-                    cmd.Parameters.AddWithValue("@Type", SerializeWorkoutType(template.Type));
-                    cmd.ExecuteNonQuery();
+                    using var command = new SqliteCommand(updateTemplateSql, connection, transaction);
+                    command.Parameters.AddWithValue("@TemplateId", templateId);
+                    command.Parameters.AddWithValue("@Name", template.Name);
+                    command.Parameters.AddWithValue("@Type", SerializeWorkoutType(template.Type));
+                    command.ExecuteNonQuery();
 
-                    using var deleteCmd = new SqliteCommand(deleteOldExercisesSql, conn, transaction);
+                    using var deleteCmd = new SqliteCommand(deleteOldExercisesSql, connection, transaction);
                     deleteCmd.Parameters.AddWithValue("@TemplateId", templateId);
                     deleteCmd.ExecuteNonQuery();
                 }
 
                 foreach (var exercise in template.GetExercises())
                 {
-                    using var cmd = new SqliteCommand(insertExerciseSql, conn, transaction);
-                    cmd.Parameters.AddWithValue("@TemplateId", templateId);
-                    cmd.Parameters.AddWithValue("@Name", exercise.Name);
-                    cmd.Parameters.AddWithValue("@MuscleGroup", exercise.MuscleGroup.ToString());
-                    cmd.Parameters.AddWithValue("@TargetSets", exercise.TargetSets);
-                    cmd.Parameters.AddWithValue("@TargetReps", exercise.TargetReps);
-                    cmd.Parameters.AddWithValue("@TargetWeight", exercise.TargetWeight);
-                    cmd.ExecuteNonQuery();
+                    using var command = new SqliteCommand(insertExerciseSql, connection, transaction);
+                    command.Parameters.AddWithValue("@TemplateId", templateId);
+                    command.Parameters.AddWithValue("@Name", exercise.Name);
+                    command.Parameters.AddWithValue("@MuscleGroup", exercise.MuscleGroup.ToString());
+                    command.Parameters.AddWithValue("@TargetSets", exercise.TargetSets);
+                    command.Parameters.AddWithValue("@TargetReps", exercise.TargetReps);
+                    command.Parameters.AddWithValue("@TargetWeight", exercise.TargetWeight);
+                    command.ExecuteNonQuery();
                 }
 
                 transaction.Commit();
                 return true;
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
                 transaction.Rollback();
-                System.Diagnostics.Debug.WriteLine($"Failed to save trainer workout: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Failed to save trainer workout: {exception.Message}");
                 return false;
             }
         }
@@ -133,22 +137,22 @@ namespace VibeCoders.Services
             const string deleteExercisesSql = "DELETE FROM TEMPLATE_EXERCISE WHERE workout_template_id = @Id;";
             const string deleteTemplateSql = "DELETE FROM WORKOUT_TEMPLATE WHERE workout_template_id = @Id;";
 
-            using var conn = new SqliteConnection(connectionString);
-            conn.Open();
-            using var transaction = conn.BeginTransaction();
+            using var connection = new SqliteConnection(this.connectionString);
+            connection.Open();
+            using var transaction = connection.BeginTransaction();
 
             try
             {
-                using (var cmd = new SqliteCommand(deleteExercisesSql, conn, transaction))
+                using (var command = new SqliteCommand(deleteExercisesSql, connection, transaction))
                 {
-                    cmd.Parameters.AddWithValue("@Id", templateId);
-                    cmd.ExecuteNonQuery();
+                    command.Parameters.AddWithValue("@Id", templateId);
+                    command.ExecuteNonQuery();
                 }
 
-                using (var cmd = new SqliteCommand(deleteTemplateSql, conn, transaction))
+                using (var command = new SqliteCommand(deleteTemplateSql, connection, transaction))
                 {
-                    cmd.Parameters.AddWithValue("@Id", templateId);
-                    cmd.ExecuteNonQuery();
+                    command.Parameters.AddWithValue("@Id", templateId);
+                    command.ExecuteNonQuery();
                 }
 
                 transaction.Commit();

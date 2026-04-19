@@ -1,3 +1,7 @@
+// <copyright file="StreakCheck.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
 using VibeCoders.Services;
 
 namespace VibeCoders.Domain;
@@ -5,14 +9,15 @@ namespace VibeCoders.Domain;
 public sealed class StreakCheck : IMilestoneCheck
 {
     public string AchievementTitle { get; }
+
     public int RequiredConsecutiveDays { get; }
 
     public StreakCheck(string achievementTitle, int requiredConsecutiveDays)
     {
-        AchievementTitle = achievementTitle;
-        RequiredConsecutiveDays = requiredConsecutiveDays;
+        this.AchievementTitle = achievementTitle;
+        this.RequiredConsecutiveDays = requiredConsecutiveDays;
     }
 
     public bool IsMet(int clientId, IDataStorage storage)
-        => storage.GetConsecutiveWorkoutDayStreak(clientId) >= RequiredConsecutiveDays;
+        => storage.GetConsecutiveWorkoutDayStreak(clientId) >= this.RequiredConsecutiveDays;
 }

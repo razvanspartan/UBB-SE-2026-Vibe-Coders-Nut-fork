@@ -1,3 +1,7 @@
+// <copyright file="AchievementsPage.xaml.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
@@ -8,26 +12,27 @@ namespace VibeCoders.Views;
 public sealed partial class AchievementsPage : Page
 {
     public AchievementsViewModel ViewModel { get; }
+
     public int ClientId { get; private set; }
 
     public AchievementsPage()
     {
-        ViewModel = App.GetService<AchievementsViewModel>();
-        DataContext = ViewModel;
-        InitializeComponent();
+        this.ViewModel = App.GetService<AchievementsViewModel>();
+        this.DataContext = this.ViewModel;
+        this.InitializeComponent();
     }
 
-    protected override void OnNavigatedTo(NavigationEventArgs e)
+    protected override void OnNavigatedTo(NavigationEventArgs eventArgs)
     {
-        base.OnNavigatedTo(e);
-        if (e.Parameter is int clientId)
+        base.OnNavigatedTo(eventArgs);
+        if (eventArgs.Parameter is int clientId)
         {
-            ClientId = clientId;
+            this.ClientId = clientId;
         }
     }
 
-    private void Page_Loaded(object sender, RoutedEventArgs e)
+    private void Page_Loaded(object sender, RoutedEventArgs eventArgs)
     {
-        ViewModel.LoadAchievementsCommand.Execute(ClientId);
+        this.ViewModel.LoadAchievementsCommand.Execute(this.ClientId);
     }
 }

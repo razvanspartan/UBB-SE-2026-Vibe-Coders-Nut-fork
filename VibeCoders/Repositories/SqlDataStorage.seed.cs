@@ -1,46 +1,50 @@
-using Microsoft.Data.Sqlite;
-using VibeCoders.Domain;
+// <copyright file="SqlDataStorage.seed.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
 namespace VibeCoders.Services
 {
+    using Microsoft.Data.Sqlite;
+    using VibeCoders.Domain;
+
     public partial class SqlDataStorage
     {
         public void SeedPrebuiltWorkouts()
         {
-            using var conn = new SqliteConnection(connectionString);
-            conn.Open();
+            using var connection = new SqliteConnection(this.connectionString);
+            connection.Open();
 
-            SeedTemplate(conn, "HIIT Fat Burner", new[]
+            this.SeedTemplate(connection, "HIIT Fat Burner", new[]
             {
                 ("Jumping Jacks",     "LEGS", 3, 20),
                 ("Burpees",           "CORE", 3, 15),
-                ("Mountain Climbers", "CORE", 3, 20)
+                ("Mountain Climbers", "CORE", 3, 20),
             });
 
-            SeedTemplate(conn, "Full Body Mass", new[]
+            this.SeedTemplate(connection, "Full Body Mass", new[]
             {
                 ("Back Squat",   "LEGS",  4, 8),
                 ("Bench Press",  "CHEST", 4, 8),
-                ("Barbell Rows", "BACK",  4, 8)
+                ("Barbell Rows", "BACK",  4, 8),
             });
 
-            SeedTemplate(conn, "Full Body Power", new[]
+            this.SeedTemplate(connection, "Full Body Power", new[]
             {
                 ("Deadlift",          "BACK",      4, 5),
                 ("Overhead Press",    "SHOULDERS", 4, 5),
-                ("Weighted Pull-Ups", "BACK",      4, 5)
+                ("Weighted Pull-Ups", "BACK",      4, 5),
             });
 
-            SeedTemplate(conn, "Endurance Circuit", new[]
+            this.SeedTemplate(connection, "Endurance Circuit", new[]
             {
                 ("Push-Ups",          "CHEST", 3, 20),
                 ("Bodyweight Squats", "LEGS",  3, 25),
-                ("Plank",             "CORE",  3, 60)
+                ("Plank",             "CORE",  3, 60),
             });
         }
 
         private void SeedTemplate(
-            SqliteConnection conn,
+            SqliteConnection connection,
             string name,
             IEnumerable<(string ExerciseName, string MuscleGroup, int Sets, int Reps)> exercises)
         {
@@ -49,19 +53,20 @@ namespace VibeCoders.Services
                 FROM WORKOUT_TEMPLATE
                 WHERE name = @Name AND type = 'PRE_BUILT';";
 
-            using (var checkCmd = new SqliteCommand(checkSql, conn))
+            using (var checkCmd = new SqliteCommand(checkSql, connection))
             {
                 checkCmd.Parameters.AddWithValue("@Name", name);
                 if (Convert.ToInt32(checkCmd.ExecuteScalar()) > 0)
                 {
-                    using var normalizeCmd = new SqliteCommand(@"
+                    using var normalizeCmd = new SqliteCommand(
+                        @"
                         UPDATE TEMPLATE_EXERCISE
                         SET target_weight = 0
                         WHERE workout_template_id IN (
                             SELECT workout_template_id
                             FROM WORKOUT_TEMPLATE
                             WHERE name = @Name AND type = 'PRE_BUILT'
-                        );", conn);
+                        );", connection);
                     normalizeCmd.Parameters.AddWithValue("@Name", name);
                     normalizeCmd.ExecuteNonQuery();
                     return;
@@ -73,13 +78,13 @@ namespace VibeCoders.Services
                 VALUES (0, @Name, 'PRE_BUILT');";
 
             int templateId;
-            using (var insertCmd = new SqliteCommand(insertTemplate, conn))
+            using (var insertCmd = new SqliteCommand(insertTemplate, connection))
             {
                 insertCmd.Parameters.AddWithValue("@Name", name);
                 insertCmd.ExecuteNonQuery();
             }
 
-            using (var idCmd = new SqliteCommand("SELECT last_insert_rowid();", conn))
+            using (var idCmd = new SqliteCommand("SELECT last_insert_rowid();", connection))
             {
                 templateId = Convert.ToInt32(idCmd.ExecuteScalar());
             }
@@ -92,7 +97,7 @@ namespace VibeCoders.Services
 
             foreach (var (exerciseName, muscleGroup, sets, reps) in exercises)
             {
-                using var exerciseCmd = new SqliteCommand(insertExercise, conn);
+                using var exerciseCmd = new SqliteCommand(insertExercise, connection);
                 exerciseCmd.Parameters.AddWithValue("@TemplateId", templateId);
                 exerciseCmd.Parameters.AddWithValue("@Name", exerciseName);
                 exerciseCmd.Parameters.AddWithValue("@MuscleGroup", muscleGroup);
@@ -104,10 +109,10 @@ namespace VibeCoders.Services
 
         public void SeedAchievementCatalog()
         {
-            using var conn = new SqliteConnection(connectionString);
-            conn.Open();
+            using var connection = new SqliteConnection(this.connectionString);
+            connection.Open();
 
-            using (var check = new SqliteCommand("SELECT COUNT(1) FROM ACHIEVEMENT;", conn))
+            using (var check = new SqliteCommand("SELECT COUNT(1) FROM ACHIEVEMENT;", connection))
             {
                 if (Convert.ToInt32(check.ExecuteScalar()) > 0)
                 {
@@ -117,13 +122,13 @@ namespace VibeCoders.Services
 
             void Insert(string title, string description, string criteria)
             {
-                using var cmd = new SqliteCommand(
+                using var command = new SqliteCommand(
                     "INSERT OR IGNORE INTO ACHIEVEMENT (title, description, criteria) VALUES (@Title, @Description, @Criteria);",
-                    conn);
-                cmd.Parameters.AddWithValue("@Title", title);
-                cmd.Parameters.AddWithValue("@Description", description);
-                cmd.Parameters.AddWithValue("@Criteria", criteria);
-                cmd.ExecuteNonQuery();
+                    connection);
+                command.Parameters.AddWithValue("@Title", title);
+                command.Parameters.AddWithValue("@Description", description);
+                command.Parameters.AddWithValue("@Criteria", criteria);
+                command.ExecuteNonQuery();
             }
 
             Insert("First Steps", "Prove that you have what it takes to begin.", "Complete your first workout.");
@@ -133,8 +138,8 @@ namespace VibeCoders.Services
 
         public void SeedWorkoutMilestoneAchievements()
         {
-            using var conn = new SqliteConnection(connectionString);
-            conn.Open();
+            using var connection = new SqliteConnection(this.connectionString);
+            connection.Open();
 
             foreach (var milestone in TotalWorkoutsMilestoneEvaluator.DefaultMilestones)
             {
@@ -147,7 +152,7 @@ namespace VibeCoders.Services
                     SET threshold_workouts = @Threshold
                     WHERE title = @Title AND threshold_workouts IS NULL;";
 
-                using (var insertCmd = new SqliteCommand(insertSql, conn))
+                using (var insertCmd = new SqliteCommand(insertSql, connection))
                 {
                     insertCmd.Parameters.AddWithValue("@Title", milestone.title);
                     insertCmd.Parameters.AddWithValue("@Description", milestone.description);
@@ -155,7 +160,7 @@ namespace VibeCoders.Services
                     insertCmd.ExecuteNonQuery();
                 }
 
-                using (var updateCmd = new SqliteCommand(updateSql, conn))
+                using (var updateCmd = new SqliteCommand(updateSql, connection))
                 {
                     updateCmd.Parameters.AddWithValue("@Title", milestone.title);
                     updateCmd.Parameters.AddWithValue("@Threshold", milestone.threshold);
@@ -166,8 +171,8 @@ namespace VibeCoders.Services
 
         public void SeedEvaluationEngineAchievements()
         {
-            using var conn = new SqliteConnection(connectionString);
-            conn.Open();
+            using var connection = new SqliteConnection(this.connectionString);
+            connection.Open();
 
             void Upsert(string title, string description, string criteria)
             {
@@ -180,7 +185,7 @@ namespace VibeCoders.Services
                     SET description = @Description, criteria = @Criteria
                     WHERE title = @Title;";
 
-                using (var insertCmd = new SqliteCommand(insertSql, conn))
+                using (var insertCmd = new SqliteCommand(insertSql, connection))
                 {
                     insertCmd.Parameters.AddWithValue("@Title", title);
                     insertCmd.Parameters.AddWithValue("@Description", description);
@@ -188,7 +193,7 @@ namespace VibeCoders.Services
                     insertCmd.ExecuteNonQuery();
                 }
 
-                using (var updateCmd = new SqliteCommand(updateSql, conn))
+                using (var updateCmd = new SqliteCommand(updateSql, connection))
                 {
                     updateCmd.Parameters.AddWithValue("@Title", title);
                     updateCmd.Parameters.AddWithValue("@Description", description);
@@ -215,10 +220,10 @@ namespace VibeCoders.Services
 
         public void SeedTestData()
         {
-            using var conn = new SqliteConnection(connectionString);
-            conn.Open();
+            using var connection = new SqliteConnection(this.connectionString);
+            connection.Open();
 
-            using (var check = new SqliteCommand("SELECT COUNT(1) FROM \"USER\" WHERE username = 'TestTrainer';", conn))
+            using (var check = new SqliteCommand("SELECT COUNT(1) FROM \"USER\" WHERE username = 'TestTrainer';", connection))
             {
                 if (Convert.ToInt32(check.ExecuteScalar()) > 0)
                 {
@@ -227,76 +232,83 @@ namespace VibeCoders.Services
             }
 
             int trainerUserId;
-            using (var cmd = new SqliteCommand("INSERT INTO \"USER\" (username) VALUES ('TestTrainer');", conn))
+            using (var command = new SqliteCommand("INSERT INTO \"USER\" (username) VALUES ('TestTrainer');", connection))
             {
-                cmd.ExecuteNonQuery();
+                command.ExecuteNonQuery();
             }
-            using (var idCmd = new SqliteCommand("SELECT last_insert_rowid();", conn))
+
+            using (var idCmd = new SqliteCommand("SELECT last_insert_rowid();", connection))
             {
                 trainerUserId = Convert.ToInt32(idCmd.ExecuteScalar());
             }
 
             int trainerId;
-            using (var cmd = new SqliteCommand("INSERT INTO TRAINER (user_id) VALUES (@UserId);", conn))
+            using (var command = new SqliteCommand("INSERT INTO TRAINER (user_id) VALUES (@UserId);", connection))
             {
-                cmd.Parameters.AddWithValue("@UserId", trainerUserId);
-                cmd.ExecuteNonQuery();
+                command.Parameters.AddWithValue("@UserId", trainerUserId);
+                command.ExecuteNonQuery();
             }
-            using (var idCmd = new SqliteCommand("SELECT last_insert_rowid();", conn))
+
+            using (var idCmd = new SqliteCommand("SELECT last_insert_rowid();", connection))
             {
                 trainerId = Convert.ToInt32(idCmd.ExecuteScalar());
             }
 
             int clientUserId;
-            using (var cmd = new SqliteCommand("INSERT INTO \"USER\" (username) VALUES ('TestClient');", conn))
+            using (var command = new SqliteCommand("INSERT INTO \"USER\" (username) VALUES ('TestClient');", connection))
             {
-                cmd.ExecuteNonQuery();
+                command.ExecuteNonQuery();
             }
-            using (var idCmd = new SqliteCommand("SELECT last_insert_rowid();", conn))
+
+            using (var idCmd = new SqliteCommand("SELECT last_insert_rowid();", connection))
             {
                 clientUserId = Convert.ToInt32(idCmd.ExecuteScalar());
             }
 
             int clientId;
-            using (var cmd = new SqliteCommand(@"
+            using (var command = new SqliteCommand(
+                @"
                 INSERT INTO CLIENT (user_id, trainer_id, weight, height)
-                VALUES (@UserId, @TrainerId, 85.5, 180.0);", conn))
+                VALUES (@UserId, @TrainerId, 85.5, 180.0);", connection))
             {
-                cmd.Parameters.AddWithValue("@UserId", clientUserId);
-                cmd.Parameters.AddWithValue("@TrainerId", trainerId);
-                cmd.ExecuteNonQuery();
+                command.Parameters.AddWithValue("@UserId", clientUserId);
+                command.Parameters.AddWithValue("@TrainerId", trainerId);
+                command.ExecuteNonQuery();
             }
-            using (var idCmd = new SqliteCommand("SELECT last_insert_rowid();", conn))
+
+            using (var idCmd = new SqliteCommand("SELECT last_insert_rowid();", connection))
             {
                 clientId = Convert.ToInt32(idCmd.ExecuteScalar());
             }
 
             int CreateLog(DateTime date, string duration, int cals)
             {
-                using var cmd = new SqliteCommand(@"
+                using var command = new SqliteCommand(
+                    @"
                     INSERT INTO WORKOUT_LOG (client_id, date, total_duration, calories_burned, rating)
-                    VALUES (@ClientId, @Date, @Duration, @Cals, NULL);", conn);
-                cmd.Parameters.AddWithValue("@ClientId", clientId);
-                cmd.Parameters.AddWithValue("@Date", date.ToString("o"));
-                cmd.Parameters.AddWithValue("@Duration", duration);
-                cmd.Parameters.AddWithValue("@Cals", cals);
-                cmd.ExecuteNonQuery();
+                    VALUES (@ClientId, @Date, @Duration, @Cals, NULL);", connection);
+                command.Parameters.AddWithValue("@ClientId", clientId);
+                command.Parameters.AddWithValue("@Date", date.ToString("o"));
+                command.Parameters.AddWithValue("@Duration", duration);
+                command.Parameters.AddWithValue("@Cals", cals);
+                command.ExecuteNonQuery();
 
-                using var idCmd = new SqliteCommand("SELECT last_insert_rowid();", conn);
+                using var idCmd = new SqliteCommand("SELECT last_insert_rowid();", connection);
                 return Convert.ToInt32(idCmd.ExecuteScalar());
             }
 
             void AddSet(int logId, string exName, int setIndex, int reps, double weight)
             {
-                using var cmd = new SqliteCommand(@"
+                using var command = new SqliteCommand(
+                    @"
                     INSERT INTO WORKOUT_LOG_SETS (workout_log_id, exercise_name, sets, reps, weight)
-                    VALUES (@LogId, @Name, @SetIdx, @Reps, @Weight);", conn);
-                cmd.Parameters.AddWithValue("@LogId", logId);
-                cmd.Parameters.AddWithValue("@Name", exName);
-                cmd.Parameters.AddWithValue("@SetIdx", setIndex);
-                cmd.Parameters.AddWithValue("@Reps", reps);
-                cmd.Parameters.AddWithValue("@Weight", weight);
-                cmd.ExecuteNonQuery();
+                    VALUES (@LogId, @Name, @SetIdx, @Reps, @Weight);", connection);
+                command.Parameters.AddWithValue("@LogId", logId);
+                command.Parameters.AddWithValue("@Name", exName);
+                command.Parameters.AddWithValue("@SetIdx", setIndex);
+                command.Parameters.AddWithValue("@Reps", reps);
+                command.Parameters.AddWithValue("@Weight", weight);
+                command.ExecuteNonQuery();
             }
 
             int log1 = CreateLog(DateTime.Now, "01:15:00", 450);

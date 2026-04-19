@@ -1,3 +1,7 @@
+// <copyright file="ClientProfileView.xaml.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using VibeCoders.ViewModels;
@@ -10,18 +14,18 @@ public sealed partial class ClientProfileView : Page
 
     public ClientProfileView()
     {
-        InitializeComponent();
-        ViewModel = App.GetService<ClientProfileViewModel>();
-        DataContext = ViewModel;
+        this.InitializeComponent();
+        this.ViewModel = App.GetService<ClientProfileViewModel>();
+        this.DataContext = this.ViewModel;
     }
 
-    protected override void OnNavigatedTo(NavigationEventArgs e)
+    protected override void OnNavigatedTo(NavigationEventArgs eventArgs)
     {
-        base.OnNavigatedTo(e);
+        base.OnNavigatedTo(eventArgs);
 
-        if (e.Parameter is int clientId)
+        if (eventArgs.Parameter is int clientId)
         {
-            ViewModel.LoadClientData(clientId);
+            this.ViewModel.LoadClientData(clientId);
         }
     }
 }

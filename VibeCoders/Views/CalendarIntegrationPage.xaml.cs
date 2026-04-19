@@ -1,12 +1,16 @@
-using System;
-using System.Runtime.InteropServices;
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using VibeCoders.ViewModels;
-using Windows.Storage.Pickers;
+// <copyright file="CalendarIntegrationPage.xaml.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
 namespace VibeCoders.Views
 {
+    using System;
+    using System.Runtime.InteropServices;
+    using Microsoft.UI.Xaml;
+    using Microsoft.UI.Xaml.Controls;
+    using VibeCoders.ViewModels;
+    using Windows.Storage.Pickers;
+
     public sealed partial class CalendarIntegrationPage : Page
     {
         private CalendarIntegrationViewModel? viewModel;
@@ -15,79 +19,49 @@ namespace VibeCoders.Views
         {
             this.InitializeComponent();
 
-            viewModel = App.GetService<CalendarIntegrationViewModel>();
-            this.DataContext = viewModel;
+            this.viewModel = App.GetService<CalendarIntegrationViewModel>();
+            this.DataContext = this.viewModel;
 
-            this.Loaded += async (s, e) =>
+            this.GenerateCalendarButton.Click += this.GenerateCalendarButton_Click;
+            this.Loaded += this.CalendarIntegrationPage_Loaded;
+        }
+
+        private async void CalendarIntegrationPage_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (this.viewModel != null)
             {
-                GenerateCalendarButton.Click += GenerateCalendarButton_Click;
-
-                if (viewModel != null)
-                {
-                    await viewModel.EnsureWorkoutsLoadedAsync();
-                }
-            };
+                await this.viewModel.EnsureWorkoutsLoadedAsync();
+            }
         }
 
         private async void GenerateCalendarButton_Click(object sender, RoutedEventArgs e)
         {
-            if (viewModel == null)
+            if (this.viewModel == null)
             {
                 return;
             }
 
+            await this.ExecuteCalendarGenerationAndSaveFlowAsync(this.viewModel);
+        }
+
+        private async Task ExecuteCalendarGenerationAndSaveFlowAsync(CalendarIntegrationViewModel calendarIntegrationViewModel)
+        {
             try
             {
-                GenerateCalendarButton.IsEnabled = false;
+                this.GenerateCalendarButton.IsEnabled = false;
+                calendarIntegrationViewModel.ClearStatus();
 
-                string? validationError = viewModel.ValidateInput();
-                if (validationError != null)
-                {
-                    ShowError(validationError);
-                    return;
-                }
+                CalendarIntegrationViewModel.CalendarGenerationResult calendarGenerationResult =
+                    await calendarIntegrationViewModel.GenerateCalendarForExportAsync();
 
-                var icsContent = await viewModel.GenerateCalendarAsync();
-
-                if (string.IsNullOrEmpty(icsContent))
-                {
-                    ShowError("Failed to generate calendar file. Please try again.");
-                    return;
-                }
-
-                var savePicker = new FileSavePicker();
-                savePicker.SuggestedStartLocation = PickerLocationId.Downloads;
-                savePicker.FileTypeChoices.Add("iCalendar", new System.Collections.Generic.List<string> { ".ics" });
-
-                var window = (Application.Current as App)?.Window;
-                if (window == null)
-                {
-                    ShowError("Unable to access app window for save dialog.");
-                    return;
-                }
-
-                var hWnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
-                if (hWnd == IntPtr.Zero)
-                {
-                    ShowError("Unable to initialize save dialog window handle.");
-                    return;
-                }
-
-                WinRT.Interop.InitializeWithWindow.Initialize(savePicker, hWnd);
-
-                var file = await savePicker.PickSaveFileAsync();
-
-                if (file == null)
+                if (!calendarGenerationResult.IsSuccessful)
                 {
                     calendarIntegrationViewModel.SetErrorStatus(calendarGenerationResult.Message);
                     return;
                 }
 
-                await Windows.Storage.FileIO.WriteTextAsync(file, icsContent);
-
-                ShowSuccess($"Calendar file '{file.Name}' saved successfully! You can now import it into your calendar application.");
                 string generatedCalendarContent = calendarGenerationResult.GeneratedCalendarContent;
-                await SaveGeneratedCalendarContentWithPickerAsync(
+                await this.SaveGeneratedCalendarContentWithPickerAsync(
                     generatedCalendarContent,
                     calendarIntegrationViewModel);
             }
@@ -101,7 +75,7 @@ namespace VibeCoders.Views
             }
             finally
             {
-                GenerateCalendarButton.IsEnabled = true;
+                this.GenerateCalendarButton.IsEnabled = true;
             }
         }
 
@@ -145,9 +119,8 @@ namespace VibeCoders.Views
             CalendarIntegrationViewModel calendarIntegrationViewModel,
             out IntPtr applicationWindowHandle)
         {
-            var applicationWindow = (Application.Current as App)?._window;
+            var applicationWindow = (Application.Current as App)?.Window;
             if (applicationWindow == null)
-            if (viewModel == null || string.IsNullOrEmpty(viewModel.GeneratedIcsContent))
             {
                 calendarIntegrationViewModel.SetErrorStatus("Unable to access app window for save dialog.");
                 applicationWindowHandle = IntPtr.Zero;
@@ -157,15 +130,6 @@ namespace VibeCoders.Views
             applicationWindowHandle = WinRT.Interop.WindowNative.GetWindowHandle(applicationWindow);
             if (applicationWindowHandle == IntPtr.Zero)
             {
-                var downloadsPath = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                    "Downloads");
-                Directory.CreateDirectory(downloadsPath);
-
-                var safeWorkoutName = (viewModel.SelectedWorkout?.Name ?? "Workout")
-                    .Replace(" ", "-")
-                    .Replace("/", "-")
-                    .Replace("\\", "-");
                 calendarIntegrationViewModel.SetErrorStatus("Unable to initialize save dialog window handle.");
                 return false;
             }
@@ -196,4 +160,3 @@ namespace VibeCoders.Views
         }
     }
 }
-

@@ -87,15 +87,15 @@ public sealed class EvaluationEngine
 
         var tiers = LevelingTierEvaluator.DefaultTiers;
         var result = LevelingTierEvaluator.Evaluate(unlockedCount, tiers);
-        var progress = ComputeNextRankProgress(unlockedCount, tiers, result.Level);
+        var progress = ComputeNextRankProgress(unlockedCount, tiers, result.level);
 
         return new RankShowcaseSnapshot
         {
-            DisplayLevel = result.Level,
-            RankTitle = result.RankTitle,
+            DisplayLevel = result.level,
+            RankTitle = result.rankTitle,
             UnlockedAchievementsDisplay =
                 $"{unlockedCount} achievement{(unlockedCount == 1 ? string.Empty : "s")} unlocked",
-            LevelDisplayLine = $"Level {result.Level}: {result.RankTitle}",
+            LevelDisplayLine = $"Level {result.level}: {result.rankTitle}",
             HasNextRank = progress.HasNextRank,
             ProgressPercent = progress.ProgressPercent,
             NextRankInfo = progress.NextRankInfo,
@@ -111,7 +111,7 @@ public sealed class EvaluationEngine
         int currentIndex = -1;
         for (int i = 0; i < tiers.Count; i++)
         {
-            if (tiers[i].Level == currentLevel)
+            if (tiers[i].level == currentLevel)
             {
                 currentIndex = i;
                 break;
@@ -138,7 +138,7 @@ public sealed class EvaluationEngine
 
         int remaining = Math.Max(0, bandEnd - unlockedCount);
         string nextRankInfo =
-            $"Next: Level {next.Level}: {next.RankTitle} — {remaining} more achievement{(remaining == 1 ? string.Empty : "s")} to go";
+            $"Next: Level {next.level}: {next.rankTitle} — {remaining} more achievement{(remaining == 1 ? string.Empty : "s")} to go";
 
         return (true, progressPercent, nextRankInfo);
     }

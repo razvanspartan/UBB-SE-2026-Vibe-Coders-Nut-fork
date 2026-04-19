@@ -26,7 +26,7 @@ public static class LevelingTierEvaluator
         LevelTier? best = null;
         foreach (var tier in tiers)
         {
-            if (unlockedAchievements >= tier.minAchievements)
+            if (unlockedAchievements >= tier.MinAchievements)
             {
                 best = tier;
             }
@@ -38,11 +38,11 @@ public static class LevelingTierEvaluator
     }
 }
 
-public readonly record struct LevelTier(int level, string rankTitle, int minAchievements)
+public readonly record struct LevelTier(int level, string rankTitle, int MinAchievements)
 {
     public override string ToString() =>
         string.Format(CultureInfo.InvariantCulture,
-            "Level {0} {1} @ {2} achievements", level, rankTitle, minAchievements);
+            "Level {0} {1} @ {2} achievements", level, rankTitle, MinAchievements);
 }
 
 public readonly record struct LevelingResult(int level, string rankTitle);

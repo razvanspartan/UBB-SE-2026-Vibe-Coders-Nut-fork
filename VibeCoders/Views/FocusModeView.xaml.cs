@@ -1,3 +1,7 @@
+// <copyright file="FocusModeView.xaml.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
 using Microsoft.UI.Xaml.Controls;
 using VibeCoders.ViewModels;
 
@@ -9,16 +13,16 @@ public sealed partial class FocusModeView : Page
 
     public ActiveWorkoutViewModel ViewModel { get; }
 
-    public FocusModeView(ActiveWorkoutViewModel vm, ContentDialog hostDialog)
+    public FocusModeView(ActiveWorkoutViewModel viewModel, ContentDialog hostDialog)
     {
-        InitializeComponent();
-        ViewModel = vm;
-        DataContext = vm;
+        this.InitializeComponent();
+        this.ViewModel = viewModel;
+        this.DataContext = viewModel;
         this.hostDialog = hostDialog;
     }
 
-    private void ExitButton_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    private void ExitButton_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs eventArgs)
     {
-        hostDialog.Hide();
+        this.hostDialog.Hide();
     }
 }

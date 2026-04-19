@@ -1,11 +1,15 @@
+// <copyright file="MainWindow.xaml.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
+namespace VibeCoders;
+
 using System;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using VibeCoders.Services;
 using WinRT.Interop;
-
-namespace VibeCoders;
 
 public sealed partial class MainWindow : Window
 {
@@ -14,14 +18,14 @@ public sealed partial class MainWindow : Window
 
     public MainWindow(NavigationService navigationService, IAchievementUnlockedBus achievementBus)
     {
-        InitializeComponent();
+        this.InitializeComponent();
         this.navigationService = navigationService;
         this.achievementBus = achievementBus;
-        this.achievementBus.AchievementUnlocked += OnAchievementUnlocked;
-        this.navigationService.AttachFrame(ContentFrame);
+        this.achievementBus.AchievementUnlocked += this.OnAchievementUnlocked;
+        this.navigationService.AttachFrame(this.ContentFrame);
 
         var placementDone = false;
-        Activated += (_, _) =>
+        this.Activated += (_, _) =>
         {
             if (placementDone)
             {
@@ -29,14 +33,14 @@ public sealed partial class MainWindow : Window
             }
 
             placementDone = true;
-            ApplyInitialPlacement();
+            this.ApplyInitialPlacement();
         };
     }
 
     private void ApplyInitialPlacement()
     {
-        var hWnd = WindowNative.GetWindowHandle(this);
-        var windowId = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(hWnd);
+        var windowHandle = WindowNative.GetWindowHandle(this);
+        var windowId = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(windowHandle);
         var appWindow = AppWindow.GetFromWindowId(windowId);
 
         const int width = 1280;
@@ -50,28 +54,28 @@ public sealed partial class MainWindow : Window
         appWindow.Move(new Windows.Graphics.PointInt32 { X = x, Y = y });
     }
 
-    private async void OnAchievementUnlocked(object? sender, AchievementUnlockedEventArgs e)
+    private async void OnAchievementUnlocked(object? sender, AchievementUnlockedEventArgs eventArgs)
     {
-        var achievement = e.Achievement;
+        var achievement = eventArgs.Achievement;
 
         var body = new StackPanel { Spacing = 8 };
         body.Children.Add(new TextBlock
         {
             Text = achievement.Title,
-            Style = (Style)Application.Current.Resources["SubtitleTextBlockStyle"]
+            Style = (Style)Application.Current.Resources["SubtitleTextBlockStyle"],
         });
         body.Children.Add(new TextBlock
         {
             Text = achievement.Description,
             Style = (Style)Application.Current.Resources["BodyTextBlockStyle"],
-            TextWrapping = TextWrapping.Wrap
+            TextWrapping = TextWrapping.Wrap,
         });
         body.Children.Add(new TextBlock
         {
             Text = $"Criteria: {achievement.Criteria}",
             Style = (Style)Application.Current.Resources["CaptionTextBlockStyle"],
             Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
-            TextWrapping = TextWrapping.Wrap
+            TextWrapping = TextWrapping.Wrap,
         });
 
         var dialog = new ContentDialog
@@ -79,16 +83,16 @@ public sealed partial class MainWindow : Window
             Title = "Achievement Unlocked",
             Content = body,
             CloseButtonText = "Awesome!",
-            XamlRoot = Content.XamlRoot
+            XamlRoot = this.Content.XamlRoot,
         };
 
         try
         {
             await dialog.ShowAsync();
         }
-        catch (Exception ex)
+        catch (Exception exception)
         {
-            System.Diagnostics.Debug.WriteLine($"Achievement dialog error: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"Achievement dialog error: {exception.Message}");
         }
     }
 
@@ -100,23 +104,23 @@ public sealed partial class MainWindow : Window
 
             if (tag == "Dashboard")
             {
-                navigationService.NavigateToClientDashboard(requestRefresh: true);
+                this.navigationService.NavigateToClientDashboard(requestRefresh: true);
             }
             else if (tag == "WorkoutLogs")
             {
-                navigationService.NavigateToWorkoutLogs();
+                this.navigationService.NavigateToWorkoutLogs();
             }
             else if (tag == "Calendar")
             {
-                navigationService.NavigateToCalendarIntegration();
+                this.navigationService.NavigateToCalendarIntegration();
             }
             else if (tag == "Rank")
             {
-                navigationService.NavigateToRankShowcase();
+                this.navigationService.NavigateToRankShowcase();
             }
             else if (tag == "TrainerDashboard")
             {
-                navigationService.NavigateToTrainerDashboard();
+                this.navigationService.NavigateToTrainerDashboard();
             }
         }
     }

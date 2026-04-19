@@ -1,3 +1,9 @@
+// <copyright file="App.xaml.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
+namespace VibeCoders;
+
 using System;
 using System.Diagnostics;
 using System.Linq;
@@ -8,16 +14,27 @@ using Microsoft.UI.Xaml;
 using VibeCoders.Services;
 using VibeCoders.ViewModels;
 
-namespace VibeCoders;
-
 public partial class App : Application
 {
     private static IServiceProvider? servicesProvider;
-    public Window? Window;
 
     public App()
     {
-        InitializeComponent();
+        this.InitializeComponent();
+    }
+
+    public Window? Window { get; set; }
+
+    public static T GetService<T>()
+        where T : notnull
+    {
+        if (servicesProvider is null)
+        {
+            throw new InvalidOperationException(
+                "Service provider is not initialized. Ensure OnLaunched has run.");
+        }
+
+        return servicesProvider.GetRequiredService<T>();
     }
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
@@ -42,62 +59,16 @@ public partial class App : Application
                 sql.SeedTestData();
             }
         }
-        catch (Exception ex)
+        catch (Exception exception)
         {
-            Debug.WriteLine($"Startup database init failed: {ex}");
+            Debug.WriteLine($"Startup database init failed: {exception}");
         }
 
-        TrySyncDemoClientSession();
-        Window = new MainWindow(navService, achievementBus);
-        Window.Activate();
+        this.TrySyncDemoClientSession();
+        this.Window = new MainWindow(navService, achievementBus);
+        this.Window.Activate();
 
         navService.NavigateToClientDashboard(requestRefresh: true);
-    }
-
-    public static T GetService<T>()
-        where T : notnull
-    {
-        if (servicesProvider is null)
-        {
-            throw new InvalidOperationException(
-                "Service provider is not initialized. Ensure OnLaunched has run.");
-        }
-
-        return servicesProvider.GetRequiredService<T>();
-    }
-
-    private void TrySyncDemoClientSession()
-    {
-        if (servicesProvider is null)
-        {
-            return;
-        }
-
-        try
-        {
-            var storage = servicesProvider.GetRequiredService<IDataStorage>();
-            var session = servicesProvider.GetRequiredService<IUserSession>();
-            var user = storage.LoadUser("TestClient");
-            if (user is null)
-            {
-                return;
-            }
-
-            var roster = storage.GetTrainerClient(1);
-            var client = roster.FirstOrDefault(c =>
-                string.Equals(c.Username, "TestClient", StringComparison.OrdinalIgnoreCase));
-            if (client is null)
-            {
-                return;
-            }
-
-            session.CurrentUserId = user.Id;
-            session.CurrentClientId = client.Id;
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"Session sync skipped: {ex.Message}");
-        }
     }
 
     private static void ConfigureServices(IServiceCollection services)
@@ -135,11 +106,45 @@ public partial class App : Application
         services.AddTransient<AchievementsViewModel>();
         services.AddTransient<ClientProfileViewModel>();
 
-        services.AddTransient<TrainerDashboardViewModel>(sp =>
+        services.AddTransient<TrainerDashboardViewModel>(serviceProvider =>
         {
-            var trainerService = sp.GetRequiredService<TrainerService>();
-            var navService = sp.GetRequiredService<INavigationService>();
+            var trainerService = serviceProvider.GetRequiredService<TrainerService>();
+            var navService = serviceProvider.GetRequiredService<INavigationService>();
             return new TrainerDashboardViewModel(trainerService, navService);
         });
+    }
+
+    private void TrySyncDemoClientSession()
+    {
+        if (servicesProvider is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var storage = servicesProvider.GetRequiredService<IDataStorage>();
+            var session = servicesProvider.GetRequiredService<IUserSession>();
+            var user = storage.LoadUser("TestClient");
+            if (user is null)
+            {
+                return;
+            }
+
+            var roster = storage.GetTrainerClient(1);
+            var client = roster.FirstOrDefault(c =>
+                string.Equals(c.Username, "TestClient", StringComparison.OrdinalIgnoreCase));
+            if (client is null)
+            {
+                return;
+            }
+
+            session.CurrentUserId = user.Id;
+            session.CurrentClientId = client.Id;
+        }
+        catch (Exception exception)
+        {
+            Debug.WriteLine($"Session sync skipped: {exception.Message}");
+        }
     }
 }

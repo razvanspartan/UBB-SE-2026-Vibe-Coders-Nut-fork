@@ -132,7 +132,7 @@ namespace VibeCoders.Services
             var profileClient = roster.FirstOrDefault(c => c.Id == clientId);
             if (profileClient is { Weight: > 0, Height: > 0 })
             {
-                bmi = (float)BmiCalculator.Calculate(profileClient.Weight, profileClient.Height);
+                bmi = (float)BmiCalculator.CalculateBmi(profileClient.Weight, profileClient.Height);
             }
 
             return new NutritionSyncPayload
@@ -256,7 +256,7 @@ namespace VibeCoders.Services
                 if (exercise.Met <= 0)
                     exercise.Met = (float)ExerciseCalorieCalculator.GetMet(exercise.ExerciseName);
 
-                exercise.ExerciseCaloriesBurned = ExerciseCalorieCalculator.Calculate(exercise.Met, weightKg, durationPerExercise);
+                exercise.ExerciseCaloriesBurned = ExerciseCalorieCalculator.CalculateCalories(exercise.Met, weightKg, durationPerExercise);
             }
 
             log.TotalCaloriesBurned = log.Exercises.Sum(e => e.ExerciseCaloriesBurned);
