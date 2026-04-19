@@ -2,7 +2,7 @@ namespace VibeCoders.Domain;
 
 public static class BmiCalculator
 {
-    public static double Calculate(double weightKg, double heightCm)
+    public static double CalculateBodyMassIndex(double weightKg, double heightCm)
     {
         if (weightKg <= 0)
         {

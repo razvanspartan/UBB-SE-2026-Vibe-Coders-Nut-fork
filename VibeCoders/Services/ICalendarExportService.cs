@@ -4,6 +4,6 @@ namespace VibeCoders.Services
 {
     public interface ICalendarExportService
     {
-        string GenerateCalendar(WorkoutTemplate workoutTemplate, int durationWeeks, int[] selectedDays, DateTime? startDate = null);
+        string GenerateICSCalendar(WorkoutTemplate workoutTemplate, int durationWeeks, int[] selectedDays, DateTime? startDate = null);
     }
 }

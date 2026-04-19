@@ -13,15 +13,15 @@ namespace VibeCoders.ViewModels;
 
 public partial class ClientProfileViewModel : ObservableObject
 {
-    private readonly IDataStorage _storage;
-    private readonly ClientService _clientService;
-    private int _loadedClientId;
+    private readonly IDataStorage storage;
+    private readonly ClientService clientService;
+    private int loadedClientId;
 
     [ObservableProperty]
-    private ObservableCollection<LoggedExercise> loggedExercises = new();
+    private ObservableCollection<LoggedExercise> loggedExercises = new ();
 
     [ObservableProperty]
-    private ObservableCollection<Meal> meals = new();
+    private ObservableCollection<Meal> meals = new ();
 
     [ObservableProperty]
     private string caloriesSummary = "Calories burned (all logged workouts): 0";
@@ -34,18 +34,21 @@ public partial class ClientProfileViewModel : ObservableObject
 
     public ClientProfileViewModel(IDataStorage storage, ClientService clientService)
     {
-        _storage = storage;
-        _clientService = clientService;
+        this.storage = storage;
+        this.clientService = clientService;
     }
 
     [RelayCommand]
     private async Task SyncNutritionAsync()
     {
-        if (_loadedClientId <= 0) return;
+        if (loadedClientId <= 0)
+        {
+            return;
+        }
 
         SyncNutritionStatus = "Syncing…";
 
-        var history = _storage.GetWorkoutHistory(_loadedClientId);
+        var history = storage.GetWorkoutHistory(loadedClientId);
         var totalCalories = history.Sum(h => h.TotalCaloriesBurned);
         var last = history.FirstOrDefault();
         var difficulty = string.IsNullOrWhiteSpace(last?.IntensityTag) ? "unknown" : last.IntensityTag;
@@ -56,7 +59,7 @@ public partial class ClientProfileViewModel : ObservableObject
         List<Client> roster;
         try
         {
-            roster = _storage.GetTrainerClient(1);
+            roster = storage.GetTrainerClient(1);
         }
         catch (Exception ex)
         {
@@ -64,9 +67,11 @@ public partial class ClientProfileViewModel : ObservableObject
             roster = [];
         }
 
-        var profileClient = roster.FirstOrDefault(c => c.Id == _loadedClientId);
+        var profileClient = roster.FirstOrDefault(c => c.Id == loadedClientId);
         if (profileClient is { Weight: > 0, Height: > 0 })
-            bmi = (float)BmiCalculator.Calculate(profileClient.Weight, profileClient.Height);
+        {
+            bmi = (float)BmiCalculator.CalculateBodyMassIndex(profileClient.Weight, profileClient.Height);
+        }
 
         var payload = new NutritionSyncPayload
         {
@@ -75,7 +80,7 @@ public partial class ClientProfileViewModel : ObservableObject
             UserBmi = bmi
         };
 
-        var ok = await _clientService.SyncNutritionAsync(payload).ConfigureAwait(true);
+        var ok = await clientService.SyncNutritionAsync(payload).ConfigureAwait(true);
         SyncNutritionStatus = ok
             ? "Nutrition sync OK."
             : "Sync failed — start your local nutrition API (see NutritionSyncOptions default URL) or check the network.";
@@ -83,8 +88,8 @@ public partial class ClientProfileViewModel : ObservableObject
 
     public void LoadClientData(int clientId)
     {
-        _loadedClientId = clientId;
-        var history = _storage.GetWorkoutHistory(clientId);
+        loadedClientId = clientId;
+        var history = storage.GetWorkoutHistory(clientId);
         var totalCal = history.Sum(h => h.TotalCaloriesBurned);
         CaloriesSummary = $"Calories burned (all logged workouts): {totalCal}";
 
@@ -100,10 +105,10 @@ public partial class ClientProfileViewModel : ObservableObject
             LoggedExercises = new ObservableCollection<LoggedExercise>();
         }
 
-        var plan = _clientService.GetActiveNutritionPlan(clientId);
+        var plan = clientService.GetActiveNutritionPlan(clientId);
         if (plan != null)
         {
-            var mealList = _storage.GetMealsForPlan(plan.PlanId);
+            var mealList = storage.GetMealsForPlan(plan.PlanId);
             Meals = new ObservableCollection<Meal>(mealList);
         }
         else

@@ -6,7 +6,7 @@ namespace VibeCoders.Domain
 {
     public class CalendarExportService : VibeCoders.Services.ICalendarExportService
     {
-        public string GenerateCalendar(WorkoutTemplate workoutTemplate, int durationWeeks, int[] selectedDays, DateTime? startDate = null)
+        public string GenerateICSCalendar(WorkoutTemplate workoutTemplate, int durationWeeks, int[] selectedDays, DateTime? startDate = null)
         {
             if (workoutTemplate == null)
             {
@@ -60,7 +60,7 @@ namespace VibeCoders.Domain
                         continue;
                     }
 
-                    var eventContent = CreateVEvent(workoutTemplate, currentDate);
+                    var eventContent = CreateVirtualEvent(workoutTemplate, currentDate);
                     events.Add(eventContent);
                 }
             }
@@ -68,7 +68,7 @@ namespace VibeCoders.Domain
             return events;
         }
 
-        private string CreateVEvent(WorkoutTemplate workoutTemplate, DateTime eventDate)
+        private string CreateVirtualEvent(WorkoutTemplate workoutTemplate, DateTime eventDate)
         {
             var builder = new StringBuilder();
 
