@@ -20,12 +20,7 @@ namespace VibeCoders.Services
 
         public void NavigateToClientDashboard(bool requestRefresh)
         {
-            if (frame is null)
-            {
-                return;
-            }
-
-            frame.Navigate(typeof(ClientDashboardPage));
+            frame?.Navigate(typeof(ClientDashboardPage));
 
             if (requestRefresh)
             {
@@ -35,52 +30,27 @@ namespace VibeCoders.Services
 
         public void NavigateToCalendarIntegration()
         {
-            if (frame is null)
-            {
-                return;
-            }
-
-            frame.Navigate(typeof(CalendarIntegrationPage));
+            frame?.Navigate(typeof(CalendarIntegrationPage));
         }
 
         public void NavigateToRankShowcase()
         {
-            if (frame is null)
-            {
-                return;
-            }
-
-            frame.Navigate(typeof(RankShowcasePage));
+            frame?.Navigate(typeof(RankShowcasePage));
         }
 
         public void NavigateToActiveWorkout(int clientId = 0)
         {
-            if (frame is null)
-            {
-                return;
-            }
-
-            frame.Navigate(typeof(ActiveWorkoutPage), clientId);
+            frame?.Navigate(typeof(ActiveWorkoutPage), clientId);
         }
 
         public void NavigateToWorkoutLogs()
         {
-            if (frame is null)
-            {
-                return;
-            }
-
-            frame.Navigate(typeof(WorkoutLogsPage));
+            frame?.Navigate(typeof(WorkoutLogsPage));
         }
 
         public void GoBack()
         {
-            if (frame is null)
-            {
-                return;
-            }
-
-            if (frame.CanGoBack)
+            if (frame?.CanGoBack == true)
             {
                 frame.GoBack();
             }
@@ -88,22 +58,12 @@ namespace VibeCoders.Services
 
         public void NavigateToTrainerDashboard()
         {
-            if (frame is null)
-            {
-                return;
-            }
-
-            frame.Navigate(typeof(TrainerDashboardView));
+            frame?.Navigate(typeof(TrainerDashboardView));
         }
 
         public void NavigateToClientProfile(int clientId)
         {
-            if (frame is null)
-            {
-                return;
-            }
-
-            frame.Navigate(typeof(ClientProfileView), clientId);
+            frame?.Navigate(typeof(ClientProfileView), clientId);
         }
     }
 }

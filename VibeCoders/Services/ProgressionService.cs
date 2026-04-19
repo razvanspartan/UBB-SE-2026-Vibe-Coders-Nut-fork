@@ -7,8 +7,8 @@ namespace VibeCoders.Services
     {
         private readonly IDataStorage storage;
 
-        private const double PlateauThreshold = 0.9;
-        private const int ConsecutiveFailedSetsForPlateau = 2;
+        private const double PLATEAU_THRESHOLD = 0.9;
+        private const int CONSECUTIVE_FAILED_SETS_FOR_PLATEAU = 2;
 
         public ProgressionService(IDataStorage storage)
         {
@@ -97,10 +97,10 @@ namespace VibeCoders.Services
 
                 sumOfRatios += ratio;
 
-                if (ratio < PlateauThreshold)
+                if (ratio < PLATEAU_THRESHOLD)
                 {
                     consecutiveLowSets++;
-                    if (consecutiveLowSets >= ConsecutiveFailedSetsForPlateau)
+                    if (consecutiveLowSets >= CONSECUTIVE_FAILED_SETS_FOR_PLATEAU)
                     {
                         plateauDetected = true;
                     }
