@@ -1,5 +1,3 @@
-using System.Net.Http;
-using System.Net.Http.Json;
 using VibeCoders.Domain;
 using VibeCoders.Models;
 using VibeCoders.Models.Integration;
@@ -13,22 +11,20 @@ namespace VibeCoders.Services
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly EvaluationEngine _evaluationEngine;
         private readonly IAchievementUnlockedBus _achievementBus;
-        private readonly NutritionSyncOptions _nutritionSync;
 
         public ClientService(
             IDataStorage storage,
             ProgressionService progressionService,
             IHttpClientFactory httpClientFactory,
             EvaluationEngine evaluationEngine,
-            IAchievementUnlockedBus achievementBus,
-            NutritionSyncOptions nutritionSync)
+            IAchievementUnlockedBus achievementBus
+            )
         {
             _storage            = storage;
             _progressionService = progressionService;
             _httpClientFactory  = httpClientFactory;
             _evaluationEngine   = evaluationEngine;
             _achievementBus     = achievementBus;
-            _nutritionSync      = nutritionSync;
         }
 
         private const double DefaultMet = 5.0;
@@ -111,20 +107,74 @@ namespace VibeCoders.Services
             NutritionSyncPayload payload,
             CancellationToken cancellationToken = default)
         {
+            return true;
+        }
+
+        public NutritionSyncPayload BuildNutritionSyncPayload(int clientId)
+        {
+            var history = _storage.GetWorkoutHistory(clientId);
+            var totalCalories = history.Sum(h => h.TotalCaloriesBurned);
+            var last = history.FirstOrDefault();
+            var difficulty = string.IsNullOrWhiteSpace(last?.IntensityTag) ? "unknown" : last.IntensityTag;
+
+            float bmi = 0f;
+            List<Client> roster;
             try
             {
-                var client = _httpClientFactory.CreateClient();
-                var response = await client
-                    .PostAsJsonAsync(_nutritionSync.Endpoint, payload, cancellationToken)
-                    .ConfigureAwait(false);
-
-                return response.IsSuccessStatusCode;
+                roster = _storage.GetTrainerClient(1);
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error syncing nutrition: {ex.Message}");
-                return false;
+                System.Diagnostics.Debug.WriteLine($"ClientService: BMI lookup failed; sync continues with UserBmi=0. {ex.Message}");
+                roster = [];
             }
+
+            var profileClient = roster.FirstOrDefault(c => c.Id == clientId);
+            if (profileClient is { Weight: > 0, Height: > 0 })
+            {
+                bmi = (float)BmiCalculator.Calculate(profileClient.Weight, profileClient.Height);
+            }
+
+            return new NutritionSyncPayload
+            {
+                TotalCalories = totalCalories,
+                WorkoutDifficulty = difficulty,
+                UserBmi = bmi,
+            };
+        }
+
+        public ClientProfileSnapshot BuildClientProfileSnapshot(int clientId)
+        {
+            var history = _storage.GetWorkoutHistory(clientId);
+            var totalCal = history.Sum(h => h.TotalCaloriesBurned);
+
+            var latest = history.FirstOrDefault();
+            string latestSessionHint;
+            IReadOnlyList<LoggedExercise> loggedExercises;
+
+            if (latest != null && latest.Exercises is { Count: > 0 })
+            {
+                latestSessionHint = $"Latest session: {latest.WorkoutName} — {latest.Date:g}";
+                loggedExercises = latest.Exercises;
+            }
+            else
+            {
+                latestSessionHint = "No completed workouts with exercises yet.";
+                loggedExercises = Array.Empty<LoggedExercise>();
+            }
+
+            var plan = GetActiveNutritionPlan(clientId);
+            IReadOnlyList<Meal> meals = plan != null
+                ? _storage.GetMealsForPlan(plan.PlanId)
+                : Array.Empty<Meal>();
+
+            return new ClientProfileSnapshot
+            {
+                CaloriesSummary = $"Calories burned (all logged workouts): {totalCal}",
+                LatestSessionHint = latestSessionHint,
+                LoggedExercises = loggedExercises,
+                Meals = meals,
+            };
         }
 
         public NutritionPlan? GetActiveNutritionPlan(int clientId)
@@ -154,6 +204,44 @@ namespace VibeCoders.Services
                 System.Diagnostics.Debug.WriteLine($"Error loading active nutrition plan: {ex.Message}");
                 return null;
             }
+        }
+
+        public string BuildEstimatedWorkoutDurationDisplay(IReadOnlyList<LoggedExercise> loggedExercises)
+        {
+            int totalSetCount = 0;
+            for (int exerciseIndex = 0; exerciseIndex < loggedExercises.Count; exerciseIndex++)
+            {
+                totalSetCount += loggedExercises[exerciseIndex].Sets.Count;
+            }
+
+            int totalMinutes = 0;
+            if (totalSetCount > 0)
+            {
+                totalMinutes = totalSetCount + ((totalSetCount - 1) * 3);
+            }
+
+            var estimatedDuration = TimeSpan.FromMinutes(totalMinutes);
+            return $"{(int)estimatedDuration.TotalHours:D2}:{estimatedDuration.Minutes:D2}";
+        }
+
+        public WorkoutLog BuildUpdatedWorkoutLog(WorkoutLog sourceWorkoutLog, IReadOnlyList<LoggedExercise> updatedExercises)
+        {
+            return new WorkoutLog
+            {
+                Id = sourceWorkoutLog.Id,
+                ClientId = sourceWorkoutLog.ClientId,
+                WorkoutName = sourceWorkoutLog.WorkoutName,
+                Date = sourceWorkoutLog.Date,
+                Duration = sourceWorkoutLog.Duration,
+                SourceTemplateId = sourceWorkoutLog.SourceTemplateId,
+                Type = sourceWorkoutLog.Type,
+                TotalCaloriesBurned = sourceWorkoutLog.TotalCaloriesBurned,
+                AverageMet = sourceWorkoutLog.AverageMet,
+                IntensityTag = sourceWorkoutLog.IntensityTag,
+                Rating = sourceWorkoutLog.Rating,
+                TrainerNotes = sourceWorkoutLog.TrainerNotes,
+                Exercises = new List<LoggedExercise>(updatedExercises),
+            };
         }
 
         private void ComputeCalories(WorkoutLog log)
@@ -226,6 +314,17 @@ namespace VibeCoders.Services
             {
                 System.Diagnostics.Debug.WriteLine($"Error confirming deload: {ex.Message}");
             }
+        }
+
+        public sealed class ClientProfileSnapshot
+        {
+            public string CaloriesSummary { get; init; } = "Calories burned (all logged workouts): 0";
+
+            public string LatestSessionHint { get; init; } = string.Empty;
+
+            public IReadOnlyList<LoggedExercise> LoggedExercises { get; init; } = Array.Empty<LoggedExercise>();
+
+            public IReadOnlyList<Meal> Meals { get; init; } = Array.Empty<Meal>();
         }
     }
 }

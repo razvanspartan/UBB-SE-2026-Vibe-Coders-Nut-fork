@@ -519,7 +519,7 @@ namespace VibeCoders.ViewModels
     public sealed partial class ActiveExerciseViewModel : ObservableObject
     {
         public string ExerciseName { get; }
-#pragma warning disable SA1309 // Field names should not begin with underscore
+
         [ObservableProperty]
         public partial double? PreviousBestWeight { get; set; }
         public MuscleGroup MuscleGroup { get; }
@@ -530,7 +530,6 @@ namespace VibeCoders.ViewModels
 
         [ObservableProperty]
         public partial string AdjustmentNote { get; set; } = string.Empty;
-#pragma warning restore SA1309 // Field names should not begin with underscore
 
         public ActiveExerciseViewModel(TemplateExercise template, Action<ActiveSetViewModel> autoSaveSet)
         {
