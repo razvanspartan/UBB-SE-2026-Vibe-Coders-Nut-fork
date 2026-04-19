@@ -1,8 +1,8 @@
+namespace VibeCoders.Views;
+
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using VibeCoders.ViewModels;
-
-namespace VibeCoders.Views;
 
 public sealed partial class ClientProfileView : Page
 {

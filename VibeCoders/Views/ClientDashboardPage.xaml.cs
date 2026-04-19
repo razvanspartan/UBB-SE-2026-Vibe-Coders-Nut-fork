@@ -1,11 +1,11 @@
+namespace VibeCoders.Views;
+
 using System.ComponentModel;
 using LiveChartsCore.SkiaSharpView.WinUI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using VibeCoders.Services;
 using VibeCoders.ViewModels;
-
-namespace VibeCoders.Views;
 
 public sealed partial class ClientDashboardPage : Page
 {

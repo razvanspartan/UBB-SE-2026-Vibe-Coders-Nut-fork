@@ -1,7 +1,7 @@
+namespace VibeCoders.Views;
+
 using Microsoft.UI.Xaml.Controls;
 using VibeCoders.ViewModels;
-
-namespace VibeCoders.Views;
 
 public sealed partial class FocusModeView : Page
 {

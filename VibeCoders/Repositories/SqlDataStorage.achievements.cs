@@ -1,5 +1,3 @@
-
-
 namespace VibeCoders.Services;
 
 using Microsoft.Data.Sqlite;
