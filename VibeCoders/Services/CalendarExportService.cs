@@ -1,10 +1,11 @@
 using System;
+using System.IO;
 using System.Text;
 using VibeCoders.Models;
 
-namespace VibeCoders.Domain
+namespace VibeCoders.Services
 {
-    public class CalendarExportService : VibeCoders.Services.ICalendarExportService
+    public class CalendarExportService : ICalendarExportService
     {
         public string GenerateCalendar(WorkoutTemplate workoutTemplate, int durationWeeks, int[] selectedDays, DateTime? startDate = null)
         {
@@ -35,6 +36,33 @@ namespace VibeCoders.Domain
             icsBuilder.AppendLine("END:VCALENDAR");
             
             return icsBuilder.ToString();
+        }
+
+        public async Task<string?> SaveCalendarToDownloadsAsync(string calendarContent, string? workoutName)
+        {
+            if (string.IsNullOrWhiteSpace(calendarContent))
+            {
+                return null;
+            }
+
+            try
+            {
+                string downloadsPath = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                    "Downloads");
+                Directory.CreateDirectory(downloadsPath);
+
+                string safeWorkoutName = BuildSafeWorkoutName(workoutName);
+                string fileName = $"{safeWorkoutName}-{DateTime.Now:yyyyMMdd-HHmmss}.ics";
+                string fullPath = Path.Combine(downloadsPath, fileName);
+
+                await File.WriteAllTextAsync(fullPath, calendarContent);
+                return fullPath;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         private List<string> GenerateWorkoutEvents(WorkoutTemplate workoutTemplate, int durationWeeks, int[] selectedDays, DateTime baseDate)
@@ -118,6 +146,46 @@ namespace VibeCoders.Domain
                 .Replace("\r\n", "\\n")
                 .Replace("\n", "\\n")
                 .Replace("\r", "\\n");
+        }
+
+        private static string BuildSafeWorkoutName(string? workoutName)
+        {
+            string fallbackWorkoutName = string.IsNullOrWhiteSpace(workoutName)
+                ? "Workout"
+                : workoutName;
+
+            var safeNameBuilder = new StringBuilder(fallbackWorkoutName.Length);
+            char[] invalidCharacters = Path.GetInvalidFileNameChars();
+
+            for (int index = 0; index < fallbackWorkoutName.Length; index++)
+            {
+                char currentCharacter = fallbackWorkoutName[index];
+
+                if (currentCharacter == ' ' || currentCharacter == '/' || currentCharacter == '\\')
+                {
+                    safeNameBuilder.Append('-');
+                    continue;
+                }
+
+                bool isInvalidCharacter = false;
+                for (int invalidCharacterIndex = 0; invalidCharacterIndex < invalidCharacters.Length; invalidCharacterIndex++)
+                {
+                    if (currentCharacter == invalidCharacters[invalidCharacterIndex])
+                    {
+                        isInvalidCharacter = true;
+                        break;
+                    }
+                }
+
+                safeNameBuilder.Append(isInvalidCharacter ? '-' : currentCharacter);
+            }
+
+            if (safeNameBuilder.Length == 0)
+            {
+                return "Workout";
+            }
+
+            return safeNameBuilder.ToString();
         }
     }
 }

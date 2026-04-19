@@ -1,90 +1,73 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.UI.Xaml.Controls;
 using VibeCoders.Models;
 using VibeCoders.Services;
 
 namespace VibeCoders.ViewModels
 {
-    public class DaySelectionItem : ObservableObject
+    public partial class DaySelectionItem : ObservableObject
     {
-        private bool _isSelected;
-
         public int DayOfWeekIndex { get; }
+
         public string DayName { get; }
 
-        public bool IsSelected
-        {
-            get => _isSelected;
-            set => SetProperty(ref _isSelected, value);
-        }
+        [ObservableProperty]
+        public partial bool IsSelected { get; set; }
 
         public DaySelectionItem(int dayOfWeekIndex, string dayName, bool initialSelection = false)
         {
             DayOfWeekIndex = dayOfWeekIndex;
             DayName = dayName;
-            _isSelected = initialSelection;
+            IsSelected = initialSelection;
         }
     }
 
-    public class CalendarIntegrationViewModel : ObservableObject
+    public partial class CalendarIntegrationViewModel : ObservableObject
     {
-        private readonly IDataStorage _dataStorage;
+        private readonly ICalendarWorkoutCatalogService _workoutCatalogService;
         private readonly ICalendarExportService _calendarExportService;
         private readonly IUserSession _userSession;
 
-        private ObservableCollection<WorkoutTemplate> _availableWorkouts = new();
-        private WorkoutTemplate? _selectedWorkout;
-        private int _durationWeeks = 4;
-        private ObservableCollection<DaySelectionItem> _selectedDays = new();
-        private bool _isLoading;
-        private string _generatedIcsContent = string.Empty;
+        [ObservableProperty]
+        public partial ObservableCollection<WorkoutTemplate> AvailableWorkouts { get; set; } = new();
 
-        public ObservableCollection<WorkoutTemplate> AvailableWorkouts
-        {
-            get => _availableWorkouts;
-            set => SetProperty(ref _availableWorkouts, value);
-        }
+        [ObservableProperty]
+        public partial WorkoutTemplate? SelectedWorkout { get; set; }
 
-        public WorkoutTemplate? SelectedWorkout
-        {
-            get => _selectedWorkout;
-            set => SetProperty(ref _selectedWorkout, value);
-        }
+        [ObservableProperty]
+        public partial int DurationWeeks { get; set; } = 4;
 
-        public int DurationWeeks
-        {
-            get => _durationWeeks;
-            set => SetProperty(ref _durationWeeks, value);
-        }
+        [ObservableProperty]
+        public partial ObservableCollection<DaySelectionItem> SelectedDays { get; set; } = new();
 
-        public ObservableCollection<DaySelectionItem> SelectedDays
-        {
-            get => _selectedDays;
-            set => SetProperty(ref _selectedDays, value);
-        }
+        [ObservableProperty]
+        public partial bool IsLoading { get; set; }
 
-        public bool IsLoading
-        {
-            get => _isLoading;
-            set => SetProperty(ref _isLoading, value);
-        }
+        [ObservableProperty]
+        public partial string GeneratedIcsContent { get; set; } = string.Empty;
 
-        public string GeneratedIcsContent
-        {
-            get => _generatedIcsContent;
-            set => SetProperty(ref _generatedIcsContent, value);
-        }
+        [ObservableProperty]
+        public partial InfoBarSeverity StatusSeverity { get; set; }
+
+        [ObservableProperty]
+        public partial string StatusTitle { get; set; } = string.Empty;
+
+        [ObservableProperty]
+        public partial string StatusMessage { get; set; } = string.Empty;
+
+        [ObservableProperty]
+        public partial bool IsStatusOpen { get; set; }
 
         public CalendarIntegrationViewModel(
-            IDataStorage dataStorage,
+            ICalendarWorkoutCatalogService workoutCatalogService,
             ICalendarExportService calendarExportService,
             IUserSession userSession)
         {
-            _dataStorage = dataStorage ?? throw new ArgumentNullException(nameof(dataStorage));
+            _workoutCatalogService = workoutCatalogService ?? throw new ArgumentNullException(nameof(workoutCatalogService));
             _calendarExportService = calendarExportService ?? throw new ArgumentNullException(nameof(calendarExportService));
             _userSession = userSession ?? throw new ArgumentNullException(nameof(userSession));
 
@@ -92,7 +75,7 @@ namespace VibeCoders.ViewModels
 
             // Populate immediately so UI is responsive even if DB is unavailable.
             var clientId = (int)_userSession.CurrentClientId;
-            LoadFallbackWorkouts(clientId);
+            SetAvailableWorkouts(_workoutCatalogService.GetFallbackWorkouts(clientId));
 
             _ = LoadAvailableWorkoutsAsync();
         }
@@ -116,38 +99,15 @@ namespace VibeCoders.ViewModels
                 IsLoading = true;
 
                 var clientId = (int)_userSession.CurrentClientId;
-                var dbLoadTask = Task.Run(() => _dataStorage.GetAvailableWorkouts(clientId));
-                var completedTask = await Task.WhenAny(dbLoadTask, Task.Delay(1500));
-
-                if (completedTask != dbLoadTask)
-                {
-                    return;
-                }
-
-                var workouts = await dbLoadTask;
-
-                AvailableWorkouts.Clear();
-                foreach (var workout in workouts)
-                {
-                    AvailableWorkouts.Add(workout);
-                }
-
-                if (AvailableWorkouts.Count == 0)
-                {
-                    LoadFallbackWorkouts(clientId);
-                    return;
-                }
-
-                if (SelectedWorkout == null && AvailableWorkouts.Count > 0)
-                {
-                    SelectedWorkout = AvailableWorkouts[0];
-                }
+                var workouts = await _workoutCatalogService
+                    .GetAvailableWorkoutsAsync(clientId, TimeSpan.FromMilliseconds(1500));
+                SetAvailableWorkouts(workouts);
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error loading workouts: {ex.Message}");
                 var clientId = (int)_userSession.CurrentClientId;
-                LoadFallbackWorkouts(clientId);
+                SetAvailableWorkouts(_workoutCatalogService.GetFallbackWorkouts(clientId));
             }
             finally
             {
@@ -165,65 +125,10 @@ namespace VibeCoders.ViewModels
             await LoadAvailableWorkoutsAsync();
         }
 
-        private static List<WorkoutTemplate> CreateFallbackWorkouts(int clientId)
-        {
-            var fullBodyStrength = new WorkoutTemplate
-            {
-                Id = -1,
-                ClientId = clientId,
-                Name = "Fallback - Full Body Strength",
-                Type = WorkoutType.PREBUILT
-            };
-            fullBodyStrength.AddExercise(new TemplateExercise { Id = -101, WorkoutTemplateId = -1, Name = "Back Squat", MuscleGroup = MuscleGroup.LEGS, TargetSets = 4, TargetReps = 6 });
-            fullBodyStrength.AddExercise(new TemplateExercise { Id = -102, WorkoutTemplateId = -1, Name = "Bench Press", MuscleGroup = MuscleGroup.CHEST, TargetSets = 4, TargetReps = 6 });
-            fullBodyStrength.AddExercise(new TemplateExercise { Id = -103, WorkoutTemplateId = -1, Name = "Barbell Row", MuscleGroup = MuscleGroup.BACK, TargetSets = 4, TargetReps = 8 });
-
-            var hiitConditioning = new WorkoutTemplate
-            {
-                Id = -2,
-                ClientId = clientId,
-                Name = "Fallback - HIIT Conditioning",
-                Type = WorkoutType.PREBUILT
-            };
-            hiitConditioning.AddExercise(new TemplateExercise { Id = -201, WorkoutTemplateId = -2, Name = "Burpees", MuscleGroup = MuscleGroup.CORE, TargetSets = 4, TargetReps = 12 });
-            hiitConditioning.AddExercise(new TemplateExercise { Id = -202, WorkoutTemplateId = -2, Name = "Jump Squats", MuscleGroup = MuscleGroup.LEGS, TargetSets = 4, TargetReps = 15 });
-            hiitConditioning.AddExercise(new TemplateExercise { Id = -203, WorkoutTemplateId = -2, Name = "Mountain Climbers", MuscleGroup = MuscleGroup.CORE, TargetSets = 4, TargetReps = 20 });
-
-            var pushPull = new WorkoutTemplate
-            {
-                Id = -3,
-                ClientId = clientId,
-                Name = "Fallback - Push Pull Split",
-                Type = WorkoutType.PREBUILT
-            };
-            pushPull.AddExercise(new TemplateExercise { Id = -301, WorkoutTemplateId = -3, Name = "Overhead Press", MuscleGroup = MuscleGroup.SHOULDERS, TargetSets = 4, TargetReps = 8 });
-            pushPull.AddExercise(new TemplateExercise { Id = -302, WorkoutTemplateId = -3, Name = "Pull-Ups", MuscleGroup = MuscleGroup.BACK, TargetSets = 4, TargetReps = 8 });
-            pushPull.AddExercise(new TemplateExercise { Id = -303, WorkoutTemplateId = -3, Name = "Dumbbell Curl", MuscleGroup = MuscleGroup.ARMS, TargetSets = 3, TargetReps = 12 });
-
-            var coreMobility = new WorkoutTemplate
-            {
-                Id = -4,
-                ClientId = clientId,
-                Name = "Fallback - Core and Mobility",
-                Type = WorkoutType.PREBUILT
-            };
-            coreMobility.AddExercise(new TemplateExercise { Id = -401, WorkoutTemplateId = -4, Name = "Plank", MuscleGroup = MuscleGroup.CORE, TargetSets = 3, TargetReps = 60 });
-            coreMobility.AddExercise(new TemplateExercise { Id = -402, WorkoutTemplateId = -4, Name = "Dead Bug", MuscleGroup = MuscleGroup.CORE, TargetSets = 3, TargetReps = 12 });
-            coreMobility.AddExercise(new TemplateExercise { Id = -403, WorkoutTemplateId = -4, Name = "Hip Bridge", MuscleGroup = MuscleGroup.LEGS, TargetSets = 3, TargetReps = 15 });
-
-            return new List<WorkoutTemplate>
-            {
-                fullBodyStrength,
-                hiitConditioning,
-                pushPull,
-                coreMobility
-            };
-        }
-
-        private void LoadFallbackWorkouts(int clientId)
+        private void SetAvailableWorkouts(IEnumerable<WorkoutTemplate> workouts)
         {
             AvailableWorkouts.Clear();
-            foreach (var workout in CreateFallbackWorkouts(clientId))
+            foreach (var workout in workouts)
             {
                 AvailableWorkouts.Add(workout);
             }
@@ -236,55 +141,148 @@ namespace VibeCoders.ViewModels
 
         public int[] GetSelectedDaysOfWeek()
         {
-            return SelectedDays
-                .Where(d => d.IsSelected)
-                .Select(d => d.DayOfWeekIndex)
-                .ToArray();
+            var selectedDayIndexes = new List<int>();
+
+            for (int selectedDayIndex = 0; selectedDayIndex < SelectedDays.Count; selectedDayIndex++)
+            {
+                var selectedDayItem = SelectedDays[selectedDayIndex];
+                if (selectedDayItem.IsSelected)
+                {
+                    selectedDayIndexes.Add(selectedDayItem.DayOfWeekIndex);
+                }
+            }
+
+            return selectedDayIndexes.ToArray();
         }
 
         public string? ValidateInput()
         {
             if (SelectedWorkout == null)
+            {
                 return "Please select a workout from the dropdown.";
+            }
 
             if (DurationWeeks < 1 || DurationWeeks > 52)
+            {
                 return "Duration must be between 1 and 52 weeks.";
+            }
 
             var selectedDaysArray = GetSelectedDaysOfWeek();
             if (selectedDaysArray.Length == 0)
+            {
                 return "Please select at least one training day.";
+            }
 
             return null;
         }
 
-        public async Task<string> GenerateCalendarAsync()
+        public Task<string> GenerateCalendarAsync()
         {
-            var icsContent = await Task.Run(() =>
+            var validationErrorMessage = ValidateInput();
+            if (validationErrorMessage != null)
             {
-                var validationError = ValidateInput();
-                if (validationError != null)
-                    throw new InvalidOperationException(validationError);
+                throw new InvalidOperationException(validationErrorMessage);
+            }
 
-                if (SelectedWorkout == null)
-                    throw new InvalidOperationException("No workout selected.");
+            if (SelectedWorkout == null)
+            {
+                throw new InvalidOperationException("No workout selected.");
+            }
 
-                var selectedDaysArray = GetSelectedDaysOfWeek();
-                return _calendarExportService.GenerateCalendar(
-                    SelectedWorkout,
-                    DurationWeeks,
-                    selectedDaysArray);
-            });
+            var selectedDayIndexes = GetSelectedDaysOfWeek();
+            string generatedCalendarContent = _calendarExportService.GenerateCalendar(
+                SelectedWorkout,
+                DurationWeeks,
+                selectedDayIndexes);
 
-            GeneratedIcsContent = icsContent;
-            return icsContent;
+            GeneratedIcsContent = generatedCalendarContent;
+            return Task.FromResult(generatedCalendarContent);
+        }
+
+        public async Task<CalendarGenerationResult> GenerateCalendarForExportAsync()
+        {
+            try
+            {
+                string generatedCalendarContent = await GenerateCalendarAsync();
+                if (string.IsNullOrEmpty(generatedCalendarContent))
+                {
+                    return CalendarGenerationResult.CreateFailure("Failed to generate calendar file. Please try again.");
+                }
+
+                return CalendarGenerationResult.CreateSuccess(generatedCalendarContent);
+            }
+            catch (InvalidOperationException invalidOperationException)
+            {
+                return CalendarGenerationResult.CreateFailure(invalidOperationException.Message);
+            }
+        }
+
+        public Task<string?> SaveGeneratedCalendarToDownloadsFallbackAsync()
+        {
+            string selectedWorkoutName = SelectedWorkout?.Name ?? "Workout";
+            return _calendarExportService.SaveCalendarToDownloadsAsync(GeneratedIcsContent, selectedWorkoutName);
+        }
+
+        public void SetErrorStatus(string errorMessage)
+        {
+            StatusSeverity = InfoBarSeverity.Error;
+            StatusTitle = "Error";
+            StatusMessage = errorMessage;
+            IsStatusOpen = true;
+        }
+
+        public void SetSuccessStatus(string successMessage)
+        {
+            StatusSeverity = InfoBarSeverity.Success;
+            StatusTitle = "Success";
+            StatusMessage = successMessage;
+            IsStatusOpen = true;
+        }
+
+        public void ClearStatus()
+        {
+            StatusTitle = string.Empty;
+            StatusMessage = string.Empty;
+            IsStatusOpen = false;
         }
 
         public void ToggleDaySelection(int dayOfWeek)
         {
-            var dayItem = SelectedDays.FirstOrDefault(d => d.DayOfWeekIndex == dayOfWeek);
-            if (dayItem != null)
+            for (int selectedDayIndex = 0; selectedDayIndex < SelectedDays.Count; selectedDayIndex++)
             {
-                dayItem.IsSelected = !dayItem.IsSelected;
+                DaySelectionItem daySelectionItem = SelectedDays[selectedDayIndex];
+                if (daySelectionItem.DayOfWeekIndex == dayOfWeek)
+                {
+                    daySelectionItem.IsSelected = !daySelectionItem.IsSelected;
+                    return;
+                }
+            }
+        }
+
+        public sealed class CalendarGenerationResult
+        {
+            public bool IsSuccessful { get; init; }
+
+            public string Message { get; init; } = string.Empty;
+
+            public string GeneratedCalendarContent { get; init; } = string.Empty;
+
+            public static CalendarGenerationResult CreateSuccess(string generatedCalendarContent)
+            {
+                return new CalendarGenerationResult
+                {
+                    IsSuccessful = true,
+                    GeneratedCalendarContent = generatedCalendarContent,
+                };
+            }
+
+            public static CalendarGenerationResult CreateFailure(string failureMessage)
+            {
+                return new CalendarGenerationResult
+                {
+                    IsSuccessful = false,
+                    Message = failureMessage,
+                };
             }
         }
     }
