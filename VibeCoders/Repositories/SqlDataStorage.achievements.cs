@@ -1,14 +1,14 @@
+namespace VibeCoders.Services;
+
 using Microsoft.Data.Sqlite;
 using VibeCoders.Models;
-
-namespace VibeCoders.Services;
 
 public partial class SqlDataStorage
 {
     public int GetConsecutiveWorkoutDayStreak(int clientId)
     {
-        using var conn = new SqliteConnection(connectionString);
-        conn.Open();
+        using var connection = new SqliteConnection(this.connectionString);
+        connection.Open();
 
         const string sql = @"
             SELECT DISTINCT date(date)
@@ -16,11 +16,11 @@ public partial class SqlDataStorage
             WHERE  client_id = @ClientId
             ORDER BY date(date) DESC;";
 
-        using var cmd = new SqliteCommand(sql, conn);
-        cmd.Parameters.AddWithValue("@ClientId", clientId);
+        using var command = new SqliteCommand(sql, connection);
+        command.Parameters.AddWithValue("@ClientId", clientId);
 
         var dates = new List<DateTime>();
-        using var reader = cmd.ExecuteReader();
+        using var reader = command.ExecuteReader();
         while (reader.Read())
         {
             if (DateTime.TryParse(reader.GetString(0), out var parsedDate))
@@ -60,8 +60,8 @@ public partial class SqlDataStorage
     {
         var list = new List<Achievement>();
 
-        using var conn = new SqliteConnection(connectionString);
-        conn.Open();
+        using var connection = new SqliteConnection(this.connectionString);
+        connection.Open();
 
         const string sql = @"
             SELECT
@@ -73,8 +73,8 @@ public partial class SqlDataStorage
             FROM ACHIEVEMENT
             ORDER BY achievement_id;";
 
-        using var cmd = new SqliteCommand(sql, conn);
-        using var reader = cmd.ExecuteReader();
+        using var command = new SqliteCommand(sql, connection);
+        using var reader = command.ExecuteReader();
 
         while (reader.Read())
         {
@@ -85,7 +85,7 @@ public partial class SqlDataStorage
                 Description = reader.GetString(2),
                 Criteria = reader.GetString(3),
                 ThresholdWorkouts = reader.IsDBNull(4) ? null : reader.GetInt32(4),
-                IsUnlocked = false
+                IsUnlocked = false,
             });
         }
 
@@ -94,22 +94,22 @@ public partial class SqlDataStorage
 
     public void EvaluateAndUnlockWorkoutMilestones(int clientId)
     {
-        var achievements = GetAllAchievements();
-        int totalWorkouts = GetWorkoutCount(clientId);
+        var achievements = this.GetAllAchievements();
+        int totalWorkouts = this.GetWorkoutCount(clientId);
 
         foreach (var achievement in achievements)
         {
             if (achievement.ThresholdWorkouts.HasValue && totalWorkouts >= achievement.ThresholdWorkouts.Value)
             {
-                AwardAchievement(clientId, achievement.AchievementId);
+                this.AwardAchievement(clientId, achievement.AchievementId);
             }
         }
     }
 
     public int GetWorkoutsInLastSevenDays(int clientId)
     {
-        using var conn = new SqliteConnection(connectionString);
-        conn.Open();
+        using var connection = new SqliteConnection(this.connectionString);
+        connection.Open();
 
         const string sql = @"
             SELECT COUNT(*)
@@ -118,17 +118,17 @@ public partial class SqlDataStorage
               AND  date(date) >= date('now', '-6 days')
               AND  date(date) <= date('now');";
 
-        using var cmd = new SqliteCommand(sql, conn);
-        cmd.Parameters.AddWithValue("@ClientId", clientId);
-        return Convert.ToInt32(cmd.ExecuteScalar());
+        using var command = new SqliteCommand(sql, connection);
+        command.Parameters.AddWithValue("@ClientId", clientId);
+        return Convert.ToInt32(command.ExecuteScalar());
     }
 
     public List<AchievementShowcaseItem> GetAchievementShowcaseForClient(int clientId)
     {
         var list = new List<AchievementShowcaseItem>();
 
-        using var conn = new SqliteConnection(connectionString);
-        conn.Open();
+        using var connection = new SqliteConnection(this.connectionString);
+        connection.Open();
 
         const string sql = @"
             SELECT a.achievement_id, a.title, a.description, a.criteria,
@@ -138,11 +138,11 @@ public partial class SqlDataStorage
                 ON ca.achievement_id = a.achievement_id AND ca.client_id = @ClientId
             ORDER BY COALESCE(ca.unlocked, 0) DESC, a.achievement_id;";
 
-        using var cmd = new SqliteCommand(sql, conn);
-        cmd.Parameters.AddWithValue("@ClientId", clientId);
+        using var command = new SqliteCommand(sql, connection);
+        command.Parameters.AddWithValue("@ClientId", clientId);
 
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        using var reader = cmd.ExecuteReader();
+        using var reader = command.ExecuteReader();
         while (reader.Read())
         {
             var title = reader.GetString(1);
@@ -157,7 +157,7 @@ public partial class SqlDataStorage
                 Title = title,
                 Description = reader.GetString(2),
                 Criteria = reader.GetString(3),
-                IsUnlocked = reader.GetInt32(4) != 0
+                IsUnlocked = reader.GetInt32(4) != 0,
             });
         }
 
@@ -166,28 +166,28 @@ public partial class SqlDataStorage
 
     public int GetWorkoutCount(int clientId)
     {
-        using var conn = new SqliteConnection(connectionString);
-        conn.Open();
-        using var cmd = new SqliteCommand(
-            "SELECT COUNT(1) FROM WORKOUT_LOG WHERE client_id = @ClientId;", conn);
-        cmd.Parameters.AddWithValue("@ClientId", clientId);
-        return Convert.ToInt32(cmd.ExecuteScalar());
+        using var connection = new SqliteConnection(this.connectionString);
+        connection.Open();
+        using var command = new SqliteCommand(
+            "SELECT COUNT(1) FROM WORKOUT_LOG WHERE client_id = @ClientId;", connection);
+        command.Parameters.AddWithValue("@ClientId", clientId);
+        return Convert.ToInt32(command.ExecuteScalar());
     }
 
     public int GetDistinctWorkoutDayCount(int clientId)
     {
-        using var conn = new SqliteConnection(connectionString);
-        conn.Open();
-        using var cmd = new SqliteCommand(
-            "SELECT COUNT(DISTINCT date(date)) FROM WORKOUT_LOG WHERE client_id = @ClientId;", conn);
-        cmd.Parameters.AddWithValue("@ClientId", clientId);
-        return Convert.ToInt32(cmd.ExecuteScalar());
+        using var connection = new SqliteConnection(this.connectionString);
+        connection.Open();
+        using var command = new SqliteCommand(
+            "SELECT COUNT(DISTINCT date(date)) FROM WORKOUT_LOG WHERE client_id = @ClientId;", connection);
+        command.Parameters.AddWithValue("@ClientId", clientId);
+        return Convert.ToInt32(command.ExecuteScalar());
     }
 
     public AchievementShowcaseItem? GetAchievementForClient(int achievementId, int clientId)
     {
-        using var conn = new SqliteConnection(connectionString);
-        conn.Open();
+        using var connection = new SqliteConnection(this.connectionString);
+        connection.Open();
 
         const string sql = @"
             SELECT a.achievement_id, a.title, a.description, a.criteria,
@@ -197,11 +197,11 @@ public partial class SqlDataStorage
                 ON ca.achievement_id = a.achievement_id AND ca.client_id = @ClientId
             WHERE a.achievement_id = @AchievementId;";
 
-        using var cmd = new SqliteCommand(sql, conn);
-        cmd.Parameters.AddWithValue("@AchievementId", achievementId);
-        cmd.Parameters.AddWithValue("@ClientId", clientId);
+        using var command = new SqliteCommand(sql, connection);
+        command.Parameters.AddWithValue("@AchievementId", achievementId);
+        command.Parameters.AddWithValue("@ClientId", clientId);
 
-        using var reader = cmd.ExecuteReader();
+        using var reader = command.ExecuteReader();
         if (!reader.Read())
         {
             return null;
@@ -213,14 +213,14 @@ public partial class SqlDataStorage
             Title = reader.GetString(1),
             Description = reader.GetString(2),
             Criteria = reader.GetString(3),
-            IsUnlocked = reader.GetInt32(4) != 0
+            IsUnlocked = reader.GetInt32(4) != 0,
         };
     }
 
     public bool AwardAchievement(int clientId, int achievementId)
     {
-        using var conn = new SqliteConnection(connectionString);
-        conn.Open();
+        using var connection = new SqliteConnection(this.connectionString);
+        connection.Open();
 
         const string checkSql = @"
             SELECT COUNT(1)
@@ -229,7 +229,7 @@ public partial class SqlDataStorage
               AND achievement_id = @AchievementId
               AND unlocked       = 1;";
 
-        using (var checkCmd = new SqliteCommand(checkSql, conn))
+        using (var checkCmd = new SqliteCommand(checkSql, connection))
         {
             checkCmd.Parameters.AddWithValue("@ClientId", clientId);
             checkCmd.Parameters.AddWithValue("@AchievementId", achievementId);
@@ -252,14 +252,14 @@ public partial class SqlDataStorage
 
         try
         {
-            using (var insertCmd = new SqliteCommand(insertSql, conn))
+            using (var insertCmd = new SqliteCommand(insertSql, connection))
             {
                 insertCmd.Parameters.AddWithValue("@ClientId", clientId);
                 insertCmd.Parameters.AddWithValue("@AchievementId", achievementId);
                 insertCmd.ExecuteNonQuery();
             }
 
-            using (var updateCmd = new SqliteCommand(updateSql, conn))
+            using (var updateCmd = new SqliteCommand(updateSql, connection))
             {
                 updateCmd.Parameters.AddWithValue("@ClientId", clientId);
                 updateCmd.Parameters.AddWithValue("@AchievementId", achievementId);
@@ -268,7 +268,7 @@ public partial class SqlDataStorage
 
             return true;
         }
-        catch (SqliteException ex) when (ex.SqliteErrorCode == 19)
+        catch (SqliteException exception) when (exception.SqliteErrorCode == 19)
         {
             return false;
         }

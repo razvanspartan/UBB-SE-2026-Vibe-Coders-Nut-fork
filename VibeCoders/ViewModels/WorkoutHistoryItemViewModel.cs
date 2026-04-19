@@ -1,3 +1,5 @@
+namespace VibeCoders.ViewModels;
+
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -10,8 +12,6 @@ using VibeCoders.Domain;
 using VibeCoders.Models.Analytics;
 using VibeCoders.Services;
 
-namespace VibeCoders.ViewModels;
-
 public sealed partial class WorkoutHistoryItemViewModel : ObservableObject
 {
     private readonly IWorkoutAnalyticsStore store;
@@ -23,27 +23,32 @@ public sealed partial class WorkoutHistoryItemViewModel : ObservableObject
     {
         this.store = store;
         this.clientId = clientId;
-        WorkoutLogId = row.Id;
-        Title = string.IsNullOrWhiteSpace(row.WorkoutName) ? "Workout" : row.WorkoutName;
-        DateLine = row.LogDate.ToString("d", System.Globalization.CultureInfo.CurrentCulture);
-        DurationLine = ActiveTimeFormatter.ToHourMinuteSecond(
+        this.WorkoutLogId = row.Id;
+        this.Title = string.IsNullOrWhiteSpace(row.WorkoutName) ? "Workout" : row.WorkoutName;
+        this.DateLine = row.LogDate.ToString("d", System.Globalization.CultureInfo.CurrentCulture);
+        this.DurationLine = ActiveTimeFormatter.ToHourMinuteSecond(
             TimeSpan.FromSeconds(row.DurationSeconds));
-        TotalCaloriesBurned = row.TotalCaloriesBurned;
-        IntensityTag = row.IntensityTag;
+        this.TotalCaloriesBurned = row.TotalCaloriesBurned;
+        this.IntensityTag = row.IntensityTag;
     }
 
     public int WorkoutLogId { get; }
+
     public string Title { get; }
+
     public string DateLine { get; }
+
     public string DurationLine { get; }
+
     public int TotalCaloriesBurned { get; }
+
     public string IntensityTag { get; }
 
     public SolidColorBrush IntensityBrush
     {
         get
         {
-            return IntensityTag.ToLower() switch
+            return this.IntensityTag.ToLower() switch
             {
                 "light" => new SolidColorBrush(Colors.Green),
                 "moderate" => new SolidColorBrush(Colors.Orange),
@@ -54,6 +59,7 @@ public sealed partial class WorkoutHistoryItemViewModel : ObservableObject
     }
 
     public ObservableCollection<ExerciseSetGroupViewModel> ExerciseSetGroups { get; } = new ();
+
     public ObservableCollection<ExerciseCalorieInfo> ExerciseCalories { get; } = new ();
 
     [ObservableProperty]
@@ -73,18 +79,18 @@ public sealed partial class WorkoutHistoryItemViewModel : ObservableObject
     [RelayCommand]
     private async Task LoadDetailAsync()
     {
-        if (detailLoaded)
+        if (this.detailLoaded)
         {
             return;
         }
 
-        IsLoadingDetail = true;
+        this.IsLoadingDetail = true;
         try
         {
-            var detail = await store.GetWorkoutSessionDetailAsync(
-                clientId, WorkoutLogId).ConfigureAwait(true);
-            ExerciseSetGroups.Clear();
-            ExerciseCalories.Clear();
+            var detail = await this.store.GetWorkoutSessionDetailAsync(
+                this.clientId, this.WorkoutLogId).ConfigureAwait(true);
+            this.ExerciseSetGroups.Clear();
+            this.ExerciseCalories.Clear();
             if (detail is not null)
             {
                 foreach (var group in detail.Sets
@@ -93,7 +99,7 @@ public sealed partial class WorkoutHistoryItemViewModel : ObservableObject
                 {
                     var groupVm = new ExerciseSetGroupViewModel
                     {
-                        ExerciseName = group.Key
+                        ExerciseName = group.Key,
                     };
 
                     foreach (var (set, index) in group
@@ -105,37 +111,42 @@ public sealed partial class WorkoutHistoryItemViewModel : ObservableObject
                         {
                             SetNumber = index + 1,
                             RepsDisplay = set.RepsDisplay,
-                            WeightDisplay = set.WeightDisplay
+                            WeightDisplay = set.WeightDisplay,
                         });
                     }
 
-                    ExerciseSetGroups.Add(groupVm);
+                    this.ExerciseSetGroups.Add(groupVm);
                 }
+
                 foreach (var e in detail.ExerciseCalories)
                 {
-                                ExerciseCalories.Add(e);
-                            }
-                        }
+                    this.ExerciseCalories.Add(e);
+                }
+            }
 
-                        detailLoaded = true;
-                    }
-                    finally
-                    {
-                        IsLoadingDetail = false;
-                    }
+            this.detailLoaded = true;
+        }
+        finally
+        {
+            this.IsLoadingDetail = false;
+        }
     }
 }
 
 public sealed class ExerciseSetGroupViewModel
 {
     public string ExerciseName { get; init; } = string.Empty;
+
     public ObservableCollection<SetDetailRowViewModel> Sets { get; } = new ();
 }
 
 public sealed class SetDetailRowViewModel
 {
     private const string EmDash = "—";
+
     public int SetNumber { get; init; }
+
     public string RepsDisplay { get; init; } = EmDash;
+
     public string WeightDisplay { get; init; } = EmDash;
 }

@@ -1,19 +1,28 @@
+namespace VibeCoders.Services;
+
 using System;
+using System.IO;
+using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 using VibeCoders.Models;
 
-namespace VibeCoders.Domain
-{
-    public class CalendarExportService : VibeCoders.Services.ICalendarExportService
+    public class CalendarExportService : ICalendarExportService
     {
-        public string GenerateICSCalendar(WorkoutTemplate workoutTemplate, int durationWeeks, int[] selectedDays, DateTime? startDate = null)
+        private const int MinDurationWeeks = 1;
+        private const int MaxDurationWeeks = 52;
+        private const int DaysInWeek = 7;
+        private const int DefaultStartHour = 10;
+        private const int DefaultDurationHours = 1;
+
+        public string GenerateCalendar(WorkoutTemplate workoutTemplate, int durationWeeks, int[] selectedDays, DateTime? startDate = null)
         {
             if (workoutTemplate == null)
             {
                 throw new ArgumentNullException(nameof(workoutTemplate));
             }
 
-            if (durationWeeks < 1 || durationWeeks > 52)
+            if (durationWeeks < MinDurationWeeks || durationWeeks > MaxDurationWeeks)
             {
                 throw new ArgumentOutOfRangeException(nameof(durationWeeks), "Duration must be between 1 and 52 weeks.");
             }
@@ -43,6 +52,33 @@ namespace VibeCoders.Domain
             return icsBuilder.ToString();
         }
 
+        public async Task<string?> SaveCalendarToDownloadsAsync(string calendarContent, string? workoutName)
+        {
+            if (string.IsNullOrWhiteSpace(calendarContent))
+            {
+                return null;
+            }
+
+            try
+            {
+                string downloadsPath = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                    "Downloads");
+                Directory.CreateDirectory(downloadsPath);
+
+                string safeWorkoutName = BuildSafeWorkoutName(workoutName);
+                string fileName = $"{safeWorkoutName}-{DateTime.Now:yyyyMMdd-HHmmss}.ics";
+                string fullPath = Path.Combine(downloadsPath, fileName);
+
+                await File.WriteAllTextAsync(fullPath, calendarContent);
+                return fullPath;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         private List<string> GenerateWorkoutEvents(WorkoutTemplate workoutTemplate, int durationWeeks, int[] selectedDays, DateTime baseDate)
         {
             var events = new List<string>();
@@ -50,9 +86,9 @@ namespace VibeCoders.Domain
 
             for (int week = 0; week < durationWeeks; week++)
             {
-                for (int dayOffset = 0; dayOffset < 7; dayOffset++)
+                for (int dayOffset = 0; dayOffset < DaysInWeek; dayOffset++)
                 {
-                    var currentDate = baseDate.AddDays((week * 7) + dayOffset);
+                    var currentDate = baseDate.AddDays((week * DaysInWeek) + dayOffset);
                     int dayOfWeek = (int)currentDate.DayOfWeek;
 
                     if (!selectedDaysHash.Contains(dayOfWeek))
@@ -60,7 +96,7 @@ namespace VibeCoders.Domain
                         continue;
                     }
 
-                    var eventContent = CreateVirtualEvent(workoutTemplate, currentDate);
+                    var eventContent = CreateVEvent(workoutTemplate, currentDate);
                     events.Add(eventContent);
                 }
             }
@@ -72,8 +108,8 @@ namespace VibeCoders.Domain
         {
             var builder = new StringBuilder();
 
-            var eventStart = eventDate.Date.AddHours(10);
-            var eventEnd = eventStart.AddHours(1);
+            var eventStart = eventDate.Date.AddHours(DefaultStartHour);
+            var eventEnd = eventStart.AddHours(DefaultDurationHours);
 
             builder.AppendLine("BEGIN:VEVENT");
             builder.AppendLine($"DTSTART:{FormatIcsDateTime(eventStart)}");
@@ -131,5 +167,44 @@ namespace VibeCoders.Domain
                 .Replace("\n", "\\n")
                 .Replace("\r", "\\n");
         }
+
+        private static string BuildSafeWorkoutName(string? workoutName)
+        {
+            string fallbackWorkoutName = string.IsNullOrWhiteSpace(workoutName)
+                ? "Workout"
+                : workoutName;
+
+            var safeNameBuilder = new StringBuilder(fallbackWorkoutName.Length);
+            char[] invalidCharacters = Path.GetInvalidFileNameChars();
+
+            for (int index = 0; index < fallbackWorkoutName.Length; index++)
+            {
+                char currentCharacter = fallbackWorkoutName[index];
+
+                if (currentCharacter == ' ' || currentCharacter == '/' || currentCharacter == '\\')
+                {
+                    safeNameBuilder.Append('-');
+                    continue;
+                }
+
+                bool isInvalidCharacter = false;
+                for (int invalidCharacterIndex = 0; invalidCharacterIndex < invalidCharacters.Length; invalidCharacterIndex++)
+                {
+                    if (currentCharacter == invalidCharacters[invalidCharacterIndex])
+                    {
+                        isInvalidCharacter = true;
+                        break;
+                    }
+                }
+
+                safeNameBuilder.Append(isInvalidCharacter ? '-' : currentCharacter);
+            }
+
+            if (safeNameBuilder.Length == 0)
+            {
+                return "Workout";
+            }
+
+            return safeNameBuilder.ToString();
+        }
     }
-}

@@ -1,3 +1,5 @@
+namespace VibeCoders.Views;
+
 using System.ComponentModel;
 using LiveChartsCore.SkiaSharpView.WinUI;
 using Microsoft.UI.Xaml;
@@ -5,12 +7,10 @@ using Microsoft.UI.Xaml.Controls;
 using VibeCoders.Services;
 using VibeCoders.ViewModels;
 
-namespace VibeCoders.Views;
-
 public sealed partial class ClientDashboardPage : Page
 {
-    private readonly CartesianChart _chart;
-    private readonly IAchievementUnlockedBus _achievementBus;
+    private readonly CartesianChart chart;
+    private readonly IAchievementUnlockedBus achievementBus;
 
     public ClientDashboardViewModel ViewModel { get; }
 
@@ -20,10 +20,10 @@ public sealed partial class ClientDashboardPage : Page
         DataContext = ViewModel;
         InitializeComponent();
 
-        _achievementBus = App.GetService<IAchievementUnlockedBus>();
-        _achievementBus.AchievementUnlocked += OnAchievementUnlocked;
+        achievementBus = App.GetService<IAchievementUnlockedBus>();
+        achievementBus.AchievementUnlocked += OnAchievementUnlocked;
 
-        _chart = new CartesianChart
+        chart = new CartesianChart
         {
             HorizontalAlignment = HorizontalAlignment.Stretch,
             VerticalAlignment = VerticalAlignment.Stretch,
@@ -32,7 +32,7 @@ public sealed partial class ClientDashboardPage : Page
 
         SyncChartToViewModel();
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
-        ChartContainer.Children.Add(_chart);
+        ChartContainer.Children.Add(chart);
 
         Unloaded += Page_Unloaded;
     }
@@ -59,9 +59,9 @@ public sealed partial class ClientDashboardPage : Page
 
     private void Page_Unloaded(object sender, RoutedEventArgs e)
     {
-        _achievementBus.AchievementUnlocked -= OnAchievementUnlocked;
+        achievementBus.AchievementUnlocked -= OnAchievementUnlocked;
         ViewModel.PropertyChanged -= OnViewModelPropertyChanged;
-        ChartContainer.Children.Remove(_chart);
+        ChartContainer.Children.Remove(chart);
     }
 
     private void OnAchievementUnlocked(object? sender, AchievementUnlockedEventArgs e)
@@ -79,7 +79,7 @@ public sealed partial class ClientDashboardPage : Page
 
     private void SyncChartToViewModel()
     {
-        _chart.Series = ViewModel.ChartSeries;
-        _chart.XAxes = ViewModel.ChartXAxes;
+        chart.Series = ViewModel.ChartSeries;
+        chart.XAxes = ViewModel.ChartXAxes;
     }
 }

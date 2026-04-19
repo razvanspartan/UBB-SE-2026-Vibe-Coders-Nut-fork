@@ -2,7 +2,10 @@ namespace VibeCoders.Domain;
 
 public static class BmiCalculator
 {
-    public static double CalculateBodyMassIndex(double weightKg, double heightCm)
+    private const double CentimetersInMeter = 100.0;
+    private const int DecimalPlaces = 2;
+
+    public static double CalculateBmi(double weightKg, double heightCm)
     {
         if (weightKg <= 0)
         {
@@ -14,8 +17,8 @@ public static class BmiCalculator
             throw new ArgumentOutOfRangeException(nameof(heightCm), "Height must be greater than zero.");
         }
 
-        var heightMetres = heightCm / 100.0;
+        var heightMetres = heightCm / CentimetersInMeter;
         var bmi = weightKg / (heightMetres * heightMetres);
-        return Math.Round(bmi, 2);
+        return Math.Round(bmi, DecimalPlaces);
     }
 }

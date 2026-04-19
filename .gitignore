@@ -16,4 +16,7 @@ obj/
 
 # VS Code settings
 .vscode/
-/VibeCoders/ViewModels/RankShowcaseViewModel.cs
+
+.github/copilot-instructions.md
+.github/instructions/
+*.instructions.md

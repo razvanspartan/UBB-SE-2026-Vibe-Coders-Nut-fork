@@ -15,7 +15,13 @@
             <TextBlock Text="Set up your workout calendar by selecting your workout, duration, and the days you want to train." TextWrapping="Wrap" />
 
             <!-- Status Message InfoBar -->
-            <InfoBar x:Name="StatusInfoBar" IsOpen="False" Margin="0,0,0,8"/>
+            <InfoBar
+                x:Name="StatusInfoBar"
+                Margin="0,0,0,8"
+                IsOpen="{Binding IsStatusOpen, Mode=TwoWay}"
+                Severity="{Binding StatusSeverity, Mode=OneWay}"
+                Title="{Binding StatusTitle, Mode=OneWay}"
+                Message="{Binding StatusMessage, Mode=OneWay}"/>
 
             <!-- Workout Selector Dropdown - Bound to ViewModel -->
             <ComboBox 
