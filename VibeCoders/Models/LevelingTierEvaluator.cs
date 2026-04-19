@@ -1,5 +1,3 @@
-
-
 namespace VibeCoders.Domain;
 
 using System.Globalization;
