@@ -96,7 +96,7 @@ using VibeCoders.Models;
                         continue;
                     }
 
-                    var eventContent = CreateVEvent(workoutTemplate, currentDate);
+                    var eventContent = CreateVirtualEvent(workoutTemplate, currentDate);
                     events.Add(eventContent);
                 }
             }

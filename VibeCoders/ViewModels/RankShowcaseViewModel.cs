@@ -8,6 +8,9 @@ using VibeCoders.Services;
 
 namespace VibeCoders.ViewModels;
 
+/// <summary>
+/// View model for the rank showcase view, responsible for displaying user progression and achievements.
+/// </summary>
 public sealed partial class RankShowcaseViewModel : ObservableObject
 {
     private readonly EvaluationEngine evaluationEngine;
@@ -21,20 +24,30 @@ public sealed partial class RankShowcaseViewModel : ObservableObject
         this.session = session;
     }
 
-    [ObservableProperty] private int    displayLevel;
-    [ObservableProperty] private string rankTitle              = "\u2014";
-    [ObservableProperty] private string unlockedAchievementsDisplay = "0 achievements unlocked";
-    [ObservableProperty] private bool   isLoading;
+    [ObservableProperty]
+    public partial int DisplayLevel { get; set; }
 
-    [ObservableProperty] private string levelDisplayLine = "Level \u2014";
+    [ObservableProperty]
+    public partial string RankTitle { get; set; } = "\u2014";
 
-    [ObservableProperty] private double progressPercent;
+    [ObservableProperty]
+    public partial string UnlockedAchievementsDisplay { get; set; } = "0 achievements unlocked";
 
-    [ObservableProperty] private string nextRankInfo = string.Empty;
+    [ObservableProperty]
+    public partial bool IsLoading { get; set; }
 
-    [ObservableProperty] private bool hasNextRank;
+    [ObservableProperty]
+    public partial string LevelDisplayLine { get; set; } = "Level \u2014";
 
-    public ObservableCollection<AchievementShowcaseItem> ShowcaseAchievements { get; } = new();
+    [ObservableProperty]
+    public partial double ProgressPercent { get; set; }
+
+    [ObservableProperty]
+    public partial string NextRankInfo { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial bool HasNextRank { get; set; }
+    public ObservableCollection<AchievementShowcaseItem> ShowcaseAchievements { get; } = new ();
 
     public Task LoadAsync(CancellationToken cancellationToken = default)
     {
