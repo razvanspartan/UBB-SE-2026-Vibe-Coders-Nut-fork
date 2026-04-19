@@ -1,3 +1,5 @@
+namespace VibeCoders.ViewModels;
+
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -9,8 +11,6 @@ using Microsoft.UI.Xaml.Media;
 using VibeCoders.Domain;
 using VibeCoders.Models.Analytics;
 using VibeCoders.Services;
-
-namespace VibeCoders.ViewModels;
 
 public sealed partial class WorkoutHistoryItemViewModel : ObservableObject
 {

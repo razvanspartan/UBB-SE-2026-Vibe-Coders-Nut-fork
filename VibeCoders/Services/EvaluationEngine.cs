@@ -1,8 +1,8 @@
+namespace VibeCoders.Services;
+
 using System.Diagnostics;
 using VibeCoders.Domain;
 using VibeCoders.Models;
-
-namespace VibeCoders.Services;
 
 public sealed class EvaluationEngine
 {
