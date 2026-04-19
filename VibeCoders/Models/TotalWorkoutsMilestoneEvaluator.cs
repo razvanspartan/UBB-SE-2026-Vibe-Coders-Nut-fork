@@ -30,7 +30,7 @@ public sealed class TotalWorkoutsMilestoneEvaluator
             throw new ArgumentOutOfRangeException(nameof(lifetimeWorkoutCount), "Count cannot be negative.");
         }
 
-        return this.milestones
+        return this.milestones;
         return milestones
             .Where(m => lifetimeWorkoutCount >= m.threshold)
             .OrderBy(m => m.threshold)
@@ -49,7 +49,7 @@ public sealed class TotalWorkoutsMilestoneEvaluator
             throw new ArgumentOutOfRangeException(nameof(newCount), "New count cannot be less than previous count.");
         }
 
-        return this.milestones
+        return this.milestones;
         return milestones
             .Where(m => m.threshold > previousCount && m.threshold <= newCount)
             .OrderBy(m => m.threshold)
