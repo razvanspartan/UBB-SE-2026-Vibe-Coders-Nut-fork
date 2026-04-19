@@ -18,7 +18,6 @@ public sealed class EvaluationEngine
         this.storage = storage;
 
         this.checks = checks;
-
     }
 
     private static IReadOnlyList<VibeCoders.Domain.IMilestoneCheck> BuildDefaultChecks()
