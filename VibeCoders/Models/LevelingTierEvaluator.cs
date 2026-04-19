@@ -1,6 +1,6 @@
-using System.Globalization;
-
 namespace VibeCoders.Domain;
+
+using System.Globalization;
 
 public static class LevelingTierEvaluator
 {
@@ -26,7 +26,7 @@ public static class LevelingTierEvaluator
         LevelTier? best = null;
         foreach (var tier in tiers)
         {
-            if (unlockedAchievements >= tier.MinAchievements)
+            if (unlockedAchievements >= tier.minimumAchievements)
             {
                 best = tier;
             }
@@ -34,15 +34,15 @@ public static class LevelingTierEvaluator
 
         return best is null
             ? new LevelingResult(0, "Unranked")
-            : new LevelingResult(best.Value.Level, best.Value.RankTitle);
+            : new LevelingResult(best.Value.level, best.Value.rankTitle);
     }
 }
 
-public readonly record struct LevelTier(int Level, string RankTitle, int MinAchievements)
+public readonly record struct LevelTier(int level, string rankTitle, int minimumAchievements)
 {
     public override string ToString() =>
         string.Format(CultureInfo.InvariantCulture,
-            "Level {0} {1} @ {2} achievements", Level, RankTitle, MinAchievements);
+            "Level {0} {1} @ {2} achievements", level, rankTitle, minimumAchievements);
 }
 
-public readonly record struct LevelingResult(int Level, string RankTitle);
+public readonly record struct LevelingResult(int level, string rankTitle);

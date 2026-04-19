@@ -1,6 +1,6 @@
-using VibeCoders.Services;
-
 namespace VibeCoders.Domain;
+
+using VibeCoders.Services;
 
 public sealed class WeeklyVolumeCheck : IMilestoneCheck
 {
@@ -9,7 +9,7 @@ public sealed class WeeklyVolumeCheck : IMilestoneCheck
 
     public WeeklyVolumeCheck(string achievementTitle, int requiredWorkoutsPerWeek)
     {
-        AchievementTitle       = achievementTitle;
+        AchievementTitle = achievementTitle;
         RequiredWorkoutsPerWeek = requiredWorkoutsPerWeek;
     }
 

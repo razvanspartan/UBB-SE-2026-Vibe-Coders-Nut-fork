@@ -1,9 +1,9 @@
+namespace VibeCoders.Services;
+
 using System.Globalization;
 using Microsoft.Data.Sqlite;
 using VibeCoders.Models;
 using VibeCoders.Models.Analytics;
-
-namespace VibeCoders.Services;
 
 public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
 {
@@ -18,36 +18,38 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
 
     public async Task EnsureCreatedAsync(CancellationToken cancellationToken = default)
     {
-        await initLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await this.initLock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            if (initialized)
+            if (this.initialized)
             {
                 return;
             }
 
-            await using var conn = new SqliteConnection(connectionString);
-            await conn.OpenAsync(cancellationToken).ConfigureAwait(false);
+            await using var connection = new SqliteConnection(this.connectionString);
+            await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
-            await using (var cmd = new SqliteCommand(@"
+            await using (var command = new SqliteCommand(
+                @"
                 CREATE INDEX IF NOT EXISTS ix_workout_log_client_date
-                    ON WORKOUT_LOG (client_id, date DESC, workout_log_id DESC);", conn))
+                    ON WORKOUT_LOG (client_id, date DESC, workout_log_id DESC);", connection))
             {
-                await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
             }
 
-            await using (var cmd = new SqliteCommand(@"
+            await using (var command = new SqliteCommand(
+                @"
                 CREATE INDEX IF NOT EXISTS ix_workout_log_sets_log_idx
-                    ON WORKOUT_LOG_SETS (workout_log_id, sets);", conn))
+                    ON WORKOUT_LOG_SETS (workout_log_id, sets);", connection))
             {
-                await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
             }
 
-            initialized = true;
+            this.initialized = true;
         }
         finally
         {
-            initLock.Release();
+            this.initLock.Release();
         }
     }
 
@@ -55,7 +57,7 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
         long clientId, WorkoutLog log, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(log);
-        await EnsureCreatedAsync(cancellationToken).ConfigureAwait(false);
+        await this.EnsureCreatedAsync(cancellationToken).ConfigureAwait(false);
 
         int cid = log.ClientId > 0 ? log.ClientId : (int)clientId;
         if (cid <= 0)
@@ -63,29 +65,30 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
             throw new InvalidOperationException("Workout log must have a positive client id.");
         }
 
-        await using var conn = new SqliteConnection(connectionString);
-        await conn.OpenAsync(cancellationToken).ConfigureAwait(false);
-        await using var tx = conn.BeginTransaction();
+        await using var connection = new SqliteConnection(this.connectionString);
+        await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var tx = connection.BeginTransaction();
 
         try
         {
-            await using (var insertLog = new SqliteCommand(@"
+            await using (var insertLog = new SqliteCommand(
+                @"
                 INSERT INTO WORKOUT_LOG
                     (client_id, workout_id, date, total_duration, calories_burned, rating, intensity_tag)
                 VALUES
-                    (@clientId, @tmpl, @date, @dur, @cal, NULL, @intensity);", conn, tx))
+                    (@clientId, @tmpl, @date, @dur, @cal, NULL, @intensity);", connection, tx))
             {
-                insertLog.Parameters.AddWithValue("@clientId",  cid);
-                insertLog.Parameters.AddWithValue("@tmpl",      log.SourceTemplateId);
-                insertLog.Parameters.AddWithValue("@date",      log.Date.ToString("o"));
-                insertLog.Parameters.AddWithValue("@dur",       log.Duration.ToString());
-                insertLog.Parameters.AddWithValue("@cal",       log.TotalCaloriesBurned);
+                insertLog.Parameters.AddWithValue("@clientId", cid);
+                insertLog.Parameters.AddWithValue("@tmpl", log.SourceTemplateId);
+                insertLog.Parameters.AddWithValue("@date", log.Date.ToString("o"));
+                insertLog.Parameters.AddWithValue("@dur", log.Duration.ToString());
+                insertLog.Parameters.AddWithValue("@cal", log.TotalCaloriesBurned);
                 insertLog.Parameters.AddWithValue("@intensity", log.IntensityTag ?? string.Empty);
                 await insertLog.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
             }
 
             int logId;
-            await using (var idCmd = new SqliteCommand("SELECT last_insert_rowid();", conn, tx))
+            await using (var idCmd = new SqliteCommand("SELECT last_insert_rowid();", connection, tx))
             {
                 logId = Convert.ToInt32(
                     await idCmd.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false),
@@ -97,25 +100,26 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
             {
                 foreach (var set in exercise.Sets)
                 {
-                    await using var insertSet = new SqliteCommand(@"
+                    await using var insertSet = new SqliteCommand(
+                        @"
                         INSERT INTO WORKOUT_LOG_SETS
                             (workout_log_id, exercise_name, sets, reps, weight,
                              target_reps, target_weight, performance_ratio,
                              is_system_adjusted, adjustment_note)
                         VALUES
-                            (@lid, @ex, @si, @ar, @aw, @tr, @tw, @ratio, @adjusted, @note);",
-                        conn, tx);
+                            (@lid, @exception, @si, @ar, @aw, @tr, @tw, @ratio, @adjusted, @note);",
+                        connection, tx);
 
-                    insertSet.Parameters.AddWithValue("@lid",      logId);
-                    insertSet.Parameters.AddWithValue("@ex",       exercise.ExerciseName);
-                    insertSet.Parameters.AddWithValue("@si",       set.SetIndex);
-                    insertSet.Parameters.AddWithValue("@ar",       (object?)set.ActualReps ?? DBNull.Value);
-                    insertSet.Parameters.AddWithValue("@aw",       (object?)set.ActualWeight ?? DBNull.Value);
-                    insertSet.Parameters.AddWithValue("@tr",       (object?)set.TargetReps ?? DBNull.Value);
-                    insertSet.Parameters.AddWithValue("@tw",       (object?)set.TargetWeight ?? DBNull.Value);
-                    insertSet.Parameters.AddWithValue("@ratio",    exercise.PerformanceRatio);
+                    insertSet.Parameters.AddWithValue("@lid", logId);
+                    insertSet.Parameters.AddWithValue("@exception", exercise.ExerciseName);
+                    insertSet.Parameters.AddWithValue("@si", set.SetIndex);
+                    insertSet.Parameters.AddWithValue("@ar", (object?)set.ActualReps ?? DBNull.Value);
+                    insertSet.Parameters.AddWithValue("@aw", (object?)set.ActualWeight ?? DBNull.Value);
+                    insertSet.Parameters.AddWithValue("@tr", (object?)set.TargetReps ?? DBNull.Value);
+                    insertSet.Parameters.AddWithValue("@tw", (object?)set.TargetWeight ?? DBNull.Value);
+                    insertSet.Parameters.AddWithValue("@ratio", exercise.PerformanceRatio);
                     insertSet.Parameters.AddWithValue("@adjusted", exercise.IsSystemAdjusted ? 1 : 0);
-                    insertSet.Parameters.AddWithValue("@note",     exercise.AdjustmentNote);
+                    insertSet.Parameters.AddWithValue("@note", exercise.AdjustmentNote);
                     await insertSet.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
                 }
             }
@@ -133,12 +137,12 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
     public async Task<DashboardSummary> GetDashboardSummaryAsync(
         long clientId, CancellationToken cancellationToken = default)
     {
-        await EnsureCreatedAsync(cancellationToken).ConfigureAwait(false);
+        await this.EnsureCreatedAsync(cancellationToken).ConfigureAwait(false);
 
-        await using var conn = new SqliteConnection(connectionString);
-        await conn.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = new SqliteConnection(this.connectionString);
+        await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
-        var total = await ScalarLongAsync(conn, @"
+        var total = await ScalarLongAsync(connection, @"
             SELECT COUNT(*)
             FROM WORKOUT_LOG wl
             WHERE wl.client_id = @cid;",
@@ -147,7 +151,7 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
         var today = DateOnly.FromDateTime(DateTime.Today);
         var windowStart = today.AddDays(-6);
 
-        var activeSeconds = await ScalarLongAsync(conn, @"
+        var activeSeconds = await ScalarLongAsync(connection, @"
             SELECT COALESCE(SUM(
                 CASE
                     WHEN wl.total_duration IS NOT NULL AND wl.total_duration != ''
@@ -160,18 +164,19 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
               AND date(wl.date) <= @end;",
             "@cid", clientId,
             "@start", windowStart.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-            "@end",   today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+            "@end", today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
             cancellationToken).ConfigureAwait(false);
 
         string? preferred = null;
-        await using (var prefCmd = new SqliteCommand(@"
+        await using (var prefCmd = new SqliteCommand(
+            @"
             SELECT wt.name
             FROM WORKOUT_LOG wl
             LEFT JOIN WORKOUT_TEMPLATE wt ON wt.workout_template_id = wl.workout_id
             WHERE wl.client_id = @cid AND wt.name IS NOT NULL
             GROUP BY wt.name
             ORDER BY COUNT(*) DESC, wt.name ASC
-            LIMIT 1;", conn))
+            LIMIT 1;", connection))
         {
             prefCmd.Parameters.AddWithValue("@cid", clientId);
             await using var reader = await prefCmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
@@ -185,19 +190,19 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
         {
             TotalWorkouts = (int)Math.Min(int.MaxValue, total),
             TotalActiveTimeLastSevenDays = TimeSpan.FromSeconds(activeSeconds),
-            PreferredWorkoutName = preferred
+            PreferredWorkoutName = preferred,
         };
     }
 
     public async Task<TimeSpan> GetTotalActiveTimeAsync(
         long clientId, CancellationToken cancellationToken = default)
     {
-        await EnsureCreatedAsync(cancellationToken).ConfigureAwait(false);
+        await this.EnsureCreatedAsync(cancellationToken).ConfigureAwait(false);
 
-        await using var conn = new SqliteConnection(connectionString);
-        await conn.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = new SqliteConnection(this.connectionString);
+        await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
-        var totalSeconds = await ScalarLongAsync(conn, @"
+        var totalSeconds = await ScalarLongAsync(connection, @"
             SELECT COALESCE(SUM(
                 CASE
                     WHEN wl.total_duration IS NOT NULL AND wl.total_duration != ''
@@ -214,35 +219,35 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
     public async Task<IReadOnlyList<ConsistencyWeekBucket>> GetConsistencyLastFourWeeksAsync(
         long clientId, CancellationToken cancellationToken = default)
     {
-        await EnsureCreatedAsync(cancellationToken).ConfigureAwait(false);
+        await this.EnsureCreatedAsync(cancellationToken).ConfigureAwait(false);
 
         var today = DateOnly.FromDateTime(DateTime.Today);
         var mondayThisWeek = GetMondayOfWeek(today);
         var buckets = new List<ConsistencyWeekBucket>(4);
 
-        await using var conn = new SqliteConnection(connectionString);
-        await conn.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = new SqliteConnection(this.connectionString);
+        await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
         for (var i = 0; i < 4; i++)
         {
             var weekStart = mondayThisWeek.AddDays(-21 + (i * 7));
             var weekEnd = weekStart.AddDays(7);
 
-            var count = await ScalarLongAsync(conn, @"
+            var count = await ScalarLongAsync(connection, @"
                 SELECT COUNT(*)
                 FROM WORKOUT_LOG wl
                 WHERE wl.client_id = @cid
                   AND date(wl.date) >= @start
                   AND date(wl.date) <  @end;",
-                "@cid",   clientId,
+                "@cid", clientId,
                 "@start", weekStart.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-                "@end",   weekEnd.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                "@end", weekEnd.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
                 cancellationToken).ConfigureAwait(false);
 
             buckets.Add(new ConsistencyWeekBucket
             {
                 WeekStart = weekStart,
-                WorkoutCount = (int)count
+                WorkoutCount = (int)count,
             });
         }
 
@@ -262,18 +267,19 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
             pageSize = 10;
         }
 
-        await EnsureCreatedAsync(cancellationToken).ConfigureAwait(false);
+        await this.EnsureCreatedAsync(cancellationToken).ConfigureAwait(false);
 
-        await using var conn = new SqliteConnection(connectionString);
-        await conn.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = new SqliteConnection(this.connectionString);
+        await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
-        var total = await ScalarLongAsync(conn, @"
+        var total = await ScalarLongAsync(connection, @"
             SELECT COUNT(*)
             FROM WORKOUT_LOG wl
             WHERE wl.client_id = @cid;",
             "@cid", clientId, cancellationToken).ConfigureAwait(false);
 
-        await using var cmd = new SqliteCommand(@"
+        await using var command = new SqliteCommand(
+            @"
             SELECT
                 wl.workout_log_id,
                 COALESCE(wt.name, ''),
@@ -285,14 +291,14 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
             LEFT JOIN WORKOUT_TEMPLATE wt ON wt.workout_template_id = wl.workout_id
             WHERE wl.client_id = @cid
             ORDER BY wl.date DESC, wl.workout_log_id DESC
-            LIMIT @take OFFSET @skip;", conn);
+            LIMIT @take OFFSET @skip;", connection);
 
-        cmd.Parameters.AddWithValue("@cid",  clientId);
-        cmd.Parameters.AddWithValue("@skip", pageIndex * pageSize);
-        cmd.Parameters.AddWithValue("@take", pageSize);
+        command.Parameters.AddWithValue("@cid", clientId);
+        command.Parameters.AddWithValue("@skip", pageIndex * pageSize);
+        command.Parameters.AddWithValue("@take", pageSize);
 
         var items = new List<WorkoutHistoryRow>();
-        await using var reader = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
         while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
         {
             items.Add(new WorkoutHistoryRow
@@ -302,24 +308,24 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
                 LogDate = DateTime.Parse(reader.GetString(2)),
                 DurationSeconds = ParseDurationToSeconds(reader.IsDBNull(3) ? null : reader.GetString(3)),
                 TotalCaloriesBurned = reader.GetInt32(4),
-                IntensityTag = reader.GetString(5)
+                IntensityTag = reader.GetString(5),
             });
         }
 
         return new WorkoutHistoryPageResult
         {
             TotalCount = (int)Math.Min(int.MaxValue, total),
-            Items = items
+            Items = items,
         };
     }
 
     public async Task<WorkoutSessionDetail?> GetWorkoutSessionDetailAsync(
         long clientId, int workoutLogId, CancellationToken cancellationToken = default)
     {
-        await EnsureCreatedAsync(cancellationToken).ConfigureAwait(false);
+        await this.EnsureCreatedAsync(cancellationToken).ConfigureAwait(false);
 
-        await using var conn = new SqliteConnection(connectionString);
-        await conn.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = new SqliteConnection(this.connectionString);
+        await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
         string? workoutName;
         DateTime logDate;
@@ -327,7 +333,8 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
         int totalCalories;
         string intensityTag;
 
-        await using (var head = new SqliteCommand(@"
+        await using (var head = new SqliteCommand(
+            @"
             SELECT
                 COALESCE(wt.name, ''),
                 wl.date,
@@ -336,9 +343,9 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
                 COALESCE(wl.intensity_tag, '')
             FROM WORKOUT_LOG wl
             LEFT JOIN WORKOUT_TEMPLATE wt ON wt.workout_template_id = wl.workout_id
-            WHERE wl.workout_log_id = @id AND wl.client_id = @cid;", conn))
+            WHERE wl.workout_log_id = @id AND wl.client_id = @cid;", connection))
         {
-            head.Parameters.AddWithValue("@id",  workoutLogId);
+            head.Parameters.AddWithValue("@id", workoutLogId);
             head.Parameters.AddWithValue("@cid", clientId);
 
             await using var r = await head.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
@@ -357,11 +364,12 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
         var exerciseCalories = new List<ExerciseCalorieInfo>();
         var sets = new List<WorkoutSetRow>();
 
-        await using (var setsCmd = new SqliteCommand(@"
+        await using (var setsCmd = new SqliteCommand(
+            @"
             SELECT exercise_name, sets, reps, weight
             FROM WORKOUT_LOG_SETS
             WHERE workout_log_id = @lid
-            ORDER BY rowid ASC;", conn))
+            ORDER BY rowid ASC;", connection))
         {
             setsCmd.Parameters.AddWithValue("@lid", workoutLogId);
             await using var sr = await setsCmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
@@ -377,7 +385,7 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
                     ExerciseName = exName,
                     SetIndex = setIndex,
                     ActualReps = sr.IsDBNull(2) ? null : sr.GetInt32(2),
-                    ActualWeight = sr.IsDBNull(3) ? null : sr.GetDouble(3)
+                    ActualWeight = sr.IsDBNull(3) ? null : sr.GetDouble(3),
                 });
 
                 exerciseSetCounts.TryGetValue(exName, out var count);
@@ -394,7 +402,7 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
                 exerciseCalories.Add(new ExerciseCalorieInfo
                 {
                     ExerciseName = exName,
-                    CaloriesBurned = calories
+                    CaloriesBurned = calories,
                 });
             }
         }
@@ -408,7 +416,7 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
             TotalCaloriesBurned = totalCalories,
             IntensityTag = intensityTag,
             Sets = sets,
-            ExerciseCalories = exerciseCalories
+            ExerciseCalories = exerciseCalories,
         };
     }
 
@@ -428,26 +436,26 @@ public sealed class SqlWorkoutAnalyticsStore : IWorkoutAnalyticsStore
     }
 
     private static async Task<long> ScalarLongAsync(
-        SqliteConnection conn, string sql,
+        SqliteConnection connection, string sql,
         string paramName, long paramValue,
         CancellationToken cancellationToken)
     {
-        await using var cmd = new SqliteCommand(sql, conn);
-        cmd.Parameters.AddWithValue(paramName, paramValue);
-        var obj = await cmd.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = new SqliteCommand(sql, connection);
+        command.Parameters.AddWithValue(paramName, paramValue);
+        var obj = await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
         return Convert.ToInt64(obj ?? 0L, CultureInfo.InvariantCulture);
     }
 
     private static async Task<long> ScalarLongAsync(
-        SqliteConnection conn, string sql,
+        SqliteConnection connection, string sql,
         string p1, long v1, string p2, string v2, string p3, string v3,
         CancellationToken cancellationToken)
     {
-        await using var cmd = new SqliteCommand(sql, conn);
-        cmd.Parameters.AddWithValue(p1, v1);
-        cmd.Parameters.AddWithValue(p2, v2);
-        cmd.Parameters.AddWithValue(p3, v3);
-        var obj = await cmd.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = new SqliteCommand(sql, connection);
+        command.Parameters.AddWithValue(p1, v1);
+        command.Parameters.AddWithValue(p2, v2);
+        command.Parameters.AddWithValue(p3, v3);
+        var obj = await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
         return Convert.ToInt64(obj ?? 0L, CultureInfo.InvariantCulture);
     }
 

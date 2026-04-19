@@ -1,3 +1,5 @@
+namespace VibeCoders;
+
 using System;
 using System.Diagnostics;
 using System.Linq;
@@ -5,34 +7,44 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
-using VibeCoders.Domain;
 using VibeCoders.Services;
 using VibeCoders.ViewModels;
 
-namespace VibeCoders;
-
 public partial class App : Application
 {
-    private static IServiceProvider? _services;
-    public Window? _window;
+    private static IServiceProvider? servicesProvider;
 
     public App()
     {
-        InitializeComponent();
+        this.InitializeComponent();
+    }
+
+    public Window? Window { get; set; }
+
+    public static T GetService<T>()
+        where T : notnull
+    {
+        if (servicesProvider is null)
+        {
+            throw new InvalidOperationException(
+                "Service provider is not initialized. Ensure OnLaunched has run.");
+        }
+
+        return servicesProvider.GetRequiredService<T>();
     }
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
         var services = new ServiceCollection();
         ConfigureServices(services);
-        _services = services.BuildServiceProvider();
+        servicesProvider = services.BuildServiceProvider();
 
-        var navService = (NavigationService)_services.GetRequiredService<INavigationService>();
-        var achievementBus = _services.GetRequiredService<IAchievementUnlockedBus>();
+        var navService = (NavigationService)servicesProvider.GetRequiredService<INavigationService>();
+        var achievementBus = servicesProvider.GetRequiredService<IAchievementUnlockedBus>();
 
         try
         {
-            var storage = _services.GetRequiredService<IDataStorage>();
+            var storage = servicesProvider.GetRequiredService<IDataStorage>();
             if (storage is SqlDataStorage sql)
             {
                 sql.EnsureSchemaCreated();
@@ -43,52 +55,16 @@ public partial class App : Application
                 sql.SeedTestData();
             }
         }
-        catch (Exception ex)
+        catch (Exception exception)
         {
-            Debug.WriteLine($"Startup database init failed: {ex}");
+            Debug.WriteLine($"Startup database init failed: {exception}");
         }
 
-        TrySyncDemoClientSession();
-        _window = new MainWindow(navService, achievementBus);
-        _window.Activate();
+        this.TrySyncDemoClientSession();
+        this.Window = new MainWindow(navService, achievementBus);
+        this.Window.Activate();
 
         navService.NavigateToClientDashboard(requestRefresh: true);
-    }
-
-    public static T GetService<T>() where T : notnull
-    {
-        if (_services is null)
-        {
-            throw new InvalidOperationException(
-                "Service provider is not initialized. Ensure OnLaunched has run.");
-        }
-
-        return _services.GetRequiredService<T>();
-    }
-
-    private void TrySyncDemoClientSession()
-    {
-        if (_services is null) return;
-
-        try
-        {
-            var storage = _services.GetRequiredService<IDataStorage>();
-            var session = _services.GetRequiredService<IUserSession>();
-            var user    = storage.LoadUser("TestClient");
-            if (user is null) return;
-
-            var roster = storage.GetTrainerClient(1);
-            var client = roster.FirstOrDefault(c =>
-                string.Equals(c.Username, "TestClient", StringComparison.OrdinalIgnoreCase));
-            if (client is null) return;
-
-            session.CurrentUserId   = user.Id;
-            session.CurrentClientId = client.Id;
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"Session sync skipped: {ex.Message}");
-        }
     }
 
     private static void ConfigureServices(IServiceCollection services)
@@ -105,9 +81,9 @@ public partial class App : Application
         services.AddSingleton<IAchievementUnlockedBus, AchievementUnlockedBus>();
         services.AddSingleton<IWorkoutDataForwarder, WorkoutDataForwarder>();
         services.AddSingleton<ICalendarExportService, CalendarExportService>();
+        services.AddSingleton<ICalendarWorkoutCatalogService, CalendarWorkoutCatalogService>();
         services.AddSingleton<INavigationService, NavigationService>();
 
-        services.AddSingleton(new NutritionSyncOptions());
         services.AddSingleton<WorkoutUiState>();
 
         services.AddHttpClient();
@@ -126,11 +102,45 @@ public partial class App : Application
         services.AddTransient<AchievementsViewModel>();
         services.AddTransient<ClientProfileViewModel>();
 
-        services.AddTransient<TrainerDashboardViewModel>(sp =>
+        services.AddTransient<TrainerDashboardViewModel>(serviceProvider =>
         {
-            var trainerService = sp.GetRequiredService<TrainerService>();
-            var navService = sp.GetRequiredService<INavigationService>();
+            var trainerService = serviceProvider.GetRequiredService<TrainerService>();
+            var navService = serviceProvider.GetRequiredService<INavigationService>();
             return new TrainerDashboardViewModel(trainerService, navService);
         });
+    }
+
+    private void TrySyncDemoClientSession()
+    {
+        if (servicesProvider is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var storage = servicesProvider.GetRequiredService<IDataStorage>();
+            var session = servicesProvider.GetRequiredService<IUserSession>();
+            var user = storage.LoadUser("TestClient");
+            if (user is null)
+            {
+                return;
+            }
+
+            var roster = storage.GetTrainerClient(1);
+            var client = roster.FirstOrDefault(c =>
+                string.Equals(c.Username, "TestClient", StringComparison.OrdinalIgnoreCase));
+            if (client is null)
+            {
+                return;
+            }
+
+            session.CurrentUserId = user.Id;
+            session.CurrentClientId = client.Id;
+        }
+        catch (Exception exception)
+        {
+            Debug.WriteLine($"Session sync skipped: {exception.Message}");
+        }
     }
 }

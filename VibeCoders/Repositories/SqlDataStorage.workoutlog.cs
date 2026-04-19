@@ -1,18 +1,18 @@
-using Microsoft.Data.Sqlite;
-using VibeCoders.Models;
-
 namespace VibeCoders.Services
 {
+    using Microsoft.Data.Sqlite;
+    using VibeCoders.Models;
+
     public partial class SqlDataStorage
     {
         public double GetClientWeight(int clientId)
         {
             const string sql = "SELECT weight FROM CLIENT WHERE client_id = @ClientId LIMIT 1;";
-            using var conn = new SqliteConnection(_connectionString);
-            conn.Open();
-            using var cmd = new SqliteCommand(sql, conn);
-            cmd.Parameters.AddWithValue("@ClientId", clientId);
-            var result = cmd.ExecuteScalar();
+            using var connection = new SqliteConnection(this.connectionString);
+            connection.Open();
+            using var command = new SqliteCommand(sql, connection);
+            command.Parameters.AddWithValue("@ClientId", clientId);
+            var result = command.ExecuteScalar();
             return result is null || result == DBNull.Value ? 75.0 : Convert.ToDouble(result);
         }
 
@@ -34,28 +34,28 @@ namespace VibeCoders.Services
                      @TargetReps, @TargetWeight, @PerformanceRatio,
                      @IsSystemAdjusted, @AdjustmentNote);";
 
-            using var conn = new SqliteConnection(_connectionString);
-            conn.Open();
+            using var connection = new SqliteConnection(this.connectionString);
+            connection.Open();
 
-            using var transaction = conn.BeginTransaction();
+            using var transaction = connection.BeginTransaction();
 
             try
             {
                 int workoutLogId;
-                using (var cmd = new SqliteCommand(insertLog, conn, transaction))
+                using (var command = new SqliteCommand(insertLog, connection, transaction))
                 {
-                    cmd.Parameters.AddWithValue("@ClientId",      log.ClientId);
-                    cmd.Parameters.AddWithValue("@WorkoutId",     log.SourceTemplateId);
-                    cmd.Parameters.AddWithValue("@Type",          SerializeWorkoutType(log.Type));
-                    cmd.Parameters.AddWithValue("@Date",          log.Date.ToString("o"));
-                    cmd.Parameters.AddWithValue("@Duration",      log.Duration.ToString());
-                    cmd.Parameters.AddWithValue("@CaloriesBurned", log.TotalCaloriesBurned);
-                    cmd.Parameters.AddWithValue("@Rating",        DBNull.Value);
-                    cmd.Parameters.AddWithValue("@IntensityTag",  log.IntensityTag ?? string.Empty);
-                    cmd.ExecuteNonQuery();
+                    command.Parameters.AddWithValue("@ClientId", log.ClientId);
+                    command.Parameters.AddWithValue("@WorkoutId", log.SourceTemplateId);
+                    command.Parameters.AddWithValue("@Type", SerializeWorkoutType(log.Type));
+                    command.Parameters.AddWithValue("@Date", log.Date.ToString("o"));
+                    command.Parameters.AddWithValue("@Duration", log.Duration.ToString());
+                    command.Parameters.AddWithValue("@CaloriesBurned", log.TotalCaloriesBurned);
+                    command.Parameters.AddWithValue("@Rating", DBNull.Value);
+                    command.Parameters.AddWithValue("@IntensityTag", log.IntensityTag ?? string.Empty);
+                    command.ExecuteNonQuery();
                 }
 
-                using (var idCmd = new SqliteCommand("SELECT last_insert_rowid();", conn, transaction))
+                using (var idCmd = new SqliteCommand("SELECT last_insert_rowid();", connection, transaction))
                 {
                     workoutLogId = Convert.ToInt32(idCmd.ExecuteScalar());
                     log.Id = workoutLogId;
@@ -65,28 +65,28 @@ namespace VibeCoders.Services
                 {
                     foreach (var set in exercise.Sets)
                     {
-                        using var cmd = new SqliteCommand(insertSet, conn, transaction);
-                        cmd.Parameters.AddWithValue("@WorkoutLogId",       workoutLogId);
-                        cmd.Parameters.AddWithValue("@ExerciseName",       exercise.ExerciseName);
-                        cmd.Parameters.AddWithValue("@SetIndex",           set.SetIndex);
-                        cmd.Parameters.AddWithValue("@ActualReps",         (object?)set.ActualReps ?? DBNull.Value);
-                        cmd.Parameters.AddWithValue("@ActualWeight",       (object?)set.ActualWeight ?? DBNull.Value);
-                        cmd.Parameters.AddWithValue("@TargetReps",         (object?)set.TargetReps ?? DBNull.Value);
-                        cmd.Parameters.AddWithValue("@TargetWeight",       (object?)set.TargetWeight ?? DBNull.Value);
-                        cmd.Parameters.AddWithValue("@PerformanceRatio",   exercise.PerformanceRatio);
-                        cmd.Parameters.AddWithValue("@IsSystemAdjusted",   exercise.IsSystemAdjusted ? 1 : 0);
-                        cmd.Parameters.AddWithValue("@AdjustmentNote",     exercise.AdjustmentNote);
-                        cmd.ExecuteNonQuery();
+                        using var command = new SqliteCommand(insertSet, connection, transaction);
+                        command.Parameters.AddWithValue("@WorkoutLogId", workoutLogId);
+                        command.Parameters.AddWithValue("@ExerciseName", exercise.ExerciseName);
+                        command.Parameters.AddWithValue("@SetIndex", set.SetIndex);
+                        command.Parameters.AddWithValue("@ActualReps", (object?)set.ActualReps ?? DBNull.Value);
+                        command.Parameters.AddWithValue("@ActualWeight", (object?)set.ActualWeight ?? DBNull.Value);
+                        command.Parameters.AddWithValue("@TargetReps", (object?)set.TargetReps ?? DBNull.Value);
+                        command.Parameters.AddWithValue("@TargetWeight", (object?)set.TargetWeight ?? DBNull.Value);
+                        command.Parameters.AddWithValue("@PerformanceRatio", exercise.PerformanceRatio);
+                        command.Parameters.AddWithValue("@IsSystemAdjusted", exercise.IsSystemAdjusted ? 1 : 0);
+                        command.Parameters.AddWithValue("@AdjustmentNote", exercise.AdjustmentNote);
+                        command.ExecuteNonQuery();
                     }
                 }
 
                 transaction.Commit();
                 return true;
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
                 transaction.Rollback();
-                System.Diagnostics.Debug.WriteLine($"SaveWorkoutLog failed: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"SaveWorkoutLog failed: {exception.Message}");
                 return false;
             }
         }
@@ -111,14 +111,14 @@ namespace VibeCoders.Services
 
             var logs = new List<WorkoutLog>();
 
-            using var conn = new SqliteConnection(_connectionString);
-            conn.Open();
+            using var connection = new SqliteConnection(this.connectionString);
+            connection.Open();
 
-            using (var cmd = new SqliteCommand(sqlLogs, conn))
+            using (var command = new SqliteCommand(sqlLogs, connection))
             {
-                cmd.Parameters.AddWithValue("@ClientId", clientId);
+                command.Parameters.AddWithValue("@ClientId", clientId);
 
-                using var reader = cmd.ExecuteReader();
+                using var reader = command.ExecuteReader();
                 while (reader.Read())
                 {
                     logs.Add(new WorkoutLog
@@ -132,20 +132,20 @@ namespace VibeCoders.Services
                         TrainerNotes = reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
                         WorkoutName = reader.IsDBNull(7) ? string.Empty : reader.GetString(7),
                         Type = ParseWorkoutType(reader.IsDBNull(8) ? null : reader.GetString(8)),
-                                        ClientId = clientId
-                                    });
-                                }
-                            }
+                        ClientId = clientId,
+                    });
+                }
+            }
 
-                            foreach (var log in logs)
-                            {
-                                log.Exercises = LoadExercisesForLog(log.Id, conn);
-                            }
+            foreach (var log in logs)
+            {
+                log.Exercises = this.LoadExercisesForLog(log.Id, connection);
+            }
 
-                            return logs;
-                        }
+            return logs;
+        }
 
-                        public bool UpdateWorkoutLog(WorkoutLog log)
+        public bool UpdateWorkoutLog(WorkoutLog log)
         {
             const string updateLog = @"
                 UPDATE WORKOUT_LOG
@@ -170,27 +170,27 @@ namespace VibeCoders.Services
                      @TargetReps, @TargetWeight, @PerformanceRatio,
                      @IsSystemAdjusted, @AdjustmentNote);";
 
-            using var conn = new SqliteConnection(_connectionString);
-            conn.Open();
-            using var transaction = conn.BeginTransaction();
+            using var connection = new SqliteConnection(this.connectionString);
+            connection.Open();
+            using var transaction = connection.BeginTransaction();
 
             try
             {
-                using (var cmd = new SqliteCommand(updateLog, conn, transaction))
+                using (var command = new SqliteCommand(updateLog, connection, transaction))
                 {
-                    cmd.Parameters.AddWithValue("@WorkoutLogId", log.Id);
-                    cmd.Parameters.AddWithValue("@Duration", log.Duration.ToString());
-                    cmd.Parameters.AddWithValue("@CaloriesBurned", log.TotalCaloriesBurned);
-                    cmd.Parameters.AddWithValue("@IntensityTag", log.IntensityTag ?? string.Empty);
-                    cmd.Parameters.AddWithValue("@Rating", log.Rating == -1 ? DBNull.Value : (object)(int)log.Rating);
-                    cmd.Parameters.AddWithValue("@TrainerNotes", string.IsNullOrWhiteSpace(log.TrainerNotes) ? DBNull.Value : (object)log.TrainerNotes);
-                    cmd.ExecuteNonQuery();
+                    command.Parameters.AddWithValue("@WorkoutLogId", log.Id);
+                    command.Parameters.AddWithValue("@Duration", log.Duration.ToString());
+                    command.Parameters.AddWithValue("@CaloriesBurned", log.TotalCaloriesBurned);
+                    command.Parameters.AddWithValue("@IntensityTag", log.IntensityTag ?? string.Empty);
+                    command.Parameters.AddWithValue("@Rating", log.Rating == -1 ? DBNull.Value : (object)(int)log.Rating);
+                    command.Parameters.AddWithValue("@TrainerNotes", string.IsNullOrWhiteSpace(log.TrainerNotes) ? DBNull.Value : (object)log.TrainerNotes);
+                    command.ExecuteNonQuery();
                 }
 
-                using (var cmd = new SqliteCommand(deleteSets, conn, transaction))
+                using (var command = new SqliteCommand(deleteSets, connection, transaction))
                 {
-                    cmd.Parameters.AddWithValue("@WorkoutLogId", log.Id);
-                    cmd.ExecuteNonQuery();
+                    command.Parameters.AddWithValue("@WorkoutLogId", log.Id);
+                    command.ExecuteNonQuery();
                 }
 
                 foreach (var exercise in log.Exercises)
@@ -202,28 +202,28 @@ namespace VibeCoders.Services
                     for (int i = 0; i < orderedSets.Count; i++)
                     {
                         var set = orderedSets[i];
-                        using var cmd = new SqliteCommand(insertSet, conn, transaction);
-                        cmd.Parameters.AddWithValue("@WorkoutLogId", log.Id);
-                        cmd.Parameters.AddWithValue("@ExerciseName", exercise.ExerciseName);
-                        cmd.Parameters.AddWithValue("@SetIndex", i + 1);
-                        cmd.Parameters.AddWithValue("@ActualReps", (object?)set.ActualReps ?? DBNull.Value);
-                        cmd.Parameters.AddWithValue("@ActualWeight", (object?)set.ActualWeight ?? DBNull.Value);
-                        cmd.Parameters.AddWithValue("@TargetReps", (object?)set.TargetReps ?? DBNull.Value);
-                        cmd.Parameters.AddWithValue("@TargetWeight", (object?)set.TargetWeight ?? DBNull.Value);
-                        cmd.Parameters.AddWithValue("@PerformanceRatio", exercise.PerformanceRatio);
-                        cmd.Parameters.AddWithValue("@IsSystemAdjusted", exercise.IsSystemAdjusted ? 1 : 0);
-                        cmd.Parameters.AddWithValue("@AdjustmentNote", exercise.AdjustmentNote);
-                        cmd.ExecuteNonQuery();
+                        using var command = new SqliteCommand(insertSet, connection, transaction);
+                        command.Parameters.AddWithValue("@WorkoutLogId", log.Id);
+                        command.Parameters.AddWithValue("@ExerciseName", exercise.ExerciseName);
+                        command.Parameters.AddWithValue("@SetIndex", i + 1);
+                        command.Parameters.AddWithValue("@ActualReps", (object?)set.ActualReps ?? DBNull.Value);
+                        command.Parameters.AddWithValue("@ActualWeight", (object?)set.ActualWeight ?? DBNull.Value);
+                        command.Parameters.AddWithValue("@TargetReps", (object?)set.TargetReps ?? DBNull.Value);
+                        command.Parameters.AddWithValue("@TargetWeight", (object?)set.TargetWeight ?? DBNull.Value);
+                        command.Parameters.AddWithValue("@PerformanceRatio", exercise.PerformanceRatio);
+                        command.Parameters.AddWithValue("@IsSystemAdjusted", exercise.IsSystemAdjusted ? 1 : 0);
+                        command.Parameters.AddWithValue("@AdjustmentNote", exercise.AdjustmentNote);
+                        command.ExecuteNonQuery();
                     }
                 }
 
                 transaction.Commit();
                 return true;
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
                 transaction.Rollback();
-                System.Diagnostics.Debug.WriteLine($"UpdateWorkoutLog failed: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"UpdateWorkoutLog failed: {exception.Message}");
                 return false;
             }
         }
@@ -248,35 +248,35 @@ namespace VibeCoders.Services
 
             var logs = new List<WorkoutLog>();
 
-            using var conn = new SqliteConnection(_connectionString);
-            conn.Open();
+            using var connection = new SqliteConnection(this.connectionString);
+            connection.Open();
 
-            using (var cmd = new SqliteCommand(sql, conn))
+            using (var command = new SqliteCommand(sql, connection))
             {
-                cmd.Parameters.AddWithValue("@TemplateExerciseId", templateExerciseId);
+                command.Parameters.AddWithValue("@TemplateExerciseId", templateExerciseId);
 
-                using var reader = cmd.ExecuteReader();
+                using var reader = command.ExecuteReader();
                 while (reader.Read())
                 {
-                            logs.Add(new WorkoutLog
-                            {
-                                Id = reader.GetInt32(0),
-                                ClientId = reader.GetInt32(1),
-                                Date = DateTime.Parse(reader.GetString(2)),
-                                Duration = TimeSpan.Parse(reader.GetString(3)),
-                                TotalCaloriesBurned = reader.IsDBNull(4) ? 0 : reader.GetInt32(4),
-                                SourceTemplateId = reader.IsDBNull(5) ? 0 : reader.GetInt32(5),
-                                Type = ParseWorkoutType(reader.IsDBNull(6) ? null : reader.GetString(6))
-                            });
-                        }
-                    }
-
-                    foreach (var log in logs)
+                    logs.Add(new WorkoutLog
                     {
-                        log.Exercises = LoadExercisesForLog(log.Id, conn);
-                    }
+                        Id = reader.GetInt32(0),
+                        ClientId = reader.GetInt32(1),
+                        Date = DateTime.Parse(reader.GetString(2)),
+                        Duration = TimeSpan.Parse(reader.GetString(3)),
+                        TotalCaloriesBurned = reader.IsDBNull(4) ? 0 : reader.GetInt32(4),
+                        SourceTemplateId = reader.IsDBNull(5) ? 0 : reader.GetInt32(5),
+                        Type = ParseWorkoutType(reader.IsDBNull(6) ? null : reader.GetString(6)),
+                    });
+                }
+            }
 
-                    return logs;
+            foreach (var log in logs)
+            {
+                log.Exercises = this.LoadExercisesForLog(log.Id, connection);
+            }
+
+            return logs;
         }
 
         public bool UpdateWorkoutLogFeedback(int workoutLogId, double rating, string notes)
@@ -287,26 +287,26 @@ namespace VibeCoders.Services
                     trainer_notes = @Notes
                 WHERE workout_log_id = @WorkoutLogId;";
 
-            using var conn = new SqliteConnection(_connectionString);
-            conn.Open();
+            using var connection = new SqliteConnection(this.connectionString);
+            connection.Open();
 
-            using var cmd = new SqliteCommand(sql, conn);
-            cmd.Parameters.AddWithValue("@WorkoutLogId", workoutLogId);
-            cmd.Parameters.AddWithValue("@Rating",       rating == -1 ? DBNull.Value : (object)(int)rating);
-            cmd.Parameters.AddWithValue("@Notes",        string.IsNullOrWhiteSpace(notes) ? DBNull.Value : (object)notes);
+            using var command = new SqliteCommand(sql, connection);
+            command.Parameters.AddWithValue("@WorkoutLogId", workoutLogId);
+            command.Parameters.AddWithValue("@Rating", rating == -1 ? DBNull.Value : (object)(int)rating);
+            command.Parameters.AddWithValue("@Notes", string.IsNullOrWhiteSpace(notes) ? DBNull.Value : (object)notes);
 
             try
             {
-                return cmd.ExecuteNonQuery() > 0;
+                return command.ExecuteNonQuery() > 0;
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                System.Diagnostics.Debug.WriteLine($"Failed to update feedback: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Failed to update feedback: {exception.Message}");
                 return false;
             }
         }
 
-        private List<LoggedExercise> LoadExercisesForLog(int workoutLogId, SqliteConnection conn)
+        private List<LoggedExercise> LoadExercisesForLog(int workoutLogId, SqliteConnection connection)
         {
             const string sql = @"
                 SELECT
@@ -330,10 +330,10 @@ namespace VibeCoders.Services
 
             var exerciseMap = new Dictionary<string, LoggedExercise>();
 
-            using var cmd = new SqliteCommand(sql, conn);
-            cmd.Parameters.AddWithValue("@WorkoutLogId", workoutLogId);
+            using var command = new SqliteCommand(sql, connection);
+            command.Parameters.AddWithValue("@WorkoutLogId", workoutLogId);
 
-            using var reader = cmd.ExecuteReader();
+            using var reader = command.ExecuteReader();
             while (reader.Read())
             {
                 string dbMuscleString = reader.IsDBNull(10) ? "OTHER" : reader.GetString(10);
@@ -351,7 +351,7 @@ namespace VibeCoders.Services
                         IsSystemAdjusted = !reader.IsDBNull(8) && reader.GetInt32(8) != 0,
                         AdjustmentNote = reader.IsDBNull(9) ? string.Empty : reader.GetString(9),
                         TargetMuscles = parsedMuscleGroup,
-                        ParentTemplateExerciseId = reader.IsDBNull(11) ? 0 : reader.GetInt32(11)
+                        ParentTemplateExerciseId = reader.IsDBNull(11) ? 0 : reader.GetInt32(11),
                     };
                     exerciseMap[exerciseName] = exercise;
                 }
@@ -368,7 +368,7 @@ namespace VibeCoders.Services
                     ActualWeight = reader.IsDBNull(4) ? null : reader.GetDouble(4),
                     TargetReps = reader.IsDBNull(5) ? null : reader.GetInt32(5),
                     TargetWeight = reader.IsDBNull(6) ? null : reader.GetDouble(6),
-                    Exercise = exercise
+                    Exercise = exercise,
                 });
             }
 
@@ -377,9 +377,10 @@ namespace VibeCoders.Services
 
         public int GetTotalActiveTimeForClient(int clientId)
         {
-            using var conn = new SqliteConnection(_connectionString);
-            conn.Open();
-            using var cmd = new SqliteCommand(@"
+            using var connection = new SqliteConnection(this.connectionString);
+            connection.Open();
+            using var command = new SqliteCommand(
+                @"
                 SELECT COALESCE(SUM(
                     CASE
                         WHEN total_duration IS NOT NULL AND total_duration != ''
@@ -387,9 +388,9 @@ namespace VibeCoders.Services
                         ELSE 0
                     END), 0)
                 FROM WORKOUT_LOG
-                WHERE client_id = @ClientId;", conn);
-            cmd.Parameters.AddWithValue("@ClientId", clientId);
-            return Convert.ToInt32(cmd.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture);
+                WHERE client_id = @ClientId;", connection);
+            command.Parameters.AddWithValue("@ClientId", clientId);
+            return Convert.ToInt32(command.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture);
         }
     }
 }

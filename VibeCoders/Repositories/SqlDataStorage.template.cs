@@ -1,8 +1,8 @@
-using Microsoft.Data.Sqlite;
-using VibeCoders.Models;
-
 namespace VibeCoders.Services
 {
+    using Microsoft.Data.Sqlite;
+    using VibeCoders.Models;
+
     public partial class SqlDataStorage
     {
         private static WorkoutType ParseWorkoutType(string? value)
@@ -46,31 +46,33 @@ namespace VibeCoders.Services
 
             var templates = new List<WorkoutTemplate>();
 
-            using var conn = new SqliteConnection(_connectionString);
-            conn.Open();
+            using var connection = new SqliteConnection(this.connectionString);
+            connection.Open();
 
-            using (var cmd = new SqliteCommand(sql, conn))
+            using (var command = new SqliteCommand(sql, connection))
             {
-                cmd.Parameters.AddWithValue("@ClientId", clientId);
+                command.Parameters.AddWithValue("@ClientId", clientId);
 
-                using var reader = cmd.ExecuteReader();
+                using var reader = command.ExecuteReader();
                 while (reader.Read())
                 {
                     templates.Add(new WorkoutTemplate
                     {
-                        Id       = reader.GetInt32(0),
+                        Id = reader.GetInt32(0),
                         ClientId = reader.GetInt32(1),
-                        Name     = reader.GetString(2),
-                        Type     = ParseWorkoutType(reader.GetString(3))
+                        Name = reader.GetString(2),
+                        Type = ParseWorkoutType(reader.GetString(3)),
                     });
                 }
             }
 
             foreach (var template in templates)
             {
-                var exercises = LoadExercisesForTemplate(template.Id, conn);
+                var exercises = this.LoadExercisesForTemplate(template.Id, connection);
                 foreach (var exercise in exercises)
+                {
                     template.AddExercise(exercise);
+                }
             }
 
             return templates;
@@ -90,24 +92,27 @@ namespace VibeCoders.Services
                 FROM TEMPLATE_EXERCISE
                 WHERE id = @Id;";
 
-            using var conn = new SqliteConnection(_connectionString);
-            conn.Open();
+            using var connection = new SqliteConnection(this.connectionString);
+            connection.Open();
 
-            using var cmd    = new SqliteCommand(sql, conn);
-            cmd.Parameters.AddWithValue("@Id", templateExerciseId);
+            using var command = new SqliteCommand(sql, connection);
+            command.Parameters.AddWithValue("@Id", templateExerciseId);
 
-            using var reader = cmd.ExecuteReader();
-            if (!reader.Read()) return null;
+            using var reader = command.ExecuteReader();
+            if (!reader.Read())
+            {
+                return null;
+            }
 
             return new TemplateExercise
             {
-                Id                = reader.GetInt32(0),
-                Name              = reader.GetString(1),
+                Id = reader.GetInt32(0),
+                Name = reader.GetString(1),
                 WorkoutTemplateId = reader.GetInt32(2),
-                MuscleGroup       = Enum.Parse<MuscleGroup>(reader.GetString(3)),
-                TargetSets        = reader.GetInt32(4),
-                TargetReps        = reader.GetInt32(5),
-                TargetWeight      = reader.GetDouble(6)
+                MuscleGroup = Enum.Parse<MuscleGroup>(reader.GetString(3)),
+                TargetSets = reader.GetInt32(4),
+                TargetReps = reader.GetInt32(5),
+                TargetWeight = reader.GetDouble(6),
             };
         }
 
@@ -118,14 +123,14 @@ namespace VibeCoders.Services
                 SET target_weight = @NewWeight
                 WHERE id = @Id;";
 
-            using var conn = new SqliteConnection(_connectionString);
-            conn.Open();
+            using var connection = new SqliteConnection(this.connectionString);
+            connection.Open();
 
-            using var cmd = new SqliteCommand(sql, conn);
-            cmd.Parameters.AddWithValue("@NewWeight", newWeight);
-            cmd.Parameters.AddWithValue("@Id",        templateExerciseId);
+            using var command = new SqliteCommand(sql, connection);
+            command.Parameters.AddWithValue("@NewWeight", newWeight);
+            command.Parameters.AddWithValue("@Id", templateExerciseId);
 
-            return cmd.ExecuteNonQuery() > 0;
+            return command.ExecuteNonQuery() > 0;
         }
 
         public List<string> GetAllExerciseNames()
@@ -133,19 +138,21 @@ namespace VibeCoders.Services
             const string sql = "SELECT name FROM EXERCISE ORDER BY name ASC;";
             var list = new List<string>();
 
-            using var conn = new SqliteConnection(_connectionString);
-            conn.Open();
+            using var connection = new SqliteConnection(this.connectionString);
+            connection.Open();
 
-            using var cmd    = new SqliteCommand(sql, conn);
-            using var reader = cmd.ExecuteReader();
+            using var command = new SqliteCommand(sql, connection);
+            using var reader = command.ExecuteReader();
 
             while (reader.Read())
+            {
                 list.Add(reader.GetString(0));
+            }
 
             return list;
         }
 
-        private List<TemplateExercise> LoadExercisesForTemplate(int templateId, SqliteConnection conn)
+        private List<TemplateExercise> LoadExercisesForTemplate(int templateId, SqliteConnection connection)
         {
             const string sql = @"
                 SELECT
@@ -162,21 +169,21 @@ namespace VibeCoders.Services
 
             var exercises = new List<TemplateExercise>();
 
-            using var cmd = new SqliteCommand(sql, conn);
-            cmd.Parameters.AddWithValue("@TemplateId", templateId);
+            using var command = new SqliteCommand(sql, connection);
+            command.Parameters.AddWithValue("@TemplateId", templateId);
 
-            using var reader = cmd.ExecuteReader();
+            using var reader = command.ExecuteReader();
             while (reader.Read())
             {
                 exercises.Add(new TemplateExercise
                 {
-                    Id                = reader.GetInt32(0),
+                    Id = reader.GetInt32(0),
                     WorkoutTemplateId = reader.GetInt32(1),
-                    Name              = reader.GetString(2),
-                    MuscleGroup       = Enum.Parse<MuscleGroup>(reader.GetString(3)),
-                    TargetSets        = reader.GetInt32(4),
-                    TargetReps        = reader.GetInt32(5),
-                    TargetWeight      = reader.GetDouble(6)
+                    Name = reader.GetString(2),
+                    MuscleGroup = Enum.Parse<MuscleGroup>(reader.GetString(3)),
+                    TargetSets = reader.GetInt32(4),
+                    TargetReps = reader.GetInt32(5),
+                    TargetWeight = reader.GetDouble(6),
                 });
             }
 
