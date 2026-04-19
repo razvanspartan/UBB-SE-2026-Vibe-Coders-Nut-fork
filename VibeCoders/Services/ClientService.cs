@@ -1,5 +1,5 @@
-using System.Net.Http;
-using System.Net.Http.Json;
+namespace VibeCoders.Services;
+
 using VibeCoders.Domain;
 using VibeCoders.Models;
 using VibeCoders.Models.Integration;
@@ -253,5 +253,20 @@ public class ClientService : IClientService
         {
             System.Diagnostics.Debug.WriteLine($"Error confirming deload: {ex.Message}");
         }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error confirming deload: {ex.Message}");
+        }
+    }
+
+    public sealed class ClientProfileSnapshot
+    {
+        public string CaloriesSummary { get; init; } = "Calories burned (all logged workouts): 0";
+
+        public string LatestSessionHint { get; init; } = string.Empty;
+
+        public IReadOnlyList<LoggedExercise> LoggedExercises { get; init; } = Array.Empty<LoggedExercise>();
+
+        public IReadOnlyList<Meal> Meals { get; init; } = Array.Empty<Meal>();
     }
 }

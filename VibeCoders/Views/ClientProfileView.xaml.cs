@@ -1,8 +1,8 @@
+namespace VibeCoders.Views;
+
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using VibeCoders.ViewModels;
-
-namespace VibeCoders.Views;
 
 public sealed partial class ClientProfileView : Page
 {
@@ -10,16 +10,18 @@ public sealed partial class ClientProfileView : Page
 
     public ClientProfileView()
     {
-        InitializeComponent();
-        ViewModel = App.GetService<ClientProfileViewModel>();
-        DataContext = ViewModel;
+        this.InitializeComponent();
+        this.ViewModel = App.GetService<ClientProfileViewModel>();
+        this.DataContext = this.ViewModel;
     }
 
-    protected override void OnNavigatedTo(NavigationEventArgs e)
+    protected override void OnNavigatedTo(NavigationEventArgs eventArgs)
     {
-        base.OnNavigatedTo(e);
+        base.OnNavigatedTo(eventArgs);
 
-        if (e.Parameter is int clientId)
-            ViewModel.LoadClientData(clientId);
+        if (eventArgs.Parameter is int clientId)
+        {
+            this.ViewModel.LoadClientData(clientId);
+        }
     }
 }

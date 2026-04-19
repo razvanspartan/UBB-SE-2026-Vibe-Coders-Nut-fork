@@ -1,26 +1,26 @@
-using System;
-using Microsoft.Data.Sqlite;
-
 namespace VibeCoders.Services
 {
+    using System;
+    using Microsoft.Data.Sqlite;
+
     public partial class SqlDataStorage : IDataStorage
     {
-        private readonly string _connectionString = DatabasePaths.GetConnectionString();
+        private readonly string connectionString = DatabasePaths.GetConnectionString();
 
         public void EnsureSchemaCreated()
         {
             string sql = LoadSchemaSql();
 
-            using var conn = new SqliteConnection(_connectionString);
-            conn.Open();
+            using var connection = new SqliteConnection(this.connectionString);
+            connection.Open();
 
-            using var cmd = new SqliteCommand(sql, conn);
-            cmd.ExecuteNonQuery();
+            using var command = new SqliteCommand(sql, connection);
+            command.ExecuteNonQuery();
 
-            MigrateWorkoutLogTypeColumn(conn);
+            MigrateWorkoutLogTypeColumn(connection);
         }
 
-        private static void MigrateWorkoutLogTypeColumn(SqliteConnection conn)
+        private static void MigrateWorkoutLogTypeColumn(SqliteConnection connection)
         {
             const string checkSql = @"
                 SELECT 1
@@ -28,14 +28,17 @@ namespace VibeCoders.Services
                 WHERE name = 'type'
                 LIMIT 1;";
 
-            using var checkCmd = new SqliteCommand(checkSql, conn);
+            using var checkCmd = new SqliteCommand(checkSql, connection);
             var exists = checkCmd.ExecuteScalar() is not null;
             if (exists)
+            {
                 return;
+            }
 
-            using var alterCmd = new SqliteCommand(@"
+            using var alterCmd = new SqliteCommand(
+                @"
                 ALTER TABLE WORKOUT_LOG
-                ADD COLUMN type TEXT NOT NULL DEFAULT 'CUSTOM';", conn);
+                ADD COLUMN type TEXT NOT NULL DEFAULT 'CUSTOM';", connection);
             alterCmd.ExecuteNonQuery();
         }
 

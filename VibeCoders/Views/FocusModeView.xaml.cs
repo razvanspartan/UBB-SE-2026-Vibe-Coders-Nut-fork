@@ -1,24 +1,24 @@
+namespace VibeCoders.Views;
+
 using Microsoft.UI.Xaml.Controls;
 using VibeCoders.ViewModels;
 
-namespace VibeCoders.Views;
-
 public sealed partial class FocusModeView : Page
 {
-    private readonly ContentDialog _hostDialog;
+    private readonly ContentDialog hostDialog;
 
     public ActiveWorkoutViewModel ViewModel { get; }
 
-    public FocusModeView(ActiveWorkoutViewModel vm, ContentDialog hostDialog)
+    public FocusModeView(ActiveWorkoutViewModel viewModel, ContentDialog hostDialog)
     {
-        InitializeComponent();
-        ViewModel = vm;
-        DataContext = vm;
-        _hostDialog = hostDialog;
+        this.InitializeComponent();
+        this.ViewModel = viewModel;
+        this.DataContext = viewModel;
+        this.hostDialog = hostDialog;
     }
 
-    private void ExitButton_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    private void ExitButton_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs eventArgs)
     {
-        _hostDialog.Hide();
+        this.hostDialog.Hide();
     }
 }

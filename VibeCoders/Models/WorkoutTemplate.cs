@@ -1,10 +1,13 @@
-﻿namespace VibeCoders.Models
+namespace VibeCoders.Models
 {
     public class WorkoutTemplate
     {
         public int Id { get; set; }
+
         public int ClientId { get; set; }
+
         public string Name { get; set; } = string.Empty;
+
         public WorkoutType Type { get; set; }
 
         private readonly List<TemplateExercise> exercises = new ();
@@ -16,7 +19,7 @@
                 return;
             }
 
-            exercises.Add(exercise);
+            this.exercises.Add(exercise);
         }
 
         public void RemoveExercise(TemplateExercise exercise)
@@ -26,12 +29,12 @@
                 return;
             }
 
-            exercises.Remove(exercise);
+            this.exercises.Remove(exercise);
         }
 
         public List<TemplateExercise> GetExercises()
         {
-            return exercises;
+            return this.exercises;
         }
     }
 }
