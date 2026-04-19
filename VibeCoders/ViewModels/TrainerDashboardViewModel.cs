@@ -39,29 +39,38 @@ namespace VibeCoders.ViewModels
         public ObservableCollection<Client> AssignedClients { get; } = new ();
         public ObservableCollection<WorkoutLog> SelectedClientLogs { get; } = new ();
         public ObservableCollection<ExerciseDisplayRow> CurrentWorkoutDetails { get; } = new ();
-        public ObservableCollection<WorkoutTemplate> AssignedWorkouts { get; } = new ();
-        public ObservableCollection<TemplateExercise> BuilderExercises { get; } = new ();
-        public ObservableCollection<string> AvailableExercises { get; } = new ();
+        public ObservableCollection<WorkoutTemplate> ClientAssignedWorkouts { get; } = new ();
+        public ObservableCollection<TemplateExercise> RoutineBuilderExercises { get; } = new ();
+        public ObservableCollection<string> FilteredAvailableExercises { get; } = new ();
 
-#pragma warning disable MVVMTK0045
-
-        [ObservableProperty]
         private string builderErrorText = string.Empty;
+        public string BuilderErrorText
+        {
+            get => builderErrorText;
+            set
+            {
+                if (SetProperty(ref builderErrorText, value))
+                {
+                    OnPropertyChanged(nameof(HasBuilderError));
+                }
+            }
+        }
 
         public bool HasBuilderError => !string.IsNullOrEmpty(BuilderErrorText);
 
-        partial void OnBuilderErrorTextChanged(string value)
+        private bool isFeedbackFormVisible = true;
+        public bool IsFeedbackFormVisible
         {
-            OnPropertyChanged(nameof(HasBuilderError));
+            get => isFeedbackFormVisible;
+            set => SetProperty(ref isFeedbackFormVisible, value);
         }
 
-        [ObservableProperty]
-        private bool isFeedbackFormVisible = true;
-
-        [ObservableProperty]
         private string feedbackErrorText = string.Empty;
-
-#pragma warning restore MVVMTK0045
+        public string FeedbackErrorText
+        {
+            get => feedbackErrorText;
+            set => SetProperty(ref feedbackErrorText, value);
+        }
 
         public int EditingTemplateId { get; set; }
 
@@ -257,7 +266,7 @@ namespace VibeCoders.ViewModels
 
         public void LoadAssignedWorkouts()
         {
-            AssignedWorkouts.Clear();
+            ClientAssignedWorkouts.Clear();
             if (SelectedClient is null)
             {
                 return;
@@ -267,7 +276,7 @@ namespace VibeCoders.ViewModels
             var trainerAssigned = allTemplates.Where(t => t.Type == WorkoutType.TRAINER_ASSIGNED);
             foreach (var template in trainerAssigned)
             {
-                AssignedWorkouts.Add(template);
+                ClientAssignedWorkouts.Add(template);
             }
         }
 
@@ -276,10 +285,10 @@ namespace VibeCoders.ViewModels
             EditingTemplateId = template.Id;
             NewRoutineName = template.Name;
 
-            BuilderExercises.Clear();
+            RoutineBuilderExercises.Clear();
             foreach (var ex in template.GetExercises())
             {
-                BuilderExercises.Add(ex);
+                RoutineBuilderExercises.Add(ex);
             }
         }
 
@@ -293,15 +302,27 @@ namespace VibeCoders.ViewModels
             var success = trainerService.DeleteWorkoutTemplate(template.Id);
             if (success)
             {
-                AssignedWorkouts.Remove(template);
+                ClientAssignedWorkouts.Remove(template);
             }
 
             return success;
         }
 
-        public bool SaveRoutine(WorkoutTemplate template)
+        public bool BuildAndSaveRoutine()
         {
-            return trainerService.SaveTrainerWorkout(template);
+            BuilderErrorText = string.Empty;
+            var clientId = SelectedClient?.Id ?? 0;
+
+            var result = trainerService.AssignNewRoutine(EditingTemplateId, clientId, NewRoutineName, RoutineBuilderExercises);
+
+            if (!result.Success)
+            {
+                BuilderErrorText = result.ErrorMessage;
+                return false;
+            }
+
+            LoadAssignedWorkouts();
+            return true;
         }
 
         private void AddExerciseToRoutineCore()
@@ -320,7 +341,7 @@ namespace VibeCoders.ViewModels
                 TargetWeight = newExerciseWeight
             };
 
-            BuilderExercises.Add(newExercise);
+            RoutineBuilderExercises.Add(newExercise);
             SelectedNewExercise = null;
         }
 
@@ -331,9 +352,9 @@ namespace VibeCoders.ViewModels
 
         public void RemoveExerciseFromRoutine(TemplateExercise exercise)
         {
-            if (BuilderExercises.Contains(exercise))
+            if (RoutineBuilderExercises.Contains(exercise))
             {
-                BuilderExercises.Remove(exercise);
+                RoutineBuilderExercises.Remove(exercise);
             }
         }
 
@@ -369,20 +390,15 @@ namespace VibeCoders.ViewModels
                 return;
             }
 
-            var plan = new NutritionPlan
+            if (!trainerService.CreateAndAssignNutritionPlan(planStartDate.Date, planEndDate.Date, selectedClient.Id))
             {
-                StartDate = planStartDate.Date,
-                EndDate = planEndDate.Date,
-            };
-
-            if (!trainerService.AssignNutritionPlan(plan, selectedClient.Id))
-            {
+                AssignmentStatus = "Failed to assign plan.";
                 return;
             }
 
             AssignmentStatus =
                 $"Plan assigned to {selectedClient.Username}: " +
-                $"{plan.StartDate:MMM d, yyyy} - {plan.EndDate:MMM d, yyyy}";
+                $"{planStartDate.Date:MMM d, yyyy} - {planEndDate.Date:MMM d, yyyy}";
         }
 
         [RelayCommand]
@@ -405,10 +421,10 @@ namespace VibeCoders.ViewModels
 
         private void LoadAvailableExercises()
         {
-            AvailableExercises.Clear();
+            FilteredAvailableExercises.Clear();
             foreach (var name in trainerService.GetAllExerciseNames())
             {
-                AvailableExercises.Add(name);
+                FilteredAvailableExercises.Add(name);
             }
         }
 

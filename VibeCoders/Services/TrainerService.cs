@@ -61,6 +61,40 @@ namespace VibeCoders.Services
             return storage.SaveTrainerWorkout(template);
         }
 
+        public (bool Success, string ErrorMessage) AssignNewRoutine(int? editingTemplateId, int clientId, string routineName, IEnumerable<TemplateExercise> exercises)
+        {
+            if (string.IsNullOrWhiteSpace(routineName))
+            {
+                return (false, "Routine Name cannot be empty.");
+            }
+
+            if (exercises == null || !exercises.Any())
+            {
+                return (false, "You must add at least one exercise to the routine.");
+            }
+
+            var newTemplate = new WorkoutTemplate
+            {
+                Id = editingTemplateId ?? 0,
+                ClientId = clientId,
+                Name = routineName,
+                Type = WorkoutType.TRAINER_ASSIGNED,
+            };
+
+            foreach (var exercise in exercises)
+            {
+                newTemplate.AddExercise(exercise);
+            }
+
+            bool isSaved = storage.SaveTrainerWorkout(newTemplate);
+            if (!isSaved)
+            {
+                return (false, "Could not save routine to database.");
+            }
+
+            return (true, string.Empty);
+        }
+
         public List<string> GetAllExerciseNames()
         {
             return storage.GetAllExerciseNames();
@@ -80,6 +114,22 @@ namespace VibeCoders.Services
 
             storage.SaveNutritionPlanForClient(plan, clientId);
             return true;
+        }
+
+        public bool CreateAndAssignNutritionPlan(DateTime startDate, DateTime endDate, int clientId)
+        {
+            if (clientId <= 0)
+            {
+                return false;
+            }
+
+            var plan = new NutritionPlan
+            {
+                StartDate = startDate.Date,
+                EndDate = endDate.Date,
+            };
+
+            return AssignNutritionPlan(plan, clientId);
         }
     }
 }
