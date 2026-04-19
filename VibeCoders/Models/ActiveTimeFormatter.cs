@@ -1,6 +1,6 @@
-using System.Globalization;
-
 namespace VibeCoders.Domain;
+
+using System.Globalization;
 
 public static class ActiveTimeFormatter
 {
