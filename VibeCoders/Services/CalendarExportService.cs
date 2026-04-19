@@ -7,7 +7,6 @@ using System.Text;
 using System.Threading.Tasks;
 using VibeCoders.Models;
 
-
     public class CalendarExportService : ICalendarExportService
     {
         private const int MinDurationWeeks = 1;

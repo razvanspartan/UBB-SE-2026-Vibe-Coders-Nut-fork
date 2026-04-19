@@ -6,43 +6,47 @@ using VibeCoders.Models.Integration;
 
 public class ClientService
 {
-    private readonly IDataStorage _storage;
-    private readonly ProgressionService _progressionService;
-    private readonly IHttpClientFactory _httpClientFactory;
-    private readonly EvaluationEngine _evaluationEngine;
-    private readonly IAchievementUnlockedBus _achievementBus;
+    private readonly IDataStorage storage;
+    private readonly ProgressionService progressionService;
+    private readonly IHttpClientFactory httpClientFactory;
+    private readonly EvaluationEngine evaluationEngine;
+    private readonly IAchievementUnlockedBus achievementBus;
 
     public ClientService(
         IDataStorage storage,
         ProgressionService progressionService,
         IHttpClientFactory httpClientFactory,
         EvaluationEngine evaluationEngine,
-        IAchievementUnlockedBus achievementBus
-        )
+        IAchievementUnlockedBus achievementBus)
     {
-        _storage            = storage;
-        _progressionService = progressionService;
-        _httpClientFactory  = httpClientFactory;
-        _evaluationEngine   = evaluationEngine;
-        _achievementBus     = achievementBus;
+        this.storage = storage;
+        this.progressionService = progressionService;
+        this.httpClientFactory = httpClientFactory;
+        this.evaluationEngine = evaluationEngine;
+        this.achievementBus = achievementBus;
     }
 
     private const double DefaultMet = 5.0;
 
     public bool FinalizeWorkout(WorkoutLog log)
     {
-        if (log == null || log.Exercises == null) return false;
+        if (log == null || log.Exercises == null)
+        {
+            return false;
+        }
 
         try
         {
             log.Date = DateTime.Now;
-            _progressionService.EvaluateWorkout(log);
+            this.progressionService.EvaluateWorkout(log);
 
             ComputeCalories(log);
 
-            bool isSaved = _storage.SaveWorkoutLog(log);
-            if (!isSaved) return false;
-
+            bool isSaved = this.storage.SaveWorkoutLog(log);
+            if (!isSaved)
+            {
+                return false;
+            }
             RunAchievementEvaluation(log.ClientId);
 
             return true;
@@ -57,7 +61,9 @@ public class ClientService
     public bool SaveSet(WorkoutLog log, string exerciseName, LoggedSet set)
     {
         if (log == null || set == null || string.IsNullOrWhiteSpace(exerciseName))
+        {
             return false;
+        }
 
         try
         {
@@ -90,11 +96,14 @@ public class ClientService
 
     public bool ModifyWorkout(WorkoutLog updatedLog)
     {
-        if (updatedLog == null) return false;
+        if (updatedLog == null)
+        {
+            return false;
+        }
 
         try
         {
-            return _storage.SaveWorkoutLog(updatedLog);
+            return this.storage.SaveWorkoutLog(updatedLog);
         }
         catch (Exception ex)
         {
@@ -112,7 +121,7 @@ public class ClientService
 
     public NutritionSyncPayload BuildNutritionSyncPayload(int clientId)
     {
-        var history = _storage.GetWorkoutHistory(clientId);
+        var history = this.storage.GetWorkoutHistory(clientId);
         var totalCalories = history.Sum(h => h.TotalCaloriesBurned);
         var last = history.FirstOrDefault();
         var difficulty = string.IsNullOrWhiteSpace(last?.IntensityTag) ? "unknown" : last.IntensityTag;
@@ -121,12 +130,13 @@ public class ClientService
         List<Client> roster;
         try
         {
-            roster = _storage.GetTrainerClient(1);
+            roster = this.storage.GetTrainerClient(1);
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"ClientService: BMI lookup failed; sync continues with UserBmi=0. {ex.Message}");
-            roster = [];
+            roster =
+                [];
         }
 
         var profileClient = roster.FirstOrDefault(c => c.Id == clientId);
@@ -145,7 +155,7 @@ public class ClientService
 
     public ClientProfileSnapshot BuildClientProfileSnapshot(int clientId)
     {
-        var history = _storage.GetWorkoutHistory(clientId);
+        var history = this.storage.GetWorkoutHistory(clientId);
         var totalCal = history.Sum(h => h.TotalCaloriesBurned);
 
         var latest = history.FirstOrDefault();
@@ -165,7 +175,7 @@ public class ClientService
 
         var plan = GetActiveNutritionPlan(clientId);
         IReadOnlyList<Meal> meals = plan != null
-            ? _storage.GetMealsForPlan(plan.PlanId)
+            ? this.storage.GetMealsForPlan(plan.PlanId)
             : Array.Empty<Meal>();
 
         return new ClientProfileSnapshot
@@ -180,21 +190,27 @@ public class ClientService
     public NutritionPlan? GetActiveNutritionPlan(int clientId)
     {
         if (clientId <= 0)
+        {
             return null;
+        }
 
         try
         {
-            var plans = _storage.GetNutritionPlansForClient(clientId);
+            var plans = this.storage.GetNutritionPlansForClient(clientId);
             var today = DateTime.Today;
             NutritionPlan? best = null;
 
             foreach (var plan in plans)
             {
                 if (plan.StartDate.Date > today || plan.EndDate.Date < today)
+                {
                     continue;
+                }
 
                 if (best == null || plan.StartDate > best.StartDate)
+                {
                     best = plan;
+                }
             }
 
             return best;
@@ -246,15 +262,20 @@ public class ClientService
 
     private void ComputeCalories(WorkoutLog log)
     {
-        if (log.Exercises.Count == 0 || log.Duration == TimeSpan.Zero) return;
+        if (log.Exercises.Count == 0 || log.Duration == TimeSpan.Zero)
+        {
+            return;
+        }
 
-        double weightKg = _storage.GetClientWeight(log.ClientId);
+        double weightKg = this.storage.GetClientWeight(log.ClientId);
         TimeSpan durationPerExercise = log.Duration / log.Exercises.Count;
 
         foreach (var exercise in log.Exercises)
         {
             if (exercise.Met <= 0)
+            {
                 exercise.Met = (float)ExerciseCalorieCalculator.GetMet(exercise.ExerciseName);
+            }
 
             exercise.ExerciseCaloriesBurned = ExerciseCalorieCalculator.CalculateCalories(exercise.Met, weightKg, durationPerExercise);
         }
@@ -270,16 +291,18 @@ public class ClientService
     {
         try
         {
-            var newlyUnlocked = _evaluationEngine.Evaluate(clientId);
+            var newlyUnlocked = this.evaluationEngine.Evaluate(clientId);
 
             foreach (var title in newlyUnlocked)
             {
-                var catalog = _storage.GetAchievementShowcaseForClient(clientId);
-                var item    = catalog.FirstOrDefault(
+                var catalog = this.storage.GetAchievementShowcaseForClient(clientId);
+                var item = catalog.FirstOrDefault(
                     a => string.Equals(a.Title, title, StringComparison.OrdinalIgnoreCase));
 
                 if (item != null)
-                    _achievementBus.NotifyUnlocked(item);
+                {
+                    this.achievementBus.NotifyUnlocked(item);
+                }
             }
         }
         catch (Exception ex)
@@ -293,7 +316,7 @@ public class ClientService
     {
         try
         {
-            return _storage.GetNotifications(clientId);
+            return this.storage.GetNotifications(clientId);
         }
         catch (Exception ex)
         {
@@ -304,11 +327,14 @@ public class ClientService
 
     public void ConfirmDeload(Notification notification)
     {
-        if (notification == null) return;
+        if (notification == null)
+        {
+            return;
+        }
 
         try
         {
-            _progressionService.ProcessDeloadConfirmation(notification);
+            this.progressionService.ProcessDeloadConfirmation(notification);
         }
         catch (Exception ex)
         {

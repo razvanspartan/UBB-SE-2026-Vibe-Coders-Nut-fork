@@ -9,42 +9,42 @@ namespace VibeCoders.ViewModels;
 
 public partial class ClientProfileViewModel : ObservableObject
 {
-    private readonly ClientService _clientService;
-    private int _loadedClientId;
+    private readonly ClientService clientService;
+    private int loadedClientId;
 
     [ObservableProperty]
-    private ObservableCollection<LoggedExercise> loggedExercises = new();
+    public partial ObservableCollection<LoggedExercise> LoggedExercises { get; set; } = new ();
 
     [ObservableProperty]
-    private ObservableCollection<Meal> meals = new();
+    public partial ObservableCollection<Meal> Meals { get; set; } = new ();
 
     [ObservableProperty]
-    private string caloriesSummary = "Calories burned (all logged workouts): 0";
+    public partial string CaloriesSummary { get; set; } = "Calories burned (all logged workouts): 0";
 
     [ObservableProperty]
-    private string latestSessionHint = string.Empty;
+    public partial string LatestSessionHint { get; set; } = string.Empty;
 
     [ObservableProperty]
-    private string syncNutritionStatus = string.Empty;
+    public partial string SyncNutritionStatus { get; set; } = string.Empty;
 
     public ClientProfileViewModel(ClientService clientService)
     {
-        _clientService = clientService;
+        this.clientService = clientService;
     }
 
     [RelayCommand]
     private async Task SyncNutritionAsync()
     {
-        if (_loadedClientId <= 0)
+        if (this.loadedClientId <= 0)
         {
             return;
         }
 
         SyncNutritionStatus = "Syncing…";
 
-        var nutritionSyncPayload = _clientService.BuildNutritionSyncPayload(_loadedClientId);
+        var nutritionSyncPayload = this.clientService.BuildNutritionSyncPayload(this.loadedClientId);
 
-        var isNutritionSyncSuccessful = await _clientService.SyncNutritionAsync(nutritionSyncPayload).ConfigureAwait(true);
+        var isNutritionSyncSuccessful = await this.clientService.SyncNutritionAsync(nutritionSyncPayload).ConfigureAwait(true);
         SyncNutritionStatus = isNutritionSyncSuccessful
             ? "Nutrition sync OK."
             : "Sync failed — start your local nutrition API (see NutritionSyncOptions default URL) or check the network.";
@@ -52,8 +52,8 @@ public partial class ClientProfileViewModel : ObservableObject
 
     public void LoadClientData(int clientId)
     {
-        _loadedClientId = clientId;
-        var clientProfileSnapshot = _clientService.BuildClientProfileSnapshot(clientId);
+        this.loadedClientId = clientId;
+        var clientProfileSnapshot = this.clientService.BuildClientProfileSnapshot(clientId);
 
         CaloriesSummary = clientProfileSnapshot.CaloriesSummary;
         LatestSessionHint = clientProfileSnapshot.LatestSessionHint;
