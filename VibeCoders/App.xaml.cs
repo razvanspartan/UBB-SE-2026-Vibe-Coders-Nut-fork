@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
-using VibeCoders.Domain;
 using VibeCoders.Services;
 using VibeCoders.ViewModels;
 
@@ -105,9 +104,9 @@ public partial class App : Application
         services.AddSingleton<IAchievementUnlockedBus, AchievementUnlockedBus>();
         services.AddSingleton<IWorkoutDataForwarder, WorkoutDataForwarder>();
         services.AddSingleton<ICalendarExportService, CalendarExportService>();
+        services.AddSingleton<ICalendarWorkoutCatalogService, CalendarWorkoutCatalogService>();
         services.AddSingleton<INavigationService, NavigationService>();
 
-        services.AddSingleton(new NutritionSyncOptions());
         services.AddSingleton<WorkoutUiState>();
 
         services.AddHttpClient();

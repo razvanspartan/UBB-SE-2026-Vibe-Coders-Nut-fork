@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
@@ -64,7 +62,7 @@ public sealed partial class RankShowcaseViewModel : ObservableObject
         this.IsLoading = true;
         try
         {
-            var clientId = _session.CurrentClientId;
+            var rankShowcaseSnapshot = evaluationEngine.BuildRankShowcase((int)session.CurrentClientId);
 
             var showcase = _data.GetAchievementShowcaseForClient((int)clientId);
             int unlockedCount = 0;
