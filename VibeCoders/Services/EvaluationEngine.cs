@@ -79,4 +79,86 @@ public sealed class EvaluationEngine
 
         return newlyUnlocked;
     }
+
+    public RankShowcaseSnapshot BuildRankShowcase(int clientId)
+    {
+        var showcase = storage.GetAchievementShowcaseForClient(clientId);
+        int unlockedCount = showcase.Count(item => item.IsUnlocked);
+
+        var tiers = LevelingTierEvaluator.DefaultTiers;
+        var result = LevelingTierEvaluator.Evaluate(unlockedCount, tiers);
+        var progress = ComputeNextRankProgress(unlockedCount, tiers, result.Level);
+
+        return new RankShowcaseSnapshot
+        {
+            DisplayLevel = result.Level,
+            RankTitle = result.RankTitle,
+            UnlockedAchievementsDisplay =
+                $"{unlockedCount} achievement{(unlockedCount == 1 ? string.Empty : "s")} unlocked",
+            LevelDisplayLine = $"Level {result.Level}: {result.RankTitle}",
+            HasNextRank = progress.HasNextRank,
+            ProgressPercent = progress.ProgressPercent,
+            NextRankInfo = progress.NextRankInfo,
+            ShowcaseAchievements = showcase,
+        };
+    }
+
+    private static (bool HasNextRank, double ProgressPercent, string NextRankInfo) ComputeNextRankProgress(
+        int unlockedCount,
+        IReadOnlyList<LevelTier> tiers,
+        int currentLevel)
+    {
+        int currentIndex = -1;
+        for (int i = 0; i < tiers.Count; i++)
+        {
+            if (tiers[i].Level == currentLevel)
+            {
+                currentIndex = i;
+                break;
+            }
+        }
+
+        int nextIndex = currentIndex + 1;
+        if (currentIndex < 0 || nextIndex >= tiers.Count)
+        {
+            return (false, 100, "Max rank reached — keep going!");
+        }
+
+        var current = tiers[currentIndex];
+        var next = tiers[nextIndex];
+
+        int bandStart = current.MinAchievements;
+        int bandEnd = next.MinAchievements;
+        int earned = unlockedCount - bandStart;
+        int needed = bandEnd - bandStart;
+
+        double progressPercent = needed > 0
+            ? Math.Min(100, Math.Round(earned * 100.0 / needed, 1))
+            : 100;
+
+        int remaining = Math.Max(0, bandEnd - unlockedCount);
+        string nextRankInfo =
+            $"Next: Level {next.Level}: {next.RankTitle} — {remaining} more achievement{(remaining == 1 ? string.Empty : "s")} to go";
+
+        return (true, progressPercent, nextRankInfo);
+    }
+}
+
+public sealed class RankShowcaseSnapshot
+{
+    public int DisplayLevel { get; init; }
+
+    public string RankTitle { get; init; } = "—";
+
+    public string UnlockedAchievementsDisplay { get; init; } = "0 achievements unlocked";
+
+    public string LevelDisplayLine { get; init; } = "Level —";
+
+    public double ProgressPercent { get; init; }
+
+    public string NextRankInfo { get; init; } = string.Empty;
+
+    public bool HasNextRank { get; init; }
+
+    public IReadOnlyList<AchievementShowcaseItem> ShowcaseAchievements { get; init; } = Array.Empty<AchievementShowcaseItem>();
 }

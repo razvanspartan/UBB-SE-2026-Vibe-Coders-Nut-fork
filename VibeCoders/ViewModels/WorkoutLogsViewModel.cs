@@ -14,11 +14,13 @@ namespace VibeCoders.ViewModels
     {
         private readonly IDataStorage storage;
         private readonly INavigationService navigation;
+        private readonly ClientService clientService;
 
-        public WorkoutLogsViewModel(IDataStorage storage, INavigationService navigation)
+        public WorkoutLogsViewModel(IDataStorage storage, INavigationService navigation, ClientService clientService)
         {
             this.storage = storage;
             this.navigation = navigation;
+            this.clientService = clientService;
         }
 
         public ObservableCollection<WorkoutLogItemViewModel> Logs { get; } = new ();
@@ -45,7 +47,7 @@ namespace VibeCoders.ViewModels
                 var logs = storage.GetWorkoutHistory(clientId);
                 foreach (var log in logs)
                 {
-                    Logs.Add(new WorkoutLogItemViewModel(log));
+                    Logs.Add(new WorkoutLogItemViewModel(log, clientService));
                 }
 
                 ShowEmptyState = Logs.Count == 0;
@@ -119,6 +121,7 @@ namespace VibeCoders.ViewModels
     public sealed partial class WorkoutLogItemViewModel : ObservableObject
     {
         private readonly WorkoutLog log;
+        private readonly ClientService clientService;
         public int Id { get; }
         public string WorkoutName { get; }
         public DateTime Date { get; }
@@ -135,9 +138,10 @@ namespace VibeCoders.ViewModels
         [ObservableProperty]
         public partial bool IsEditMode { get; set; }
 
-        public WorkoutLogItemViewModel(WorkoutLog log)
+        public WorkoutLogItemViewModel(WorkoutLog log, ClientService clientService)
         {
             this.log = log;
+            this.clientService = clientService;
             Id = log.Id;
             WorkoutName = string.IsNullOrWhiteSpace(log.WorkoutName) ? "Workout" : log.WorkoutName;
             Date = log.Date;
@@ -150,14 +154,7 @@ namespace VibeCoders.ViewModels
 
             DateDisplay = log.Date.ToString("yyyy-MM-dd");
 
-            int totalSets = log.Exercises.Sum(e => e.Sets.Count);
-
-            int totalMinutes = totalSets > 0
-                ? (totalSets * 1) + ((totalSets - 1) * 3)
-                : 0;
-
-            var duration = TimeSpan.FromMinutes(totalMinutes);
-            TotalDurationDisplay = $"{(int)duration.TotalHours:D2}:{duration.Minutes:D2}";
+            TotalDurationDisplay = this.clientService.BuildEstimatedWorkoutDurationDisplay(log.Exercises);
 
             LoadExercisesFromLog(log);
         }
@@ -172,31 +169,27 @@ namespace VibeCoders.ViewModels
 
         public void CommitEditMode()
         {
-            log.Exercises = Exercises.Select(e => e.ToLoggedExercise(log.Id)).ToList();
+            log.Exercises = BuildUpdatedExerciseCollection();
             LoadExercisesFromLog(log);
             IsEditMode = false;
         }
 
         public WorkoutLog BuildUpdatedWorkoutLog()
         {
-            var clone = new WorkoutLog
-            {
-                Id = log.Id,
-                ClientId = log.ClientId,
-                WorkoutName = log.WorkoutName,
-                Date = log.Date,
-                Duration = log.Duration,
-                SourceTemplateId = log.SourceTemplateId,
-                Type = log.Type,
-                TotalCaloriesBurned = log.TotalCaloriesBurned,
-                AverageMet = log.AverageMet,
-                IntensityTag = log.IntensityTag,
-                Rating = log.Rating,
-                TrainerNotes = log.TrainerNotes,
-                Exercises = Exercises.Select(e => e.ToLoggedExercise(log.Id)).ToList()
-            };
+            var updatedExercises = BuildUpdatedExerciseCollection();
+            return clientService.BuildUpdatedWorkoutLog(log, updatedExercises);
+        }
 
-            return clone;
+        private List<LoggedExercise> BuildUpdatedExerciseCollection()
+        {
+            var updatedExercises = new List<LoggedExercise>();
+            for (int exerciseIndex = 0; exerciseIndex < Exercises.Count; exerciseIndex++)
+            {
+                var exerciseSummaryViewModel = Exercises[exerciseIndex];
+                updatedExercises.Add(exerciseSummaryViewModel.ToLoggedExercise(log.Id));
+            }
+
+            return updatedExercises;
         }
 
         private void LoadExercisesFromLog(WorkoutLog log)
