@@ -1,4 +1,4 @@
-namespace VibeCoders.Services
+namespace VibeCoders.Services;
 
 using System;
 using System.IO;
@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using VibeCoders.Models;
 
-{
+
     public class CalendarExportService : ICalendarExportService
     {
         private const int MinDurationWeeks = 1;
@@ -209,4 +209,3 @@ using VibeCoders.Models;
             return safeNameBuilder.ToString();
         }
     }
-}
