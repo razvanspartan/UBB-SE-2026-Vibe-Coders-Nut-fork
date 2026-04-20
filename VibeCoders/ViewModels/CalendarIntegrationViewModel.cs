@@ -28,12 +28,12 @@ namespace VibeCoders.ViewModels
 
     public partial class CalendarIntegrationViewModel : ObservableObject
     {
-        private readonly ICalendarWorkoutCatalogService _workoutCatalogService;
-        private readonly ICalendarExportService _calendarExportService;
-        private readonly IUserSession _userSession;
+        private readonly ICalendarWorkoutCatalogService workoutCatalogService;
+        private readonly ICalendarExportService calendarExportService;
+        private readonly IUserSession userSession;
 
         [ObservableProperty]
-        public partial ObservableCollection<WorkoutTemplate> AvailableWorkouts { get; set; } = new();
+        public partial ObservableCollection<WorkoutTemplate> AvailableWorkouts { get; set; } = new ();
 
         [ObservableProperty]
         public partial WorkoutTemplate? SelectedWorkout { get; set; }
@@ -42,7 +42,7 @@ namespace VibeCoders.ViewModels
         public partial int DurationWeeks { get; set; } = 4;
 
         [ObservableProperty]
-        public partial ObservableCollection<DaySelectionItem> SelectedDays { get; set; } = new();
+        public partial ObservableCollection<DaySelectionItem> SelectedDays { get; set; } = new ();
 
         [ObservableProperty]
         public partial bool IsLoading { get; set; }
@@ -67,15 +67,14 @@ namespace VibeCoders.ViewModels
             ICalendarExportService calendarExportService,
             IUserSession userSession)
         {
-            _workoutCatalogService = workoutCatalogService ?? throw new ArgumentNullException(nameof(workoutCatalogService));
-            _calendarExportService = calendarExportService ?? throw new ArgumentNullException(nameof(calendarExportService));
-            _userSession = userSession ?? throw new ArgumentNullException(nameof(userSession));
+            this.workoutCatalogService = workoutCatalogService ?? throw new ArgumentNullException(nameof(workoutCatalogService));
+            this.calendarExportService = calendarExportService ?? throw new ArgumentNullException(nameof(calendarExportService));
+            this.userSession = userSession ?? throw new ArgumentNullException(nameof(userSession));
 
             InitializeDaySelection();
 
-            // Populate immediately so UI is responsive even if DB is unavailable.
-            var clientId = (int)_userSession.CurrentClientId;
-            SetAvailableWorkouts(_workoutCatalogService.GetFallbackWorkouts(clientId));
+            var clientId = (int)this.userSession.CurrentClientId;
+            SetAvailableWorkouts(this.workoutCatalogService.GetFallbackWorkouts(clientId));
 
             _ = LoadAvailableWorkoutsAsync();
         }
@@ -98,16 +97,16 @@ namespace VibeCoders.ViewModels
             {
                 IsLoading = true;
 
-                var clientId = (int)_userSession.CurrentClientId;
-                var workouts = await _workoutCatalogService
+                var clientId = (int)this.userSession.CurrentClientId;
+                var workouts = await this.workoutCatalogService
                     .GetAvailableWorkoutsAsync(clientId, TimeSpan.FromMilliseconds(1500));
                 SetAvailableWorkouts(workouts);
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error loading workouts: {ex.Message}");
-                var clientId = (int)_userSession.CurrentClientId;
-                SetAvailableWorkouts(_workoutCatalogService.GetFallbackWorkouts(clientId));
+                var clientId = (int)this.userSession.CurrentClientId;
+                SetAvailableWorkouts(this.workoutCatalogService.GetFallbackWorkouts(clientId));
             }
             finally
             {
@@ -190,7 +189,7 @@ namespace VibeCoders.ViewModels
             }
 
             var selectedDayIndexes = GetSelectedDaysOfWeek();
-            string generatedCalendarContent = _calendarExportService.GenerateCalendar(
+            string generatedCalendarContent = this.calendarExportService.GenerateCalendar(
                 SelectedWorkout,
                 DurationWeeks,
                 selectedDayIndexes);
@@ -220,7 +219,7 @@ namespace VibeCoders.ViewModels
         public Task<string?> SaveGeneratedCalendarToDownloadsFallbackAsync()
         {
             string selectedWorkoutName = SelectedWorkout?.Name ?? "Workout";
-            return _calendarExportService.SaveCalendarToDownloadsAsync(GeneratedIcsContent, selectedWorkoutName);
+            return this.calendarExportService.SaveCalendarToDownloadsAsync(GeneratedIcsContent, selectedWorkoutName);
         }
 
         public void SetErrorStatus(string errorMessage)

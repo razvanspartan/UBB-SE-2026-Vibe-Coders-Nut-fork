@@ -21,10 +21,10 @@ public sealed partial class RankShowcaseViewModel : ObservableObject
         this.session = session;
     }
 
-    [ObservableProperty] private int    displayLevel;
-    [ObservableProperty] private string rankTitle              = "\u2014";
+    [ObservableProperty] private int displayLevel;
+    [ObservableProperty] private string rankTitle = "\u2014";
     [ObservableProperty] private string unlockedAchievementsDisplay = "0 achievements unlocked";
-    [ObservableProperty] private bool   isLoading;
+    [ObservableProperty] private bool isLoading;
 
     [ObservableProperty] private string levelDisplayLine = "Level \u2014";
 
@@ -34,7 +34,7 @@ public sealed partial class RankShowcaseViewModel : ObservableObject
 
     [ObservableProperty] private bool hasNextRank;
 
-    public ObservableCollection<AchievementShowcaseItem> ShowcaseAchievements { get; } = new();
+    public ObservableCollection<AchievementShowcaseItem> ShowcaseAchievements { get; } = new ();
 
     public Task LoadAsync(CancellationToken cancellationToken = default)
     {

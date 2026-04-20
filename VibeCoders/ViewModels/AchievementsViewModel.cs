@@ -1,6 +1,6 @@
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System.Collections.ObjectModel;
 using VibeCoders.Models;
 using VibeCoders.Services;
 
@@ -8,15 +8,15 @@ namespace VibeCoders.ViewModels;
 
 public sealed partial class AchievementsViewModel : ObservableObject
 {
-    private readonly IDataStorage _storage;
+    private readonly IDataStorage storage;
 
     public AchievementsViewModel(IDataStorage storage)
     {
-        _storage = storage;
+        this.storage = storage;
     }
 
     [ObservableProperty]
-    private ObservableCollection<Achievement> achievements = new();
+    private ObservableCollection<Achievement> achievements = new ();
 
     [ObservableProperty]
     private bool isLoading;
@@ -28,7 +28,7 @@ public sealed partial class AchievementsViewModel : ObservableObject
         {
             IsLoading = true;
             Achievements.Clear();
-            foreach (var a in _storage.GetAchievementShowcaseForClient(clientId))
+            foreach (var a in storage.GetAchievementShowcaseForClient(clientId))
             {
                 Achievements.Add(new Achievement
                 {
