@@ -10,27 +10,29 @@ public sealed partial class AchievementsViewModel : ObservableObject
 {
     private readonly IDataStorage storage;
 
+    [ObservableProperty]
+    public partial ObservableCollection<Achievement> Achievements { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsLoading { get; set; }
+
     public AchievementsViewModel(IDataStorage storage)
     {
         this.storage = storage;
+
+        this.Achievements = new ObservableCollection<Achievement>();
     }
-
-    [ObservableProperty]
-    private ObservableCollection<Achievement> achievements = new ();
-
-    [ObservableProperty]
-    private bool isLoading;
 
     [RelayCommand]
     private void LoadAchievements(int clientId)
     {
+        this.IsLoading = true;
         try
         {
-            IsLoading = true;
-            Achievements.Clear();
-            foreach (var a in storage.GetAchievementShowcaseForClient(clientId))
+            this.Achievements.Clear();
+            foreach (var a in this.storage.GetAchievementShowcaseForClient(clientId))
             {
-                Achievements.Add(new Achievement
+                this.Achievements.Add(new Achievement
                 {
                     AchievementId = a.AchievementId,
                     Name = a.Title,
@@ -43,7 +45,7 @@ public sealed partial class AchievementsViewModel : ObservableObject
         }
         finally
         {
-            IsLoading = false;
+            this.IsLoading = false;
         }
     }
 }

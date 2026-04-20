@@ -15,22 +15,23 @@ namespace VibeCoders.ViewModels
         public string MuscleGroup { get; set; } = string.Empty;
         public List<VibeCoders.Models.LoggedSet> Sets { get; set; } = new ();
 
-        public string GetReps(int index)
+        public string GetReps(int setIndex)
         {
-            if (Sets == null || Sets.Count <= index)
+            if (this.Sets == null || this.Sets.Count <= setIndex)
             {
                 return "-";
             }
-            return Sets[index].ActualReps?.ToString() ?? "-";
-        }
 
-        public string GetWeight(int index)
+            return this.Sets[setIndex].ActualReps?.ToString() ?? "-";
+        }
+        public string GetWeight(int setIndex)
         {
-            if (Sets == null || Sets.Count <= index)
+            if (this.Sets == null || this.Sets.Count <= setIndex)
             {
                 return "-";
             }
-            return Sets[index].ActualWeight?.ToString() ?? "-";
+
+            return this.Sets[setIndex].ActualWeight?.ToString() ?? "-";
         }
     }
 }
