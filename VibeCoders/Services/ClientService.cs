@@ -16,6 +16,7 @@ public class ClientService
     private readonly NutritionSyncOptions nutritionSync;
     private readonly IRepositoryWorkoutLog workoutLogRepository;
     private readonly IRepositoryTrainer trainerRepository;
+    private readonly IRepositoryNotification notificationRepository;
 
     public ClientService(
         IRepositoryWorkoutLog workoutLogRepository,
@@ -25,12 +26,14 @@ public class ClientService
         EvaluationEngine evaluationEngine,
         IAchievementUnlockedBus achievementBus,
         NutritionSyncOptions nutritionSync,
-        IRepositoryTrainer trainerRepository)
+        IRepositoryTrainer trainerRepository,
+        IRepositoryNotification notificationRepository)
     {
         this.workoutLogRepository = workoutLogRepository;
         this.storage = storage;
         this.progressionService = progressionService;
         this.httpClientFactory = httpClientFactory;
+        this.notificationRepository = notificationRepository;
         this.evaluationEngine = evaluationEngine;
         this.achievementBus = achievementBus;
         this.nutritionSync = nutritionSync;
@@ -456,7 +459,7 @@ public class ClientService
     {
         try
         {
-            return this.storage.GetNotifications(clientId);
+            return this.notificationRepository.GetNotifications(clientId);
         }
         catch (Exception ex)
         {

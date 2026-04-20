@@ -72,6 +72,7 @@ public partial class App : Application
     private static void ConfigureServices(IServiceCollection services)
     {
         var connectionString = DatabasePaths.GetConnectionString();
+        services.AddSingleton<IRepositoryNotification>(new RepositoryNotification(connectionString));
         services.AddSingleton<IDataStorage, SqlDataStorage>();
         services.AddSingleton<IRepositoryWorkoutLog>(new RepositoryWorkoutLog(connectionString));
         services.AddSingleton<IUserSession, UserSession>();

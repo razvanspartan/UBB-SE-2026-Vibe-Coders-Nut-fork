@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using VibeCoders.Models;
-
-namespace VibeCoders.Repositories.Interfaces
+﻿namespace VibeCoders.Repositories.Interfaces
 {
+    using VibeCoders.Models;
     public interface IRepositoryWorkoutLog
     {
         double GetClientWeight(int clientId);

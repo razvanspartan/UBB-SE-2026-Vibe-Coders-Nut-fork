@@ -12,9 +12,6 @@ namespace VibeCoders.Repositories
         TemplateExercise? GetTemplateExercise(int templateExerciseId);
         bool UpdateTemplateWeight(int templateExerciseId, double newWeight);
 
-        bool SaveNotification(Notification notification);
-        List<Notification> GetNotifications(int clientId);
-
         List<AchievementShowcaseItem> GetAchievementShowcaseForClient(int clientId);
 
         int GetWorkoutCount(int clientId);

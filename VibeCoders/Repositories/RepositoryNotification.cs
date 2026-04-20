@@ -2,9 +2,15 @@ namespace VibeCoders.Repositories
 {
     using Microsoft.Data.Sqlite;
     using VibeCoders.Models;
+    using VibeCoders.Repositories.Interfaces;
 
-    public partial class SqlDataStorage : IDataStorage
+    public class RepositoryNotification : IRepositoryNotification
     {
+        private readonly string connectionString;
+        public RepositoryNotification(string connectionString)
+        {
+            this.connectionString = connectionString;
+        }
         public bool SaveNotification(Notification notification)
         {
             const string sql = @"

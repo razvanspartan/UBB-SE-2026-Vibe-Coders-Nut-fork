@@ -2,18 +2,20 @@ namespace VibeCoders.Services
 {
     using VibeCoders.Models;
     using VibeCoders.Repositories;
+    using VibeCoders.Repositories.Interfaces;
     using VibeCoders.Utils;
 
     public sealed class ProgressionService
     {
         private readonly IDataStorage storage;
-
+        private readonly IRepositoryNotification notificationRepository;
         private const double PLATEAU_THRESHOLD = 0.9;
         private const int CONSECUTIVE_FAILED_SETS_FOR_PLATEAU = 2;
 
-        public ProgressionService(IDataStorage storage)
+        public ProgressionService(IDataStorage storage, IRepositoryNotification notificationRepository)
         {
             this.storage = storage;
+            this.notificationRepository = notificationRepository;
         }
 
         public void EvaluateWorkout(WorkoutLog log)
@@ -153,7 +155,7 @@ namespace VibeCoders.Services
                 $"Plateau detected. Deload recommended: " +
                 $"target weight would drop to {ProgressionUtils.CalculateDeload(template.TargetWeight)} kg.";
 
-            storage.SaveNotification(notification);
+            notificationRepository.SaveNotification(notification);
         }
     }
 }
