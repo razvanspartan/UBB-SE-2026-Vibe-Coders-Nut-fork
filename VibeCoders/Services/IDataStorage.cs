@@ -7,16 +7,16 @@ namespace VibeCoders.Services
     {
         void EnsureSchemaCreated();
 
-        bool SaveUser(User u);
+        bool SaveUser(User user);
         User? LoadUser(string username);
 
-        bool SaveClientData(Client c);
-        List<Client> GetTrainerClient(int trainerId);
+        bool SaveClientData(Client client);
+        List<Client> GetTrainerClients(int trainerId);
 
         List<WorkoutTemplate> GetAvailableWorkouts(int clientId);
 
-        bool SaveWorkoutLog(WorkoutLog log);
-        bool UpdateWorkoutLog(WorkoutLog log);
+        bool SaveWorkoutLog(WorkoutLog workoutLog);
+        bool UpdateWorkoutLog(WorkoutLog workoutLog);
         List<WorkoutLog> GetWorkoutHistory(int clientId);
         List<WorkoutLog> GetLastTwoLogsForExercise(int templateExerciseId);
 
