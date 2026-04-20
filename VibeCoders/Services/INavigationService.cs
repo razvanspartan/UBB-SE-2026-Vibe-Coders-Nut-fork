@@ -11,6 +11,7 @@ public interface INavigationService
     void NavigateToActiveWorkout(int clientId = 0);
 
     void NavigateToWorkoutLogs();
+
     void GoBack();
 
     void NavigateToClientProfile(int clientId);
