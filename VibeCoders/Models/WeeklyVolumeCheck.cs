@@ -1,6 +1,7 @@
 namespace VibeCoders.Domain;
 
 using VibeCoders.Repositories;
+using VibeCoders.Repositories.Interfaces;
 
 public sealed class WeeklyVolumeCheck : IMilestoneCheck
 {
@@ -13,6 +14,6 @@ public sealed class WeeklyVolumeCheck : IMilestoneCheck
         RequiredWorkoutsPerWeek = requiredWorkoutsPerWeek;
     }
 
-    public bool IsMet(int clientId, IDataStorage storage)
-        => storage.GetWorkoutsInLastSevenDays(clientId) >= RequiredWorkoutsPerWeek;
+    public bool IsMet(int clientId, IRepositoryAchievements achievementsRepository)
+        => achievementsRepository.GetWorkoutsInLastSevenDays(clientId) >= RequiredWorkoutsPerWeek;
 }

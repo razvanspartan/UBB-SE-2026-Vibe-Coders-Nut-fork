@@ -1,4 +1,4 @@
-using VibeCoders.Repositories;
+using VibeCoders.Repositories.Interfaces;
 
 namespace VibeCoders.Domain;
 
@@ -13,6 +13,6 @@ public sealed class WorkoutCountCheck : IMilestoneCheck
         Threshold = threshold;
     }
 
-    public bool IsMet(int clientId, IDataStorage storage)
-        => storage.GetWorkoutCount(clientId) >= Threshold;
+    public bool IsMet(int clientId, IRepositoryAchievements achievementsRepository)
+        => achievementsRepository.GetWorkoutCount(clientId) >= Threshold;
 }

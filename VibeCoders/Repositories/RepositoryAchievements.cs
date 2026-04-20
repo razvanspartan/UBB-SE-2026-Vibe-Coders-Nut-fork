@@ -1,9 +1,15 @@
 namespace VibeCoders.Repositories;
 using Microsoft.Data.Sqlite;
 using VibeCoders.Models;
+using VibeCoders.Repositories.Interfaces;
 
-public partial class SqlDataStorage : IDataStorage
+public class RepositoryAchievements : IRepositoryAchievements
 {
+    private readonly string connectionString;
+    public RepositoryAchievements(string connectionString)
+    {
+        this.connectionString = connectionString;
+    }
     public int GetConsecutiveWorkoutDayStreak(int clientId)
     {
         using var connection = new SqliteConnection(this.connectionString);

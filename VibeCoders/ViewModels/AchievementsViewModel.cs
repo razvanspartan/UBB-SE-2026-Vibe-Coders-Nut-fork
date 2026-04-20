@@ -3,12 +3,14 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using VibeCoders.Models;
 using VibeCoders.Repositories;
+using VibeCoders.Repositories.Interfaces;
 
 namespace VibeCoders.ViewModels;
 
 public sealed partial class AchievementsViewModel : ObservableObject
 {
     private readonly IDataStorage storage;
+    private readonly IRepositoryAchievements achievementsRepository;
 
     [ObservableProperty]
     public partial ObservableCollection<Achievement> Achievements { get; set; }
@@ -16,10 +18,10 @@ public sealed partial class AchievementsViewModel : ObservableObject
     [ObservableProperty]
     public partial bool IsLoading { get; set; }
 
-    public AchievementsViewModel(IDataStorage storage)
+    public AchievementsViewModel(IDataStorage storage, IRepositoryAchievements achievementsRepository)
     {
         this.storage = storage;
-
+        this.achievementsRepository = achievementsRepository;
         this.Achievements = new ObservableCollection<Achievement>();
     }
 
@@ -30,7 +32,7 @@ public sealed partial class AchievementsViewModel : ObservableObject
         try
         {
             this.Achievements.Clear();
-            foreach (var a in this.storage.GetAchievementShowcaseForClient(clientId))
+            foreach (var a in this.achievementsRepository.GetAchievementShowcaseForClient(clientId))
             {
                 this.Achievements.Add(new Achievement
                 {
