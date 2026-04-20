@@ -13,3 +13,8 @@ public sealed class NutritionSyncPayload
     [JsonPropertyName("userBmi")]
     public float UserBmi { get; init; }
 }
+
+[JsonSerializable(typeof(NutritionSyncPayload))]
+public partial class NutritionSyncJsonContext : JsonSerializerContext
+{
+}

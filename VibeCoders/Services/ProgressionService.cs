@@ -1,24 +1,26 @@
-using VibeCoders.Models;
-using VibeCoders.Utils;
-
 namespace VibeCoders.Services
 {
-    public class ProgressionService
+    using VibeCoders.Models;
+    using VibeCoders.Utils;
+
+    public sealed class ProgressionService
     {
-        private readonly IDataStorage _storage;
+        private readonly IDataStorage storage;
 
         private const double PLATEAU_THRESHOLD = 0.9;
-
         private const int CONSECUTIVE_FAILED_SETS_FOR_PLATEAU = 2;
 
         public ProgressionService(IDataStorage storage)
         {
-            _storage = storage;
+            this.storage = storage;
         }
 
         public void EvaluateWorkout(WorkoutLog log)
         {
-            if (log?.Exercises == null) return;
+            if (log?.Exercises is null)
+            {
+                return;
+            }
 
             foreach (var exercise in log.Exercises)
             {
@@ -28,16 +30,22 @@ namespace VibeCoders.Services
 
         public void ProcessDeloadConfirmation(Notification notification)
         {
-            if (notification == null) return;
+            if (notification is null)
+            {
+                return;
+            }
 
             int templateExerciseId = notification.RelatedId;
-            TemplateExercise? template = _storage.GetTemplateExercise(templateExerciseId);
+            TemplateExercise? template = storage.GetTemplateExercise(templateExerciseId);
 
-            if (template is null) return;
+            if (template is null)
+            {
+                return;
+            }
 
             double deloadedWeight = ProgressionUtils.CalculateDeload(template.TargetWeight);
 
-            bool updated = _storage.UpdateTemplateWeight(template.Id, deloadedWeight);
+            bool updated = storage.UpdateTemplateWeight(template.Id, deloadedWeight);
 
             if (updated)
             {
@@ -47,12 +55,18 @@ namespace VibeCoders.Services
 
         private void EvaluateExercise(LoggedExercise exercise, int clientId)
         {
-            if (exercise.Sets == null || exercise.Sets.Count == 0) return;
+            if (exercise.Sets is null || exercise.Sets.Count == 0)
+            {
+                return;
+            }
 
             int templateId = exercise.ParentTemplateExerciseId;
-            TemplateExercise? template = _storage.GetTemplateExercise(templateId);
+            TemplateExercise? template = storage.GetTemplateExercise(templateId);
 
-            if (template is null) return;
+            if (template is null)
+            {
+                return;
+            }
 
             bool plateauDetected = CheckForPlateau(exercise, template, out double avgRatio);
 
@@ -109,7 +123,7 @@ namespace VibeCoders.Services
             double increment = ProgressionUtils.DetermineWeightIncrement(template.MuscleGroup);
             double newWeight = currentWeight + increment;
 
-            bool updated = _storage.UpdateTemplateWeight(template.Id, newWeight);
+            bool updated = storage.UpdateTemplateWeight(template.Id, newWeight);
 
             if (updated)
             {
@@ -129,8 +143,7 @@ namespace VibeCoders.Services
                          $"Consider a deload: reduce weight to " +
                          $"{ProgressionUtils.CalculateDeload(template.TargetWeight)} kg next session.",
                 type: NotificationType.Plateau,
-                relatedId: template.Id
-            );
+                relatedId: template.Id);
 
             notification.ClientId = clientId;
 
@@ -139,7 +152,7 @@ namespace VibeCoders.Services
                 $"Plateau detected. Deload recommended: " +
                 $"target weight would drop to {ProgressionUtils.CalculateDeload(template.TargetWeight)} kg.";
 
-            _storage.SaveNotification(notification);
+            storage.SaveNotification(notification);
         }
     }
 }

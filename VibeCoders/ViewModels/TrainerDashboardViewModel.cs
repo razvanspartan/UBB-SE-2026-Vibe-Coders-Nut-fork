@@ -1,67 +1,90 @@
-using System;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using Microsoft.UI.Xaml;
-using VibeCoders.Models;
-using VibeCoders.Services;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-
 namespace VibeCoders.ViewModels
 {
-    public partial class TrainerDashboardViewModel : ObservableObject
-    {
-        private readonly TrainerService _trainerService;
+    using System;
+    using System.Collections.ObjectModel;
+    using System.ComponentModel;
+    using System.Linq;
+    using System.Runtime.CompilerServices;
+    using CommunityToolkit.Mvvm.ComponentModel;
+    using CommunityToolkit.Mvvm.Input;
+    using Microsoft.UI.Xaml;
+    using VibeCoders.Models;
+    using VibeCoders.Services;
 
-        private readonly INavigationService _navigationService;
+    public sealed partial class TrainerDashboardViewModel : ObservableObject
+    {
+        private readonly TrainerService trainerService;
+        private readonly INavigationService navigationService;
+
+        private Client? selectedClient;
+        private WorkoutLog? selectedWorkoutLog;
+        private string newRoutineName = string.Empty;
+        private string? selectedNewExercise;
+        private double newExerciseSets = 3;
+        private double newExerciseReps = 10;
+        private double newExerciseWeight;
+        private DateTimeOffset planStartDate = DateTimeOffset.Now;
+        private DateTimeOffset planEndDate = DateTimeOffset.Now.AddDays(30);
+        private string assignmentStatus = string.Empty;
 
         public TrainerDashboardViewModel(TrainerService trainerService, INavigationService navigationService)
         {
-            _trainerService = trainerService;
-            _navigationService = navigationService;
+            this.trainerService = trainerService;
+            this.navigationService = navigationService;
 
             LoadClientsAndWorkouts();
             LoadAvailableExercises();
         }
 
+        public ObservableCollection<Client> AssignedClients { get; } = new ();
+        public ObservableCollection<WorkoutLog> SelectedClientLogs { get; } = new ();
+        public ObservableCollection<ExerciseDisplayRow> CurrentWorkoutDetails { get; } = new ();
+        public ObservableCollection<WorkoutTemplate> ClientAssignedWorkouts { get; } = new ();
+        public ObservableCollection<TemplateExercise> RoutineBuilderExercises { get; } = new ();
+        public ObservableCollection<string> FilteredAvailableExercises { get; } = new ();
 
-        public ObservableCollection<Client> AssignedClients { get; } = new();
-        public ObservableCollection<WorkoutLog> SelectedClientLogs { get; } = new();
-        public ObservableCollection<ExerciseDisplayRow> CurrentWorkoutDetails { get; } = new();
-        public ObservableCollection<WorkoutTemplate> AssignedWorkouts { get; } = new();
-        public ObservableCollection<TemplateExercise> BuilderExercises { get; } = new();
-        public ObservableCollection<string> AvailableExercises { get; } = new();
-
-        [ObservableProperty]
         private string builderErrorText = string.Empty;
-
+        public string BuilderErrorText
+        {
+            get => builderErrorText;
+            set
+            {
+                if (SetProperty(ref builderErrorText, value))
+                {
+                    OnPropertyChanged(nameof(HasBuilderError));
+                }
+            }
+        }
 
         public bool HasBuilderError => !string.IsNullOrEmpty(BuilderErrorText);
 
-        partial void OnBuilderErrorTextChanged(string value)
+        private bool isFeedbackFormVisible = true;
+        public bool IsFeedbackFormVisible
         {
-            OnPropertyChanged(nameof(HasBuilderError));
+            get => isFeedbackFormVisible;
+            set => SetProperty(ref isFeedbackFormVisible, value);
         }
 
-
-        [ObservableProperty]
-        private bool isFeedbackFormVisible = true;
-
-        [ObservableProperty]
         private string feedbackErrorText = string.Empty;
+        public string FeedbackErrorText
+        {
+            get => feedbackErrorText;
+            set => SetProperty(ref feedbackErrorText, value);
+        }
 
         public int EditingTemplateId { get; set; }
 
-        private Client? _selectedClient;
         public Client? SelectedClient
         {
-            get => _selectedClient;
+            get => selectedClient;
             set
             {
-                if (_selectedClient == value) return;
-                _selectedClient = value;
+                if (selectedClient == value)
+                {
+                    return;
+                }
+
+                selectedClient = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(CanAssignPlan));
                 LoadLogsForSelectedClient();
@@ -69,87 +92,108 @@ namespace VibeCoders.ViewModels
             }
         }
 
-        private WorkoutLog? _selectedWorkoutLog;
         public WorkoutLog? SelectedWorkoutLog
         {
-            get => _selectedWorkoutLog;
+            get => selectedWorkoutLog;
             set
             {
-                if (_selectedWorkoutLog == value) return;
-                _selectedWorkoutLog = value;
+                if (selectedWorkoutLog == value)
+                {
+                    return;
+                }
+
+                selectedWorkoutLog = value;
                 OnPropertyChanged();
                 OnWorkoutLogSelected();
             }
         }
 
-        private string _newRoutineName = string.Empty;
         public string NewRoutineName
         {
-            get => _newRoutineName;
+            get => newRoutineName;
             set
             {
-                if (_newRoutineName == value) return;
-                _newRoutineName = value;
+                if (newRoutineName == value)
+                {
+                    return;
+                }
+
+                newRoutineName = value;
                 OnPropertyChanged();
             }
         }
 
-        private string? _selectedNewExercise;
         public string? SelectedNewExercise
         {
-            get => _selectedNewExercise;
+            get => selectedNewExercise;
             set
             {
-                if (_selectedNewExercise == value) return;
-                _selectedNewExercise = value;
+                if (selectedNewExercise == value)
+                {
+                    return;
+                }
+
+                selectedNewExercise = value;
                 OnPropertyChanged();
             }
         }
 
-        private double _newExerciseSets = 3;
         public double NewExerciseSets
         {
-            get => _newExerciseSets;
+            get => newExerciseSets;
             set
             {
-                if (Math.Abs(_newExerciseSets - value) < 0.001) return;
-                _newExerciseSets = value;
+                if (Math.Abs(newExerciseSets - value) < 0.001)
+                {
+                    return;
+                }
+
+                newExerciseSets = value;
                 OnPropertyChanged();
             }
         }
 
-        private double _newExerciseReps = 10;
         public double NewExerciseReps
         {
-            get => _newExerciseReps;
+            get => newExerciseReps;
             set
             {
-                if (Math.Abs(_newExerciseReps - value) < 0.001) return;
-                _newExerciseReps = value;
+                if (Math.Abs(newExerciseReps - value) < 0.001)
+                {
+                    return;
+                }
+
+                newExerciseReps = value;
                 OnPropertyChanged();
             }
         }
 
-        private double _newExerciseWeight;
         public double NewExerciseWeight
         {
-            get => _newExerciseWeight;
+            get => newExerciseWeight;
             set
             {
-                if (Math.Abs(_newExerciseWeight - value) < 0.001) return;
-                _newExerciseWeight = value;
+                if (Math.Abs(newExerciseWeight - value) < 0.001)
+                {
+                    return;
+                }
+
+                newExerciseWeight = value;
                 OnPropertyChanged();
             }
         }
 
-        private DateTimeOffset _planStartDate = DateTimeOffset.Now;
         public DateTimeOffset PlanStartDate
         {
-            get => _planStartDate;
+            get => planStartDate;
             set
             {
-                if (_planStartDate == value) return;
-                _planStartDate = value;
+                if (planStartDate == value)
+                {
+                    return;
+                }
+
+                planStartDate = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(CanAssignPlan));
                 OnPropertyChanged(nameof(DateRangeError));
@@ -157,14 +201,17 @@ namespace VibeCoders.ViewModels
             }
         }
 
-        private DateTimeOffset _planEndDate = DateTimeOffset.Now.AddDays(30);
         public DateTimeOffset PlanEndDate
         {
-            get => _planEndDate;
+            get => planEndDate;
             set
             {
-                if (_planEndDate == value) return;
-                _planEndDate = value;
+                if (planEndDate == value)
+                {
+                    return;
+                }
+
+                planEndDate = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(CanAssignPlan));
                 OnPropertyChanged(nameof(DateRangeError));
@@ -173,23 +220,26 @@ namespace VibeCoders.ViewModels
         }
 
         public string DateRangeError =>
-            _planEndDate <= _planStartDate
+            planEndDate <= planStartDate
                 ? "End date must be after start date."
                 : string.Empty;
 
-        public bool HasDateRangeError => _planEndDate <= _planStartDate;
+        public bool HasDateRangeError => planEndDate <= planStartDate;
 
         public bool CanAssignPlan =>
-            _selectedClient != null && _planEndDate > _planStartDate;
+            selectedClient is not null && planEndDate > planStartDate;
 
-        private string _assignmentStatus = string.Empty;
         public string AssignmentStatus
         {
-            get => _assignmentStatus;
+            get => assignmentStatus;
             private set
             {
-                if (_assignmentStatus == value) return;
-                _assignmentStatus = value;
+                if (assignmentStatus == value)
+                {
+                    return;
+                }
+
+                assignmentStatus = value;
                 OnPropertyChanged();
             }
         }
@@ -199,13 +249,13 @@ namespace VibeCoders.ViewModels
             SelectedClientLogs.Clear();
             CurrentWorkoutDetails.Clear();
 
-            if (_selectedClient == null)
+            if (selectedClient is null)
             {
                 SelectedWorkoutLog = null;
                 return;
             }
 
-            var logs = _trainerService.GetClientWorkoutHistory(_selectedClient.Id);
+            var logs = trainerService.GetClientWorkoutHistory(selectedClient.Id);
             foreach (var log in logs)
             {
                 SelectedClientLogs.Add(log);
@@ -216,14 +266,17 @@ namespace VibeCoders.ViewModels
 
         public void LoadAssignedWorkouts()
         {
-            AssignedWorkouts.Clear();
-            if (SelectedClient == null) return;
+            ClientAssignedWorkouts.Clear();
+            if (SelectedClient is null)
+            {
+                return;
+            }
 
-            var allTemplates = _trainerService.DataStorage.GetAvailableWorkouts(SelectedClient.Id);
+            var allTemplates = trainerService.GetAvailableWorkouts(SelectedClient.Id);
             var trainerAssigned = allTemplates.Where(t => t.Type == WorkoutType.TRAINER_ASSIGNED);
             foreach (var template in trainerAssigned)
             {
-                AssignedWorkouts.Add(template);
+                ClientAssignedWorkouts.Add(template);
             }
         }
 
@@ -232,45 +285,63 @@ namespace VibeCoders.ViewModels
             EditingTemplateId = template.Id;
             NewRoutineName = template.Name;
 
-            BuilderExercises.Clear();
+            RoutineBuilderExercises.Clear();
             foreach (var ex in template.GetExercises())
             {
-                BuilderExercises.Add(ex);
+                RoutineBuilderExercises.Add(ex);
             }
         }
 
         public bool DeleteRoutine(WorkoutTemplate template)
         {
-            if (template == null) return false;
+            if (template is null)
+            {
+                return false;
+            }
 
-            var success = _trainerService.DataStorage.DeleteWorkoutTemplate(template.Id);
+            var success = trainerService.DeleteWorkoutTemplate(template.Id);
             if (success)
             {
-                AssignedWorkouts.Remove(template);
+                ClientAssignedWorkouts.Remove(template);
             }
 
             return success;
         }
 
-        public bool SaveRoutine(WorkoutTemplate template)
+        public bool BuildAndSaveRoutine()
         {
-            return _trainerService.SaveTrainerWorkout(template);
+            BuilderErrorText = string.Empty;
+            var clientId = SelectedClient?.Id ?? 0;
+
+            var result = trainerService.AssignNewRoutine(EditingTemplateId, clientId, NewRoutineName, RoutineBuilderExercises);
+
+            if (!result.Success)
+            {
+                BuilderErrorText = result.ErrorMessage;
+                return false;
+            }
+
+            LoadAssignedWorkouts();
+            return true;
         }
 
         private void AddExerciseToRoutineCore()
         {
-            if (string.IsNullOrWhiteSpace(SelectedNewExercise)) return;
+            if (string.IsNullOrWhiteSpace(SelectedNewExercise))
+            {
+                return;
+            }
 
             var newExercise = new TemplateExercise
             {
                 Name = SelectedNewExercise,
                 MuscleGroup = MuscleGroup.OTHER,
-                TargetSets = (int)NewExerciseSets,
-                TargetReps = (int)NewExerciseReps,
-                TargetWeight = NewExerciseWeight
+                TargetSets = (int)newExerciseSets,
+                TargetReps = (int)newExerciseReps,
+                TargetWeight = newExerciseWeight
             };
 
-            BuilderExercises.Add(newExercise);
+            RoutineBuilderExercises.Add(newExercise);
             SelectedNewExercise = null;
         }
 
@@ -281,9 +352,9 @@ namespace VibeCoders.ViewModels
 
         public void RemoveExerciseFromRoutine(TemplateExercise exercise)
         {
-            if (BuilderExercises.Contains(exercise))
+            if (RoutineBuilderExercises.Contains(exercise))
             {
-                BuilderExercises.Remove(exercise);
+                RoutineBuilderExercises.Remove(exercise);
             }
         }
 
@@ -291,15 +362,18 @@ namespace VibeCoders.ViewModels
         {
             FeedbackErrorText = string.Empty;
 
-            if (SelectedWorkoutLog == null) return;
+            if (SelectedWorkoutLog is null)
+            {
+                return;
+            }
 
             if (SelectedWorkoutLog.Rating < 1)
             {
                 FeedbackErrorText = "You cannot assign an empty feedback. Please select a star rating.";
-                return; 
+                return;
             }
 
-            _trainerService.SaveWorkoutFeedback(SelectedWorkoutLog);
+            trainerService.SaveWorkoutFeedback(SelectedWorkoutLog);
 
             IsFeedbackFormVisible = false;
         }
@@ -311,20 +385,20 @@ namespace VibeCoders.ViewModels
 
         private void AssignNutritionPlanCore()
         {
-            if (!CanAssignPlan || _selectedClient == null) return;
-
-            var plan = new NutritionPlan
+            if (!CanAssignPlan || selectedClient is null)
             {
-                StartDate = _planStartDate.Date,
-                EndDate = _planEndDate.Date,
-            };
-
-            if (!_trainerService.AssignNutritionPlan(plan, _selectedClient.Id))
                 return;
+            }
+
+            if (!trainerService.CreateAndAssignNutritionPlan(planStartDate.Date, planEndDate.Date, selectedClient.Id))
+            {
+                AssignmentStatus = "Failed to assign plan.";
+                return;
+            }
 
             AssignmentStatus =
-                $"Plan assigned to {_selectedClient.Username}: " +
-                $"{plan.StartDate:MMM d, yyyy} - {plan.EndDate:MMM d, yyyy}";
+                $"Plan assigned to {selectedClient.Username}: " +
+                $"{planStartDate.Date:MMM d, yyyy} - {planEndDate.Date:MMM d, yyyy}";
         }
 
         [RelayCommand]
@@ -336,7 +410,7 @@ namespace VibeCoders.ViewModels
         private void LoadClientsAndWorkouts()
         {
             AssignedClients.Clear();
-            var clients = _trainerService.GetAssignedClients(1);
+            var clients = trainerService.GetAssignedClients(1);
             foreach (var client in clients)
             {
                 AssignedClients.Add(client);
@@ -347,35 +421,48 @@ namespace VibeCoders.ViewModels
 
         private void LoadAvailableExercises()
         {
-            AvailableExercises.Clear();
-            foreach (var name in _trainerService.DataStorage.GetAllExerciseNames())
+            FilteredAvailableExercises.Clear();
+            foreach (var name in trainerService.GetAllExerciseNames())
             {
-                AvailableExercises.Add(name);
+                FilteredAvailableExercises.Add(name);
             }
         }
 
         [RelayCommand]
         private void OpenClientProfile()
         {
-            if (SelectedClient == null) return;
+            if (SelectedClient is null)
+            {
+                return;
+            }
 
-            _navigationService.NavigateToClientProfile(SelectedClient.Id);
+            navigationService.NavigateToClientProfile(SelectedClient.Id);
         }
 
         [RelayCommand]
-        private void OpenWorkoutLogs() => _navigationService.NavigateToWorkoutLogs();
+        private void OpenWorkoutLogs()
+        {
+            navigationService.NavigateToWorkoutLogs();
+        }
 
         [RelayCommand]
-        private void OpenCalendar() => _navigationService.NavigateToCalendarIntegration();
+        private void OpenCalendar()
+        {
+            navigationService.NavigateToCalendarIntegration();
+        }
 
         private void OnWorkoutLogSelected()
         {
             CurrentWorkoutDetails.Clear();
             IsFeedbackFormVisible = true;
             FeedbackErrorText = string.Empty;
-            if (_selectedWorkoutLog == null) return;
 
-            foreach (var exercise in _selectedWorkoutLog.Exercises)
+            if (selectedWorkoutLog is null)
+            {
+                return;
+            }
+
+            foreach (var exercise in selectedWorkoutLog.Exercises)
             {
                 CurrentWorkoutDetails.Add(new ExerciseDisplayRow
                 {
@@ -385,7 +472,7 @@ namespace VibeCoders.ViewModels
                 });
             }
 
-            if (_selectedWorkoutLog.Rating >= 1)
+            if (selectedWorkoutLog.Rating >= 1)
             {
                 IsFeedbackFormVisible = false;
             }
@@ -393,7 +480,7 @@ namespace VibeCoders.ViewModels
             {
                 IsFeedbackFormVisible = true;
             }
-
         }
     }
 }
+

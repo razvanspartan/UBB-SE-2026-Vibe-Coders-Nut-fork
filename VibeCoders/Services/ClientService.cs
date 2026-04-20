@@ -11,22 +11,23 @@ public class ClientService
     private readonly IHttpClientFactory httpClientFactory;
     private readonly EvaluationEngine evaluationEngine;
     private readonly IAchievementUnlockedBus achievementBus;
+    private readonly NutritionSyncOptions nutritionSync;
 
     public ClientService(
         IDataStorage storage,
         ProgressionService progressionService,
         IHttpClientFactory httpClientFactory,
         EvaluationEngine evaluationEngine,
-        IAchievementUnlockedBus achievementBus)
+        IAchievementUnlockedBus achievementBus,
+        NutritionSyncOptions nutritionSync)
     {
         this.storage = storage;
         this.progressionService = progressionService;
         this.httpClientFactory = httpClientFactory;
         this.evaluationEngine = evaluationEngine;
         this.achievementBus = achievementBus;
+        this.nutritionSync = nutritionSync;
     }
-
-    private const double DefaultMet = 5.0;
 
     public bool FinalizeWorkout(WorkoutLog log)
     {
@@ -116,7 +117,27 @@ public class ClientService
         NutritionSyncPayload payload,
         CancellationToken cancellationToken = default)
     {
-        return true;
+        try
+        {
+            var client = this.httpClientFactory.CreateClient();
+
+            var json = System.Text.Json.JsonSerializer.Serialize(
+                payload,
+                NutritionSyncJsonContext.Default.NutritionSyncPayload);
+
+            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+            var response = await client
+                .PostAsync(this.nutritionSync.Endpoint, content, cancellationToken)
+                .ConfigureAwait(false);
+
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error syncing nutrition: {ex.Message}");
+            return false;
+        }
     }
 
     public NutritionSyncPayload BuildNutritionSyncPayload(int clientId)
@@ -252,7 +273,7 @@ public class ClientService
             SourceTemplateId = sourceWorkoutLog.SourceTemplateId,
             Type = sourceWorkoutLog.Type,
             TotalCaloriesBurned = sourceWorkoutLog.TotalCaloriesBurned,
-            AverageMet = sourceWorkoutLog.AverageMet,
+            AverageMetabolicEquivalent = sourceWorkoutLog.AverageMetabolicEquivalent,
             IntensityTag = sourceWorkoutLog.IntensityTag,
             Rating = sourceWorkoutLog.Rating,
             TrainerNotes = sourceWorkoutLog.TrainerNotes,
@@ -272,18 +293,18 @@ public class ClientService
 
         foreach (var exercise in log.Exercises)
         {
-            if (exercise.Met <= 0)
+            if (exercise.MetabolicEquivalent <= 0)
             {
-                exercise.Met = (float)ExerciseCalorieCalculator.GetMet(exercise.ExerciseName);
+                exercise.MetabolicEquivalent = (float)ExerciseCalorieCalculator.GetMetabolicEquivalent(exercise.ExerciseName);
             }
 
-            exercise.ExerciseCaloriesBurned = ExerciseCalorieCalculator.CalculateCalories(exercise.Met, weightKg, durationPerExercise);
+            exercise.ExerciseCaloriesBurned = ExerciseCalorieCalculator.CalculateCalories(exercise.MetabolicEquivalent, weightKg, durationPerExercise);
         }
 
         log.TotalCaloriesBurned = log.Exercises.Sum(e => e.ExerciseCaloriesBurned);
-        log.AverageMet = (float)log.Exercises.Average(e => e.Met);
-        log.IntensityTag = log.AverageMet < 3.0f ? "light"
-                         : log.AverageMet < 6.0f ? "moderate"
+        log.AverageMetabolicEquivalent = (float)log.Exercises.Average(e => e.MetabolicEquivalent);
+        log.IntensityTag = log.AverageMetabolicEquivalent < 3.0f ? "light"
+                         : log.AverageMetabolicEquivalent < 6.0f ? "moderate"
                          : "intense";
     }
 

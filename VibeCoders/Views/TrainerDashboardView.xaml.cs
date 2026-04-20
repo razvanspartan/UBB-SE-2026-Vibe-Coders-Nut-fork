@@ -44,7 +44,7 @@ namespace VibeCoders.Views
 
             this.ViewModel.EditingTemplateId = 0;
             this.ViewModel.NewRoutineName = string.Empty;
-            this.ViewModel.BuilderExercises.Clear();
+            this.ViewModel.RoutineBuilderExercises.Clear();
             this.ViewModel.BuilderErrorText = string.Empty;
 
             this.WorkoutBuilderDialog.Title = "Assign New Routine";
@@ -64,45 +64,15 @@ namespace VibeCoders.Views
 
         private void WorkoutBuilderDialog_PrimaryButtonClick(Microsoft.UI.Xaml.Controls.ContentDialog sender, Microsoft.UI.Xaml.Controls.ContentDialogButtonClickEventArgs args)
         {
-            this.ViewModel.BuilderErrorText = string.Empty;
-
-            if (string.IsNullOrWhiteSpace(this.ViewModel.NewRoutineName))
-            {
-                this.ViewModel.BuilderErrorText = "Routine Name cannot be empty.";
-                args.Cancel = true;
-                return;
-            }
-
-            if (this.ViewModel.BuilderExercises.Count == 0)
-            {
-                this.ViewModel.BuilderErrorText = "You must add at least one exercise to the routine.";
-                args.Cancel = true;
-                return;
-            }
-
-            var newTemplate = new VibeCoders.Models.WorkoutTemplate
-            {
-                Id = this.ViewModel.EditingTemplateId,
-                ClientId = this.ViewModel.SelectedClient?.Id ?? 0,
-                Name = this.ViewModel.NewRoutineName,
-                Type = VibeCoders.Models.WorkoutType.TRAINER_ASSIGNED,
-            };
-
-            foreach (var exercise in this.ViewModel.BuilderExercises)
-            {
-                newTemplate.AddExercise(exercise);
-            }
-
-            bool isSaved = this.ViewModel.SaveRoutine(newTemplate);
+            bool isSaved = this.ViewModel.BuildAndSaveRoutine();
 
             if (isSaved)
             {
                 Console.WriteLine("SUCCESS: Routine saved!");
-                this.ViewModel.LoadAssignedWorkouts();
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine("FAILED: Could not save routine to database.");
+                System.Diagnostics.Debug.WriteLine($"FAILED: {this.ViewModel.BuilderErrorText}");
                 args.Cancel = true;
             }
         }
