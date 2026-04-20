@@ -4,21 +4,19 @@ using System.Diagnostics;
 using VibeCoders.Domain;
 using VibeCoders.Models;
 using VibeCoders.Repositories;
+using VibeCoders.Repositories.Interfaces;
 
 public sealed class EvaluationEngine
 {
     private readonly IDataStorage storage;
     private readonly IReadOnlyList<VibeCoders.Domain.IMilestoneCheck> checks;
+    private readonly IRepositoryAchievements achievementRepository;
 
-    public EvaluationEngine(IDataStorage storage) : this(storage, BuildDefaultChecks())
-    {
-    }
-
-    public EvaluationEngine(IDataStorage storage, IReadOnlyList<VibeCoders.Domain.IMilestoneCheck> checks)
+    public EvaluationEngine(IDataStorage storage, IRepositoryAchievements achievementRepository)
     {
         this.storage = storage;
-
-        this.checks = checks;
+        this.achievementRepository = achievementRepository;
+        this.checks = BuildDefaultChecks();
     }
 
     private static IReadOnlyList<VibeCoders.Domain.IMilestoneCheck> BuildDefaultChecks()
@@ -41,7 +39,7 @@ public sealed class EvaluationEngine
 
         try
         {
-            var catalog = storage
+            var catalog = achievementRepository
                 .GetAchievementShowcaseForClient(clientId)
                 .ToDictionary(a => a.Title, StringComparer.OrdinalIgnoreCase);
 
@@ -57,12 +55,12 @@ public sealed class EvaluationEngine
                     continue;
                 }
 
-                if (!check.IsMet(clientId, storage))
+                if (!check.IsMet(clientId, achievementRepository))
                 {
                     continue;
                 }
 
-                bool awarded = storage.AwardAchievement(clientId, item.AchievementId);
+                bool awarded = achievementRepository.AwardAchievement(clientId, item.AchievementId);
                 if (!awarded)
                 {
                     continue;
@@ -84,7 +82,7 @@ public sealed class EvaluationEngine
 
     public RankShowcaseSnapshot BuildRankShowcase(int clientId)
     {
-        var showcase = storage.GetAchievementShowcaseForClient(clientId);
+        var showcase = achievementRepository.GetAchievementShowcaseForClient(clientId);
         int unlockedCount = showcase.Count(item => item.IsUnlocked);
 
         var tiers = LevelingTierEvaluator.DefaultTiers;

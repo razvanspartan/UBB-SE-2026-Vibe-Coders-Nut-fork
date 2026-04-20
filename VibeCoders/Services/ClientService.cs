@@ -17,6 +17,7 @@ public class ClientService
     private readonly IRepositoryWorkoutLog workoutLogRepository;
     private readonly IRepositoryTrainer trainerRepository;
     private readonly IRepositoryNotification notificationRepository;
+    private readonly IRepositoryAchievements achievementsRepository;
 
     public ClientService(
         IRepositoryWorkoutLog workoutLogRepository,
@@ -27,7 +28,8 @@ public class ClientService
         IAchievementUnlockedBus achievementBus,
         NutritionSyncOptions nutritionSync,
         IRepositoryTrainer trainerRepository,
-        IRepositoryNotification notificationRepository)
+        IRepositoryNotification notificationRepository,
+        IRepositoryAchievements achievementsRepository)
     {
         this.workoutLogRepository = workoutLogRepository;
         this.storage = storage;
@@ -38,6 +40,7 @@ public class ClientService
         this.achievementBus = achievementBus;
         this.nutritionSync = nutritionSync;
         this.trainerRepository = trainerRepository;
+        this.achievementsRepository = achievementsRepository;
     }
 
     public List<WorkoutLog> GetWorkoutHistoryForClient(int clientId)
@@ -438,7 +441,7 @@ public class ClientService
 
             foreach (var title in newlyUnlocked)
             {
-                var catalog = this.storage.GetAchievementShowcaseForClient(clientId);
+                var catalog = this.achievementsRepository.GetAchievementShowcaseForClient(clientId);
                 var item = catalog.FirstOrDefault(
                     a => string.Equals(a.Title, title, StringComparison.OrdinalIgnoreCase));
 

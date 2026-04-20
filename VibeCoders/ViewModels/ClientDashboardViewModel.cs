@@ -29,17 +29,20 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
     private readonly IUserSession _session;
     private readonly IAnalyticsDashboardRefreshBus _refreshBus;
     private CancellationTokenSource? _loadCts;
+    private readonly IRepositoryAchievements achievementsRepository;
 
     public ClientDashboardViewModel(
         IWorkoutAnalyticsStore store,
         IDataStorage dataStorage,
         IUserSession session,
-        IAnalyticsDashboardRefreshBus refreshBus)
+        IAnalyticsDashboardRefreshBus refreshBus,
+        IRepositoryAchievements achievementsRepository)
     {
         _store = store;
         _dataStorage = dataStorage;
         _session = session;
         _refreshBus = refreshBus;
+        this.achievementsRepository = achievementsRepository;
         _refreshBus.RefreshRequested += OnRefreshRequested;
     }
 
@@ -201,7 +204,7 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
     {
         RecentAchievements.Clear();
 
-        var items = _dataStorage.GetAchievementShowcaseForClient(clientId)
+        var items = achievementsRepository.GetAchievementShowcaseForClient(clientId)
             .Where(a => a.IsUnlocked)
             .OrderByDescending(a => a.AchievementId)
             .Take(3);

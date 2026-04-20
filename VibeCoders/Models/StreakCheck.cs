@@ -1,9 +1,10 @@
 namespace VibeCoders.Domain;
 
-using VibeCoders.Repositories;
+using VibeCoders.Repositories.Interfaces;
 
 public sealed class StreakCheck : IMilestoneCheck
 {
+    private readonly IRepositoryAchievements achievementRepository;
     public string AchievementTitle { get; }
 
     public int RequiredConsecutiveDays { get; }
@@ -14,6 +15,6 @@ public sealed class StreakCheck : IMilestoneCheck
         this.RequiredConsecutiveDays = requiredConsecutiveDays;
     }
 
-    public bool IsMet(int clientId, IDataStorage storage)
-        => storage.GetConsecutiveWorkoutDayStreak(clientId) >= this.RequiredConsecutiveDays;
+    public bool IsMet(int clientId, IRepositoryAchievements achievmentsRepository)
+        => achievmentsRepository.GetConsecutiveWorkoutDayStreak(clientId) >= this.RequiredConsecutiveDays;
 }
