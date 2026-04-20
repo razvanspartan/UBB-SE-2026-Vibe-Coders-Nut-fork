@@ -3,6 +3,8 @@ namespace VibeCoders.Services;
 using VibeCoders.Domain;
 using VibeCoders.Models;
 using VibeCoders.Models.Integration;
+using VibeCoders.Repositories;
+using VibeCoders.Repositories.Interfaces;
 
 public class ClientService
 {
@@ -12,8 +14,10 @@ public class ClientService
     private readonly EvaluationEngine evaluationEngine;
     private readonly IAchievementUnlockedBus achievementBus;
     private readonly NutritionSyncOptions nutritionSync;
+    private readonly IRepositoryWorkoutLog workoutLogRepository;
 
     public ClientService(
+        IRepositoryWorkoutLog workoutLogRepository,
         IDataStorage storage,
         ProgressionService progressionService,
         IHttpClientFactory httpClientFactory,
@@ -21,12 +25,39 @@ public class ClientService
         IAchievementUnlockedBus achievementBus,
         NutritionSyncOptions nutritionSync)
     {
+        this.workoutLogRepository = workoutLogRepository;
         this.storage = storage;
         this.progressionService = progressionService;
         this.httpClientFactory = httpClientFactory;
         this.evaluationEngine = evaluationEngine;
         this.achievementBus = achievementBus;
         this.nutritionSync = nutritionSync;
+    }
+
+    public List<WorkoutLog> GetWorkoutHistoryForClient(int clientId)
+    {
+        try
+        {
+            return this.workoutLogRepository.GetWorkoutHistory(clientId);
+        }
+        catch (Exception exception)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error loading workout history for client {clientId}: {exception.Message}");
+            return new List<WorkoutLog>();
+        }
+    }
+
+    public bool UpdateWorkoutLog(WorkoutLog updatedWorkoutLog)
+    {
+        try
+        {
+            return this.workoutLogRepository.UpdateWorkoutLog(updatedWorkoutLog);
+        }
+        catch (Exception exception)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error updating workout log {updatedWorkoutLog.Id}: {exception.Message}");
+            return false;
+        }
     }
 
     public bool FinalizeWorkout(WorkoutLog log)
@@ -43,7 +74,7 @@ public class ClientService
 
             ComputeCalories(log);
 
-            bool isSaved = this.storage.SaveWorkoutLog(log);
+            bool isSaved = this.workoutLogRepository.SaveWorkoutLog(log);
             if (!isSaved)
             {
                 return false;
@@ -104,7 +135,7 @@ public class ClientService
 
         try
         {
-            return this.storage.SaveWorkoutLog(updatedLog);
+            return this.workoutLogRepository.SaveWorkoutLog(updatedLog);
         }
         catch (Exception ex)
         {
@@ -142,7 +173,7 @@ public class ClientService
 
     public NutritionSyncPayload BuildNutritionSyncPayload(int clientId)
     {
-        var history = this.storage.GetWorkoutHistory(clientId);
+        var history = this.workoutLogRepository.GetWorkoutHistory(clientId);
         var totalCalories = history.Sum(h => h.TotalCaloriesBurned);
         var last = history.FirstOrDefault();
         var difficulty = string.IsNullOrWhiteSpace(last?.IntensityTag) ? "unknown" : last.IntensityTag;
@@ -151,7 +182,7 @@ public class ClientService
         List<Client> roster;
         try
         {
-            roster = this.storage.GetTrainerClient(1);
+            roster = this.storage.GetTrainerClients(1);
         }
         catch (Exception ex)
         {
@@ -176,7 +207,7 @@ public class ClientService
 
     public ClientProfileSnapshot BuildClientProfileSnapshot(int clientId)
     {
-        var history = this.storage.GetWorkoutHistory(clientId);
+        var history = this.workoutLogRepository.GetWorkoutHistory(clientId);
         var totalCal = history.Sum(h => h.TotalCaloriesBurned);
 
         var latest = history.FirstOrDefault();
@@ -281,6 +312,91 @@ public class ClientService
         };
     }
 
+    public List<WorkoutTemplate> GetAvailableWorkoutsForClient(int clientId)
+    {
+        try
+        {
+            return this.storage.GetAvailableWorkouts(clientId);
+        }
+        catch (Exception exception)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error loading workouts for client {clientId}: {exception.Message}");
+            return new List<WorkoutTemplate>();
+        }
+    }
+
+    public List<WorkoutTemplate> GetCustomAndTrainerAssignedWorkoutsForClient(int clientId)
+    {
+        var availableWorkouts = this.GetAvailableWorkoutsForClient(clientId);
+        var customAndTrainerAssignedWorkouts = new List<WorkoutTemplate>();
+
+        for (int workoutIndex = 0; workoutIndex < availableWorkouts.Count; workoutIndex++)
+        {
+            WorkoutTemplate availableWorkout = availableWorkouts[workoutIndex];
+            bool isCustomWorkout = availableWorkout.Type == WorkoutType.CUSTOM;
+            bool isTrainerAssignedWorkout = availableWorkout.Type == WorkoutType.TRAINER_ASSIGNED;
+
+            if ((isCustomWorkout || isTrainerAssignedWorkout) && availableWorkout.ClientId == clientId)
+            {
+                customAndTrainerAssignedWorkouts.Add(availableWorkout);
+            }
+        }
+
+        return customAndTrainerAssignedWorkouts;
+    }
+
+    public WorkoutTemplate? FindWorkoutTemplateById(int clientId, int workoutTemplateId)
+    {
+        var availableWorkouts = this.GetAvailableWorkoutsForClient(clientId);
+        for (int workoutIndex = 0; workoutIndex < availableWorkouts.Count; workoutIndex++)
+        {
+            WorkoutTemplate availableWorkout = availableWorkouts[workoutIndex];
+            if (availableWorkout.Id == workoutTemplateId)
+            {
+                return availableWorkout;
+            }
+        }
+
+        return null;
+    }
+
+    public Dictionary<string, double> GetPreviousBestWeights(int clientId)
+    {
+        try
+        {
+            var allWorkoutLogs = this.workoutLogRepository.GetWorkoutHistory(clientId);
+            var maximumWeightByExerciseName = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+
+            for (int workoutLogIndex = 0; workoutLogIndex < allWorkoutLogs.Count; workoutLogIndex++)
+            {
+                WorkoutLog workoutLog = allWorkoutLogs[workoutLogIndex];
+
+                for (int exerciseIndex = 0; exerciseIndex < workoutLog.Exercises.Count; exerciseIndex++)
+                {
+                    LoggedExercise loggedExercise = workoutLog.Exercises[exerciseIndex];
+
+                    for (int setIndex = 0; setIndex < loggedExercise.Sets.Count; setIndex++)
+                    {
+                        LoggedSet loggedSet = loggedExercise.Sets[setIndex];
+                        double actualWeight = loggedSet.ActualWeight ?? 0;
+
+                        if (!maximumWeightByExerciseName.TryGetValue(loggedSet.ExerciseName, out double previousMaximumWeight) ||
+                            actualWeight > previousMaximumWeight)
+                        {
+                            maximumWeightByExerciseName[loggedSet.ExerciseName] = actualWeight;
+                        }
+                    }
+                }
+            }
+
+            return maximumWeightByExerciseName;
+        }
+        catch
+        {
+            return new Dictionary<string, double>();
+        }
+    }
+
     private void ComputeCalories(WorkoutLog log)
     {
         if (log.Exercises.Count == 0 || log.Duration == TimeSpan.Zero)
@@ -288,7 +404,7 @@ public class ClientService
             return;
         }
 
-        double weightKg = this.storage.GetClientWeight(log.ClientId);
+        double weightKg = this.workoutLogRepository.GetClientWeight(log.ClientId);
         TimeSpan durationPerExercise = log.Duration / log.Exercises.Count;
 
         foreach (var exercise in log.Exercises)

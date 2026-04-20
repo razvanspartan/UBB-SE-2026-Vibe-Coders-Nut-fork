@@ -14,6 +14,8 @@ using SkiaSharp;
 using VibeCoders.Domain;
 using VibeCoders.Models;
 using VibeCoders.Models.Analytics;
+using VibeCoders.Repositories;
+using VibeCoders.Repositories.Interfaces;
 using VibeCoders.Services;
 
 namespace VibeCoders.ViewModels;

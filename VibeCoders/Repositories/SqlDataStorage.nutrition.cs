@@ -1,4 +1,4 @@
-namespace VibeCoders.Services
+namespace VibeCoders.Repositories
 {
     using System.Text.Json;
     using Microsoft.Data.Sqlite;

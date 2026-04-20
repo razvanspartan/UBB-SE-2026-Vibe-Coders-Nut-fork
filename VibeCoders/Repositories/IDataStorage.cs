@@ -1,7 +1,7 @@
 using VibeCoders.Models;
 using User = VibeCoders.Models.User;
 
-namespace VibeCoders.Services
+namespace VibeCoders.Repositories
 {
     public interface IDataStorage
     {
@@ -14,11 +14,6 @@ namespace VibeCoders.Services
         List<Client> GetTrainerClients(int trainerId);
 
         List<WorkoutTemplate> GetAvailableWorkouts(int clientId);
-
-        bool SaveWorkoutLog(WorkoutLog workoutLog);
-        bool UpdateWorkoutLog(WorkoutLog workoutLog);
-        List<WorkoutLog> GetWorkoutHistory(int clientId);
-        List<WorkoutLog> GetLastTwoLogsForExercise(int templateExerciseId);
 
         TemplateExercise? GetTemplateExercise(int templateExerciseId);
         bool UpdateTemplateWeight(int templateExerciseId, double newWeight);
@@ -33,8 +28,6 @@ namespace VibeCoders.Services
         int GetDistinctWorkoutDayCount(int clientId);
 
         AchievementShowcaseItem? GetAchievementForClient(int achievementId, int clientId);
-
-        bool UpdateWorkoutLogFeedback(int workoutLogId, double rating, string notes);
 
         bool AwardAchievement(int clientId, int achievementId);
 
@@ -59,9 +52,5 @@ namespace VibeCoders.Services
         List<NutritionPlan> GetNutritionPlansForClient(int clientId);
 
         List<Meal> GetMealsForPlan(int nutritionPlanId);
-
-        int GetTotalActiveTimeForClient(int clientId);
-
-        double GetClientWeight(int clientId);
     }
 }

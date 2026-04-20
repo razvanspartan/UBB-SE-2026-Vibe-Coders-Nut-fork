@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
+using VibeCoders.Repositories;
+using VibeCoders.Repositories.Interfaces;
 using VibeCoders.Services;
 using VibeCoders.ViewModels;
 
@@ -72,6 +74,7 @@ public partial class App : Application
         var connectionString = DatabasePaths.GetConnectionString();
 
         services.AddSingleton<IDataStorage, SqlDataStorage>();
+        services.AddSingleton<IRepositoryWorkoutLog>(new RepositoryWorkoutLog(connectionString));
 
         services.AddSingleton<IUserSession, UserSession>();
         services.AddSingleton<IWorkoutAnalyticsStore>(
@@ -103,12 +106,14 @@ public partial class App : Application
         services.AddTransient<AchievementsViewModel>();
         services.AddTransient<ClientProfileViewModel>();
 
-        services.AddTransient<TrainerDashboardViewModel>(serviceProvider =>
-        {
-            var trainerService = serviceProvider.GetRequiredService<TrainerService>();
-            var navService = serviceProvider.GetRequiredService<INavigationService>();
-            return new TrainerDashboardViewModel(trainerService, navService);
-        });
+        services.AddTransient<TrainerDashboardViewModel>(CreateTrainerDashboardViewModel);
+    }
+
+    private static TrainerDashboardViewModel CreateTrainerDashboardViewModel(IServiceProvider serviceProvider)
+    {
+        var trainerService = serviceProvider.GetRequiredService<TrainerService>();
+        var navService = serviceProvider.GetRequiredService<INavigationService>();
+        return new TrainerDashboardViewModel(trainerService, navService);
     }
 
     private void TrySyncDemoClientSession()
@@ -128,7 +133,7 @@ public partial class App : Application
                 return;
             }
 
-            var roster = storage.GetTrainerClient(1);
+            var roster = storage.GetTrainerClients(1);
             var client = roster.FirstOrDefault(c =>
                 string.Equals(c.Username, "TestClient", StringComparison.OrdinalIgnoreCase));
             if (client is null)
