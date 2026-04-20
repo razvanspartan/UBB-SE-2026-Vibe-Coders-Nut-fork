@@ -18,6 +18,7 @@ public class ClientService
     private readonly IRepositoryTrainer trainerRepository;
     private readonly IRepositoryNotification notificationRepository;
     private readonly IRepositoryAchievements achievementsRepository;
+    private readonly IRepositoryNutrition nutritionRepository;
 
     public ClientService(
         IRepositoryWorkoutLog workoutLogRepository,
@@ -29,7 +30,8 @@ public class ClientService
         NutritionSyncOptions nutritionSync,
         IRepositoryTrainer trainerRepository,
         IRepositoryNotification notificationRepository,
-        IRepositoryAchievements achievementsRepository)
+        IRepositoryAchievements achievementsRepository,
+        IRepositoryNutrition nutritionRepository)
     {
         this.workoutLogRepository = workoutLogRepository;
         this.storage = storage;
@@ -40,6 +42,7 @@ public class ClientService
         this.achievementBus = achievementBus;
         this.nutritionSync = nutritionSync;
         this.trainerRepository = trainerRepository;
+        this.nutritionRepository = nutritionRepository;
         this.achievementsRepository = achievementsRepository;
     }
 
@@ -236,7 +239,7 @@ public class ClientService
 
         var plan = GetActiveNutritionPlan(clientId);
         IReadOnlyList<Meal> meals = plan != null
-            ? this.storage.GetMealsForPlan(plan.PlanId)
+            ? this.nutritionRepository.GetMealsForPlan(plan.PlanId)
             : Array.Empty<Meal>();
 
         return new ClientProfileSnapshot
@@ -257,7 +260,7 @@ public class ClientService
 
         try
         {
-            var plans = this.storage.GetNutritionPlansForClient(clientId);
+            var plans = this.nutritionRepository.GetNutritionPlansForClient(clientId);
             var today = DateTime.Today;
             NutritionPlan? best = null;
 

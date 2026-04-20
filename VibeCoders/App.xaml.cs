@@ -72,6 +72,7 @@ public partial class App : Application
     private static void ConfigureServices(IServiceCollection services)
     {
         var connectionString = DatabasePaths.GetConnectionString();
+        services.AddSingleton<IRepositoryNutrition>(new RepositoryNutrition(connectionString));
         services.AddSingleton<IRepositoryAchievements>(new RepositoryAchievements(connectionString));
         services.AddSingleton<IRepositoryNotification>(new RepositoryNotification(connectionString));
         services.AddSingleton<IDataStorage, SqlDataStorage>();
@@ -96,7 +97,6 @@ public partial class App : Application
         services.AddSingleton<ClientService>();
         services.AddSingleton<EvaluationEngine>();
         services.AddSingleton<TrainerService>();
-
         services.AddTransient<ClientDashboardViewModel>();
         services.AddTransient<CalendarIntegrationViewModel>();
         services.AddTransient<RankShowcaseViewModel>();
@@ -105,7 +105,6 @@ public partial class App : Application
         services.AddTransient<CreateWorkoutViewModel>();
         services.AddTransient<AchievementsViewModel>();
         services.AddTransient<ClientProfileViewModel>();
-
         services.AddTransient<TrainerDashboardViewModel>(CreateTrainerDashboardViewModel);
     }
 
