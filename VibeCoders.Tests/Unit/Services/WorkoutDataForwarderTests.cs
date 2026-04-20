@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using NSubstitute;
 using VibeCoders.Models;
 using VibeCoders.Services;
@@ -16,9 +16,9 @@ namespace VibeCoders.Tests.Unit.Services
         private readonly int caloriesBurnedLowIntensity = 150;
         private readonly int caloriesBurnedHighIntensity = 700;
         private readonly int caloriesBurnedModerateIntensity = 350; 
-        private readonly float averageMetLowIntensity = 2.5f;
-        private readonly float averageMetModerateIntensity = 5.5f;
-        private readonly float averageMetHighIntensity = 8.75f;
+        private readonly float averageMetabolicEquivalentLowIntensity = 2.5f;
+        private readonly float averageMetabolicEquivalentModerateIntensity = 5.5f;
+        private readonly float averageMetabolicEquivalentHighIntensity = 8.75f;
         public WorkoutDataForwarderTests()
         {
             this.mockWorkoutAnalyticsStore = Substitute.For<IWorkoutAnalyticsStore>();
@@ -34,7 +34,7 @@ namespace VibeCoders.Tests.Unit.Services
 
             int resultId = await this.workoutDataForwarder.ForwardCompletedWorkoutAsync(1, mockedLowIntensityWorkoutLog);
             mockedLowIntensityWorkoutLog.TotalCaloriesBurned.Should().Be(this.caloriesBurnedLowIntensity);
-            mockedLowIntensityWorkoutLog.AverageMet.Should().Be(this.averageMetLowIntensity);
+            mockedLowIntensityWorkoutLog.AverageMetabolicEquivalent.Should().Be(this.averageMetabolicEquivalentLowIntensity);
             mockedLowIntensityWorkoutLog.IntensityTag.Should().Be("light");
             resultId.Should().Be(this.mockIdToReturn);
         }
@@ -45,7 +45,7 @@ namespace VibeCoders.Tests.Unit.Services
 
             int resultId = await this.workoutDataForwarder.ForwardCompletedWorkoutAsync(1, mockedModerateIntensityWorkoutLog);
             mockedModerateIntensityWorkoutLog.TotalCaloriesBurned.Should().Be(this.caloriesBurnedModerateIntensity);
-            mockedModerateIntensityWorkoutLog.AverageMet.Should().Be(this.averageMetModerateIntensity);
+            mockedModerateIntensityWorkoutLog.AverageMetabolicEquivalent.Should().Be(this.averageMetabolicEquivalentModerateIntensity);
             mockedModerateIntensityWorkoutLog.IntensityTag.Should().Be("moderate");
             resultId.Should().Be(this.mockIdToReturn);
         }
@@ -56,7 +56,7 @@ namespace VibeCoders.Tests.Unit.Services
 
             int resultId = await this.workoutDataForwarder.ForwardCompletedWorkoutAsync(1, mockedHighIntensityWorkoutLog);
             mockedHighIntensityWorkoutLog.TotalCaloriesBurned.Should().Be(this.caloriesBurnedHighIntensity);
-            mockedHighIntensityWorkoutLog.AverageMet.Should().Be(this.averageMetHighIntensity);
+            mockedHighIntensityWorkoutLog.AverageMetabolicEquivalent.Should().Be(this.averageMetabolicEquivalentHighIntensity);
             mockedHighIntensityWorkoutLog.IntensityTag.Should().Be("intense");
             resultId.Should().Be(this.mockIdToReturn);
         }

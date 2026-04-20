@@ -1,4 +1,4 @@
-﻿using VibeCoders.Models;
+using VibeCoders.Models;
 
 namespace VibeCoders.Tests.Mocks.DataFactories;
 
@@ -24,14 +24,14 @@ public static class WorkoutLogFactory
             new LoggedExercise
             {
                 ExerciseName = "Jogging",
-                Met = 5.0f, // Moderate threshold
+                MetabolicEquivalent = 5.0f, // Moderate threshold
                 ExerciseCaloriesBurned = 200,
                 TargetMuscles = MuscleGroup.LEGS
             },
             new LoggedExercise
             {
                 ExerciseName = "Push-ups",
-                Met = 6.0f, // Moderate threshold
+                MetabolicEquivalent = 6.0f, // Moderate threshold
                 ExerciseCaloriesBurned = 150,
                 TargetMuscles = MuscleGroup.CHEST
             }
@@ -49,7 +49,7 @@ public static class WorkoutLogFactory
             new LoggedExercise
             {
                 ExerciseName = "Heavy Squats",
-                Met = 8.5f, // Intense threshold
+                MetabolicEquivalent = 8.5f, // Intense threshold
                 ExerciseCaloriesBurned = 300,
                 TargetMuscles = MuscleGroup.LEGS,
                 Sets = new List<LoggedSet>
@@ -60,7 +60,7 @@ public static class WorkoutLogFactory
             new LoggedExercise
             {
                 ExerciseName = "Deadlift",
-                Met = 9.0f, // Intense threshold
+                MetabolicEquivalent = 9.0f, // Intense threshold
                 ExerciseCaloriesBurned = 400,
                 TargetMuscles = MuscleGroup.BACK
             }
@@ -83,7 +83,7 @@ public static class WorkoutLogFactory
             new LoggedExercise
             {
                 ExerciseName = "Yoga Flow",
-                Met = 2.5f, // Light threshold
+                MetabolicEquivalent = 2.5f, // Light threshold
                 ExerciseCaloriesBurned = 150,
                 TargetMuscles = MuscleGroup.CORE
             }
