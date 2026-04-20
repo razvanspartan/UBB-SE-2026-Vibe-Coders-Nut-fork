@@ -278,8 +278,7 @@ namespace VibeCoders.Services
 
             return logs;
         }
-
-        public bool UpdateWorkoutLogFeedback(int workoutLogId, double rating, string notes)
+      public bool UpdateWorkoutLogFeedback(int workoutLogId, double rating, string notes)
         {
             const string sql = @"
                 UPDATE WORKOUT_LOG

@@ -96,7 +96,7 @@ using VibeCoders.Models;
                         continue;
                     }
 
-                    var eventContent = CreateVEvent(workoutTemplate, currentDate);
+                    var eventContent = CreateVirtualEvent(workoutTemplate, currentDate);
                     events.Add(eventContent);
                 }
             }
@@ -104,7 +104,7 @@ using VibeCoders.Models;
             return events;
         }
 
-        private string CreateVEvent(WorkoutTemplate workoutTemplate, DateTime eventDate)
+        private string CreateVirtualEvent(WorkoutTemplate workoutTemplate, DateTime eventDate)
         {
             var builder = new StringBuilder();
 

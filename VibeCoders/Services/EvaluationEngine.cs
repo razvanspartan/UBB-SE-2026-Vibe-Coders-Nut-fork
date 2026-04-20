@@ -16,6 +16,7 @@ public sealed class EvaluationEngine
     public EvaluationEngine(IDataStorage storage, IReadOnlyList<VibeCoders.Domain.IMilestoneCheck> checks)
     {
         this.storage = storage;
+
         this.checks = checks;
     }
 
