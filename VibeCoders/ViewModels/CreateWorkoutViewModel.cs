@@ -4,7 +4,7 @@ using System.ComponentModel;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
 using VibeCoders.Models;
-using VibeCoders.Services;
+using VibeCoders.Repositories;
 
 namespace VibeCoders.ViewModels
 {

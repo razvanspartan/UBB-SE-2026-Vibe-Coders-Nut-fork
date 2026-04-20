@@ -8,17 +8,16 @@ namespace VibeCoders.ViewModels
     using CommunityToolkit.Mvvm.ComponentModel;
     using CommunityToolkit.Mvvm.Input;
     using VibeCoders.Models;
+    using VibeCoders.Repositories;
     using VibeCoders.Services;
 
     public sealed partial class WorkoutLogsViewModel : ObservableObject
     {
-        private readonly IDataStorage storage;
         private readonly INavigationService navigation;
         private readonly ClientService clientService;
 
-        public WorkoutLogsViewModel(IDataStorage storage, INavigationService navigation, ClientService clientService)
+        public WorkoutLogsViewModel(INavigationService navigation, ClientService clientService)
         {
-            this.storage = storage;
             this.navigation = navigation;
             this.clientService = clientService;
         }
@@ -44,7 +43,7 @@ namespace VibeCoders.ViewModels
                 this.Logs.Clear();
                 this.ShowEmptyState = false;
 
-                var logs = this.storage.GetWorkoutHistory(clientId);
+                var logs = this.clientService.GetWorkoutHistoryForClient(clientId);
                 foreach (var log in logs)
                 {
                     this.Logs.Add(new WorkoutLogItemViewModel(log, this.clientService));
@@ -101,7 +100,7 @@ namespace VibeCoders.ViewModels
             {
                 this.ErrorMessage = string.Empty;
                 var updated = item.BuildUpdatedWorkoutLog();
-                bool ok = this.storage.UpdateWorkoutLog(updated);
+                bool ok = this.clientService.UpdateWorkoutLog(updated);
                 if (!ok)
                 {
                     this.ErrorMessage = "Failed to save workout changes.";

@@ -6,24 +6,28 @@ namespace VibeCoders.Services
     using System.Text;
     using System.Threading.Tasks;
     using VibeCoders.Models;
+    using VibeCoders.Repositories;
+    using VibeCoders.Repositories.Interfaces;
 
     public sealed class TrainerService
     {
         private readonly IDataStorage storage;
+        private readonly IRepositoryWorkoutLog workoutLogRepository;
 
-        public TrainerService(IDataStorage storage)
+        public TrainerService(IDataStorage storage, IRepositoryWorkoutLog workoutLogRepository)
         {
             this.storage = storage;
+            this.workoutLogRepository = workoutLogRepository;
         }
 
         public List<Client> GetAssignedClients(int trainerId)
         {
-            return storage.GetTrainerClient(trainerId);
+            return storage.GetTrainerClients(trainerId);
         }
 
         public List<WorkoutLog> GetClientWorkoutHistory(int clientId)
         {
-            return storage.GetWorkoutHistory(clientId);
+            return workoutLogRepository.GetWorkoutHistory(clientId);
         }
 
         public bool SaveWorkoutFeedback(WorkoutLog log)
@@ -33,7 +37,7 @@ namespace VibeCoders.Services
                 return false;
             }
 
-            return storage.UpdateWorkoutLogFeedback(log.Id, log.Rating, log.TrainerNotes);
+            return workoutLogRepository.UpdateWorkoutLogFeedback(log.Id, log.Rating, log.TrainerNotes);
         }
 
         public void AssignWorkout(Client client, WorkoutLog workout)

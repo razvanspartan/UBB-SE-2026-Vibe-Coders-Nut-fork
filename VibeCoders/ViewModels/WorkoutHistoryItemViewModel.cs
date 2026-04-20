@@ -10,7 +10,7 @@ using Microsoft.UI;
 using Microsoft.UI.Xaml.Media;
 using VibeCoders.Domain;
 using VibeCoders.Models.Analytics;
-using VibeCoders.Services;
+using VibeCoders.Repositories.Interfaces;
 
 public sealed partial class WorkoutHistoryItemViewModel : ObservableObject
 {

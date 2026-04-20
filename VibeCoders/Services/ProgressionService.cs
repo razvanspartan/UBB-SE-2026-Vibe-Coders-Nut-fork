@@ -1,6 +1,7 @@
 namespace VibeCoders.Services
 {
     using VibeCoders.Models;
+    using VibeCoders.Repositories;
     using VibeCoders.Utils;
 
     public sealed class ProgressionService

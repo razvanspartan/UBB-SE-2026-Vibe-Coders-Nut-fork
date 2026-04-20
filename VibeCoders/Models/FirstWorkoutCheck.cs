@@ -1,4 +1,4 @@
-using VibeCoders.Services;
+using VibeCoders.Repositories;
 
 namespace VibeCoders.Domain;
 

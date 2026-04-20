@@ -11,7 +11,6 @@ namespace VibeCoders.ViewModels
     public partial class ActiveWorkoutViewModel : ObservableObject
     {
         private readonly ClientService clientService;
-        private readonly IDataStorage storage;
         private readonly INavigationService navigation;
         private readonly WorkoutUiState workoutUiState;
         private WorkoutLog activeLog;
@@ -23,12 +22,10 @@ namespace VibeCoders.ViewModels
 
         public ActiveWorkoutViewModel(
             ClientService clientService,
-            IDataStorage storage,
             INavigationService navigation,
             WorkoutUiState workoutUiState)
         {
             this.clientService = clientService;
-            this.storage = storage;
             this.navigation = navigation;
             this.workoutUiState = workoutUiState;
             this.activeLog = new WorkoutLog
@@ -179,22 +176,7 @@ namespace VibeCoders.ViewModels
 
         private Dictionary<string, double> GetPreviousBestWeights(int clientId)
         {
-            try
-            {
-                var allLogs = this.storage.GetWorkoutHistory(clientId);
-
-                return allLogs
-                    .SelectMany(log => log.Exercises)
-                    .SelectMany(ex => ex.Sets)
-                    .GroupBy(s => s.ExerciseName)
-                    .ToDictionary(
-                        g => g.Key,
-                        g => g.Max(s => s.ActualWeight ?? 0));
-            }
-            catch
-            {
-                return new Dictionary<string, double>();
-            }
+            return this.clientService.GetPreviousBestWeights(clientId);
         }
 
         [ObservableProperty]
@@ -217,13 +199,11 @@ namespace VibeCoders.ViewModels
 
         public void LoadCustomWorkouts(int clientId)
         {
-            var allWorkouts = this.storage.GetAvailableWorkouts(clientId);
+            var customAndTrainerAssignedWorkouts = this.clientService.GetCustomAndTrainerAssignedWorkoutsForClient(clientId);
             this.CustomWorkouts.Clear();
-            foreach (var w in allWorkouts.Where(w =>
-                         (w.Type == WorkoutType.CUSTOM || w.Type == WorkoutType.TRAINER_ASSIGNED) &&
-                         w.ClientId == clientId))
+            for (int workoutIndex = 0; workoutIndex < customAndTrainerAssignedWorkouts.Count; workoutIndex++)
             {
-                this.CustomWorkouts.Add(w);
+                this.CustomWorkouts.Add(customAndTrainerAssignedWorkouts[workoutIndex]);
             }
 
             this.HasCustomWorkouts = this.CustomWorkouts.Count > 0;
@@ -250,7 +230,7 @@ namespace VibeCoders.ViewModels
             {
                 this.IsLoadingWorkouts = true;
 
-                var allWorkouts = this.storage.GetAvailableWorkouts(clientId);
+                var allWorkouts = this.clientService.GetAvailableWorkoutsForClient(clientId);
                 var selected = allWorkouts
                     .Where(w => selectedGoalNames.Contains(w.Name))
                     .ToList();
@@ -428,8 +408,9 @@ namespace VibeCoders.ViewModels
                 return;
             }
 
-            var template = this.storage.GetAvailableWorkouts(clientId)
-                .FirstOrDefault(t => t.Id == this.LastCompletedLog.SourceTemplateId);
+            var template = this.clientService.FindWorkoutTemplateById(
+                clientId,
+                this.LastCompletedLog.SourceTemplateId);
 
             if (template == null)
             {

@@ -1,9 +1,9 @@
-namespace VibeCoders.Services
+namespace VibeCoders.Repositories
 {
     using System;
     using Microsoft.Data.Sqlite;
 
-    public partial class SqlDataStorage : IDataStorage
+    public partial class SqlDataStorage
     {
         private readonly string connectionString = DatabasePaths.GetConnectionString();
 

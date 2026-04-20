@@ -1,6 +1,6 @@
 namespace VibeCoders.Domain;
 
-using VibeCoders.Services;
+using VibeCoders.Repositories;
 
 public sealed class WeeklyVolumeCheck : IMilestoneCheck
 {

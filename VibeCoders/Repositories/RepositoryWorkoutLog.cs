@@ -1,10 +1,17 @@
-namespace VibeCoders.Services
+namespace VibeCoders.Repositories
 {
     using Microsoft.Data.Sqlite;
     using VibeCoders.Models;
+    using VibeCoders.Repositories.Interfaces;
+    using VibeCoders.Repositories.Mapping;
 
-    public partial class SqlDataStorage
+    public class RepositoryWorkoutLog : IRepositoryWorkoutLog
     {
+        private readonly string connectionString;
+        public RepositoryWorkoutLog(string connectionString)
+        {
+            this.connectionString = connectionString;
+        }
         public double GetClientWeight(int clientId)
         {
             const string sql = "SELECT weight FROM CLIENT WHERE client_id = @ClientId LIMIT 1;";
@@ -46,7 +53,7 @@ namespace VibeCoders.Services
                 {
                     command.Parameters.AddWithValue("@ClientId", log.ClientId);
                     command.Parameters.AddWithValue("@WorkoutId", log.SourceTemplateId);
-                    command.Parameters.AddWithValue("@Type", SerializeWorkoutType(log.Type));
+                    command.Parameters.AddWithValue("@Type", WorkoutTypeRepositoryMapping.SerializeWorkoutType(log.Type));
                     command.Parameters.AddWithValue("@Date", log.Date.ToString("o"));
                     command.Parameters.AddWithValue("@Duration", log.Duration.ToString());
                     command.Parameters.AddWithValue("@CaloriesBurned", log.TotalCaloriesBurned);
@@ -131,7 +138,7 @@ namespace VibeCoders.Services
                         Rating = reader.IsDBNull(5) ? -1 : Convert.ToDouble(reader.GetInt32(5)),
                         TrainerNotes = reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
                         WorkoutName = reader.IsDBNull(7) ? string.Empty : reader.GetString(7),
-                        Type = ParseWorkoutType(reader.IsDBNull(8) ? null : reader.GetString(8)),
+                        Type = WorkoutTypeRepositoryMapping.ParseWorkoutType(reader.IsDBNull(8) ? null : reader.GetString(8)),
                         ClientId = clientId,
                     });
                 }
@@ -266,7 +273,7 @@ namespace VibeCoders.Services
                         Duration = TimeSpan.Parse(reader.GetString(3)),
                         TotalCaloriesBurned = reader.IsDBNull(4) ? 0 : reader.GetInt32(4),
                         SourceTemplateId = reader.IsDBNull(5) ? 0 : reader.GetInt32(5),
-                        Type = ParseWorkoutType(reader.IsDBNull(6) ? null : reader.GetString(6)),
+                        Type = WorkoutTypeRepositoryMapping.ParseWorkoutType(reader.IsDBNull(6) ? null : reader.GetString(6)),
                     });
                 }
             }

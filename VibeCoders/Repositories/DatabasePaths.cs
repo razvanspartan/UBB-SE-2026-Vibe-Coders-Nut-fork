@@ -1,4 +1,4 @@
-namespace VibeCoders.Services;
+namespace VibeCoders.Repositories;
 
 public static class DatabasePaths
 {

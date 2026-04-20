@@ -1,6 +1,7 @@
 using FluentAssertions;
 using NSubstitute;
 using VibeCoders.Models;
+using VibeCoders.Repositories.Interfaces;
 using VibeCoders.Services;
 using VibeCoders.Tests.Mocks.DataFactories;
 using Xunit;

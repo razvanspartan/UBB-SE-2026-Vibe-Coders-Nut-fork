@@ -1,12 +1,13 @@
-namespace VibeCoders.Services
+namespace VibeCoders.Repositories
 {
     using Microsoft.Data.Sqlite;
     using VibeCoders.Models;
+    using VibeCoders.Repositories.Mapping;
     using User = VibeCoders.Models.User;
 
     public partial class SqlDataStorage : IDataStorage
     {
-        public List<Client> GetTrainerClient(int trainerId)
+        public List<Client> GetTrainerClients(int trainerId)
         {
             var roster = new List<Client>();
 
@@ -85,7 +86,7 @@ namespace VibeCoders.Services
                     using var command = new SqliteCommand(insertTemplateSql, connection, transaction);
                     command.Parameters.AddWithValue("@ClientId", template.ClientId);
                     command.Parameters.AddWithValue("@Name", template.Name);
-                    command.Parameters.AddWithValue("@Type", SerializeWorkoutType(template.Type));
+                    command.Parameters.AddWithValue("@Type", WorkoutTypeRepositoryMapping.SerializeWorkoutType(template.Type));
                     command.ExecuteNonQuery();
 
                     using var idCmd = new SqliteCommand("SELECT last_insert_rowid();", connection, transaction);
@@ -97,7 +98,7 @@ namespace VibeCoders.Services
                     using var command = new SqliteCommand(updateTemplateSql, connection, transaction);
                     command.Parameters.AddWithValue("@TemplateId", templateId);
                     command.Parameters.AddWithValue("@Name", template.Name);
-                    command.Parameters.AddWithValue("@Type", SerializeWorkoutType(template.Type));
+                    command.Parameters.AddWithValue("@Type", WorkoutTypeRepositoryMapping.SerializeWorkoutType(template.Type));
                     command.ExecuteNonQuery();
 
                     using var deleteCmd = new SqliteCommand(deleteOldExercisesSql, connection, transaction);

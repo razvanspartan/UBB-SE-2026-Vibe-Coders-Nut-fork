@@ -1,7 +1,7 @@
 using VibeCoders.Models;
 using VibeCoders.Models.Analytics;
 
-namespace VibeCoders.Services;
+namespace VibeCoders.Repositories.Interfaces;
 
 public interface IWorkoutAnalyticsStore
 {

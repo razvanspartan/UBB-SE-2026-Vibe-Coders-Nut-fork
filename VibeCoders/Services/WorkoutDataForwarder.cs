@@ -1,4 +1,5 @@
 using VibeCoders.Models;
+using VibeCoders.Repositories.Interfaces;
 
 namespace VibeCoders.Services;
 

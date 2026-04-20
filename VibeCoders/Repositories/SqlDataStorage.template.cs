@@ -1,35 +1,10 @@
-namespace VibeCoders.Services
+namespace VibeCoders.Repositories
 {
     using Microsoft.Data.Sqlite;
     using VibeCoders.Models;
-
+    using VibeCoders.Repositories.Mapping;
     public partial class SqlDataStorage
     {
-        private static WorkoutType ParseWorkoutType(string? value)
-        {
-            if (string.Equals(value, "PRE_BUILT", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(value, "PREBUILT", StringComparison.OrdinalIgnoreCase))
-            {
-                return WorkoutType.PREBUILT;
-            }
-
-            if (string.Equals(value, "TRAINERASSIGNED", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(value, "TRAINER-ASSIGNED", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(value, "TRAINER ASSIGNED", StringComparison.OrdinalIgnoreCase))
-            {
-                return WorkoutType.TRAINER_ASSIGNED;
-            }
-
-            return Enum.TryParse<WorkoutType>(value, true, out var parsed)
-                ? parsed
-                : WorkoutType.CUSTOM;
-        }
-
-        private static string SerializeWorkoutType(WorkoutType type)
-        {
-            return type == WorkoutType.PREBUILT ? "PRE_BUILT" : type.ToString();
-        }
-
         public List<WorkoutTemplate> GetAvailableWorkouts(int clientId)
         {
             const string sql = @"
@@ -61,7 +36,7 @@ namespace VibeCoders.Services
                         Id = reader.GetInt32(0),
                         ClientId = reader.GetInt32(1),
                         Name = reader.GetString(2),
-                        Type = ParseWorkoutType(reader.GetString(3)),
+                        Type = WorkoutTypeRepositoryMapping.ParseWorkoutType(reader.GetString(3)),
                     });
                 }
             }
