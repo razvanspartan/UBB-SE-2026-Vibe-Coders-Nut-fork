@@ -30,13 +30,14 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
     private readonly IAnalyticsDashboardRefreshBus _refreshBus;
     private CancellationTokenSource? _loadCts;
     private readonly IRepositoryAchievements achievementsRepository;
-
+    private readonly IRepositoryNutrition nutritionRepository;
     public ClientDashboardViewModel(
         IWorkoutAnalyticsStore store,
         IDataStorage dataStorage,
         IUserSession session,
         IAnalyticsDashboardRefreshBus refreshBus,
-        IRepositoryAchievements achievementsRepository)
+        IRepositoryAchievements achievementsRepository,
+        IRepositoryNutrition nutritionRepository)
     {
         _store = store;
         _dataStorage = dataStorage;
@@ -44,9 +45,8 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
         _refreshBus = refreshBus;
         this.achievementsRepository = achievementsRepository;
         _refreshBus.RefreshRequested += OnRefreshRequested;
+        this.nutritionRepository = nutritionRepository;
     }
-
-
 
     [ObservableProperty]
     private int totalWorkouts;
@@ -194,9 +194,6 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
             IsLoadingHistory = false;
         }
     }
-
-
-
     public void ReloadAchievementsPreview() =>
         LoadRecentAchievements((int)_session.CurrentClientId);
 

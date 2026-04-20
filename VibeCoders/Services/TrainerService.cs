@@ -14,11 +14,13 @@ namespace VibeCoders.Services
         private readonly IDataStorage storage;
         private readonly IRepositoryWorkoutLog workoutLogRepository;
         private readonly IRepositoryTrainer trainerRepository;
-        public TrainerService(IDataStorage storage, IRepositoryWorkoutLog workoutLogRepository, IRepositoryTrainer trainerRepository)
+        private readonly IRepositoryNutrition nutritionRepository;
+        public TrainerService(IDataStorage storage, IRepositoryWorkoutLog workoutLogRepository, IRepositoryTrainer trainerRepository, IRepositoryNutrition nutritionRepository)
         {
             this.storage = storage;
             this.workoutLogRepository = workoutLogRepository;
             this.trainerRepository = trainerRepository;
+            this.nutritionRepository = nutritionRepository;
         }
 
         public List<Client> GetAssignedClients(int trainerId)
@@ -117,7 +119,7 @@ namespace VibeCoders.Services
                 return false;
             }
 
-            storage.SaveNutritionPlanForClient(plan, clientId);
+            nutritionRepository.SaveNutritionPlanForClient(plan, clientId);
             return true;
         }
 

@@ -3,9 +3,16 @@ namespace VibeCoders.Repositories
     using System.Text.Json;
     using Microsoft.Data.Sqlite;
     using VibeCoders.Models;
+    using VibeCoders.Repositories.Interfaces;
 
-    public partial class SqlDataStorage : IDataStorage
+    public class RepositoryNutrition : IRepositoryNutrition
     {
+        private readonly string connectionString;
+        public RepositoryNutrition(string connectionString)
+        {
+            this.connectionString = connectionString;
+        }
+
         public int InsertNutritionPlan(NutritionPlan plan)
         {
             const string sql = @"
