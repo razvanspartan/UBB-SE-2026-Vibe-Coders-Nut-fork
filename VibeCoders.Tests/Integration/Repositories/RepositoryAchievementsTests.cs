@@ -8,6 +8,23 @@ namespace VibeCoders.Tests.Integration.Repositories;
 
 public sealed class RepositoryAchievementsTests : IDisposable
 {
+    private const int UserIdOffset = 1000;
+    private const int DefaultTrainerId = 1;
+    private const double DefaultWeight = 75.0;
+    private const double DefaultHeight = 180.0;
+    private const int DefaultCaloriesBurned = 300;
+    private const int DatabaseBooleanFalse = 0;
+    private const int DatabaseBooleanTrue = 1;
+    private const int NonExistentAchievementId = 999;
+    private const int TenDaysAgo = -10;
+    private const int TwentyDaysAgo = -20;
+    private const int ExpectedCountZero = 0;
+    private const int ExpectedCountOne = 1;
+    private const int ExpectedCountTwo = 2;
+    private const int ExpectedCountThree = 3;
+    private const int ExpectedCountFour = 4;
+    private const int ExpectedCountFive = 5;
+
     private readonly SqliteConnection connection;
     private readonly string connectionString;
     private readonly RepositoryAchievements repository;
@@ -30,7 +47,7 @@ public sealed class RepositoryAchievementsTests : IDisposable
 
     private static void CreateSchema(SqliteConnection connection)
     {
-        using var cmd = new SqliteCommand(
+        using var command = new SqliteCommand(
             @"
             CREATE TABLE IF NOT EXISTS CLIENT (
                 client_id  INTEGER PRIMARY KEY,
@@ -69,7 +86,7 @@ public sealed class RepositoryAchievementsTests : IDisposable
                 FOREIGN KEY (client_id)      REFERENCES CLIENT(client_id),
                 FOREIGN KEY (achievement_id) REFERENCES ACHIEVEMENT(achievement_id)
             );", connection);
-        cmd.ExecuteNonQuery();
+        command.ExecuteNonQuery();
     }
 
     [Fact]
@@ -82,7 +99,7 @@ public sealed class RepositoryAchievementsTests : IDisposable
 
         var count = this.repository.GetWorkoutCount(1);
 
-        count.Should().Be(3);
+        count.Should().Be(ExpectedCountThree);
     }
 
     [Fact]
@@ -96,7 +113,7 @@ public sealed class RepositoryAchievementsTests : IDisposable
 
         var count = this.repository.GetWorkoutCount(1);
 
-        count.Should().Be(2);
+        count.Should().Be(ExpectedCountTwo);
     }
 
     [Fact]
@@ -109,7 +126,7 @@ public sealed class RepositoryAchievementsTests : IDisposable
 
         var count = this.repository.GetDistinctWorkoutDayCount(1);
 
-        count.Should().Be(3);
+        count.Should().Be(ExpectedCountThree);
     }
 
     [Fact]
@@ -123,7 +140,7 @@ public sealed class RepositoryAchievementsTests : IDisposable
 
         var count = this.repository.GetDistinctWorkoutDayCount(1);
 
-        count.Should().Be(2);
+        count.Should().Be(ExpectedCountTwo);
     }
 
     [Fact]
@@ -131,12 +148,12 @@ public sealed class RepositoryAchievementsTests : IDisposable
     {
         InsertTestClient(1);
         var today = DateTime.UtcNow.Date;
-        InsertWorkoutLog(1, today.AddDays(-10));
-        InsertWorkoutLog(1, today.AddDays(-20));
+        InsertWorkoutLog(1, today.AddDays(TenDaysAgo));
+        InsertWorkoutLog(1, today.AddDays(TwentyDaysAgo));
 
         var count = this.repository.GetWorkoutsInLastSevenDays(1);
 
-        count.Should().Be(0);
+        count.Should().Be(ExpectedCountZero);
     }
 
     [Fact]
@@ -152,7 +169,7 @@ public sealed class RepositoryAchievementsTests : IDisposable
 
         var count = this.repository.GetWorkoutsInLastSevenDays(1);
 
-        count.Should().Be(4);
+        count.Should().Be(ExpectedCountFour);
     }
 
     [Fact]
@@ -166,7 +183,7 @@ public sealed class RepositoryAchievementsTests : IDisposable
 
         var streak = this.repository.GetConsecutiveWorkoutDayStreak(1);
 
-        streak.Should().Be(4);
+        streak.Should().Be(ExpectedCountFour);
     }
 
     [Fact]
@@ -184,7 +201,7 @@ public sealed class RepositoryAchievementsTests : IDisposable
 
         var streak = this.repository.GetConsecutiveWorkoutDayStreak(1);
 
-        streak.Should().Be(5);
+        streak.Should().Be(ExpectedCountFive);
     }
 
     [Fact]
@@ -198,7 +215,7 @@ public sealed class RepositoryAchievementsTests : IDisposable
 
         var streak = this.repository.GetConsecutiveWorkoutDayStreak(1);
 
-        streak.Should().Be(3);
+        streak.Should().Be(ExpectedCountThree);
     }
 
     [Fact]
@@ -210,7 +227,7 @@ public sealed class RepositoryAchievementsTests : IDisposable
 
         var achievements = this.repository.GetAllAchievements();
 
-        achievements.Should().HaveCount(3);
+        achievements.Should().HaveCount(ExpectedCountThree);
         achievements[0].AchievementId.Should().Be(1);
         achievements[0].Name.Should().Be("First Workout");
         achievements[0].Description.Should().Be("Complete your first workout");
@@ -228,7 +245,7 @@ public sealed class RepositoryAchievementsTests : IDisposable
 
         var achievements = this.repository.GetAllAchievements();
 
-        achievements.Should().HaveCount(3);
+        achievements.Should().HaveCount(ExpectedCountThree);
         achievements[0].AchievementId.Should().Be(1);
         achievements[1].AchievementId.Should().Be(2);
         achievements[2].AchievementId.Should().Be(3);
@@ -280,7 +297,7 @@ public sealed class RepositoryAchievementsTests : IDisposable
     {
         InsertTestClient(1);
 
-        var achievement = this.repository.GetAchievementForClient(999, 1);
+        var achievement = this.repository.GetAchievementForClient(NonExistentAchievementId, 1);
 
         achievement.Should().BeNull();
     }
@@ -328,7 +345,7 @@ public sealed class RepositoryAchievementsTests : IDisposable
 
         var showcase = this.repository.GetAchievementShowcaseForClient(1);
 
-        showcase.Should().HaveCount(3);
+        showcase.Should().HaveCount(ExpectedCountThree);
         showcase[0].AchievementId.Should().Be(2);
         showcase[0].IsUnlocked.Should().BeTrue();
         showcase[1].IsUnlocked.Should().BeFalse();
@@ -345,7 +362,7 @@ public sealed class RepositoryAchievementsTests : IDisposable
 
         var showcase = this.repository.GetAchievementShowcaseForClient(1);
 
-        showcase.Should().HaveCount(2);
+        showcase.Should().HaveCount(ExpectedCountTwo);
         showcase.Should().ContainSingle(a => a.Title == "Same Title");
         showcase.Should().ContainSingle(a => a.Title == "Different Title");
     }
@@ -397,7 +414,7 @@ public sealed class RepositoryAchievementsTests : IDisposable
         this.repository.EvaluateAndUnlockWorkoutMilestones(1);
 
         var count = GetClientAchievementCount(1, 1);
-        count.Should().Be(1);
+        count.Should().Be(ExpectedCountOne);
     }
 
     [Fact]
@@ -434,91 +451,95 @@ public sealed class RepositoryAchievementsTests : IDisposable
         var recentWorkouts = this.repository.GetWorkoutsInLastSevenDays(1);
         var showcase = this.repository.GetAchievementShowcaseForClient(1);
 
-        count.Should().Be(3);
-        distinctDays.Should().Be(3);
-        streak.Should().Be(3);
-        recentWorkouts.Should().Be(3);
-        showcase.Should().HaveCount(2);
+        count.Should().Be(ExpectedCountThree);
+        distinctDays.Should().Be(ExpectedCountThree);
+        streak.Should().Be(ExpectedCountThree);
+        recentWorkouts.Should().Be(ExpectedCountThree);
+        showcase.Should().HaveCount(ExpectedCountTwo);
     }
 
     private void InsertTestClient(int clientId)
     {
-        using var cmd = new SqliteCommand(
-            "INSERT INTO CLIENT (client_id, user_id, trainer_id, weight, height) VALUES (@id, @uid, 1, 75.0, 180.0)",
+        using var command = new SqliteCommand(
+            "INSERT INTO CLIENT (client_id, user_id, trainer_id, weight, height) VALUES (@identifier, @userId, @trainerId, @weight, @height)",
             this.connection);
-        cmd.Parameters.AddWithValue("@id", clientId);
-        cmd.Parameters.AddWithValue("@uid", clientId + 1000);
-        cmd.ExecuteNonQuery();
+        command.Parameters.AddWithValue("@identifier", clientId);
+        command.Parameters.AddWithValue("@userId", clientId + UserIdOffset);
+        command.Parameters.AddWithValue("@trainerId", DefaultTrainerId);
+        command.Parameters.AddWithValue("@weight", DefaultWeight);
+        command.Parameters.AddWithValue("@height", DefaultHeight);
+        command.ExecuteNonQuery();
     }
 
     private void InsertWorkoutLog(int clientId, DateTime date)
     {
-        using var cmd = new SqliteCommand(
+        using var command = new SqliteCommand(
             @"INSERT INTO WORKOUT_LOG (client_id, date, type, calories_burned, intensity_tag)
-              VALUES (@cid, @date, 'CUSTOM', 300, 'moderate')",
+              VALUES (@clientId, @date, 'CUSTOM', @caloriesBurned, 'moderate')",
             this.connection);
-        cmd.Parameters.AddWithValue("@cid", clientId);
-        cmd.Parameters.AddWithValue("@date", date.ToString("o"));
-        cmd.ExecuteNonQuery();
+        command.Parameters.AddWithValue("@clientId", clientId);
+        command.Parameters.AddWithValue("@date", date.ToString("o"));
+        command.Parameters.AddWithValue("@caloriesBurned", DefaultCaloriesBurned);
+        command.ExecuteNonQuery();
     }
 
     private void InsertAchievement(int achievementId, string title, string description, string criteria, int? thresholdWorkouts)
     {
-        using var cmd = new SqliteCommand(
+        using var command = new SqliteCommand(
             @"INSERT INTO ACHIEVEMENT (achievement_id, title, description, criteria, threshold_workouts)
-              VALUES (@id, @title, @desc, @criteria, @threshold)",
+              VALUES (@identifier, @title, @description, @criteria, @threshold)",
             this.connection);
-        cmd.Parameters.AddWithValue("@id", achievementId);
-        cmd.Parameters.AddWithValue("@title", title);
-        cmd.Parameters.AddWithValue("@desc", description);
-        cmd.Parameters.AddWithValue("@criteria", criteria);
-        cmd.Parameters.AddWithValue("@threshold", thresholdWorkouts ?? (object)DBNull.Value);
-        cmd.ExecuteNonQuery();
+        command.Parameters.AddWithValue("@identifier", achievementId);
+        command.Parameters.AddWithValue("@title", title);
+        command.Parameters.AddWithValue("@description", description);
+        command.Parameters.AddWithValue("@criteria", criteria);
+        command.Parameters.AddWithValue("@threshold", thresholdWorkouts ?? (object)DBNull.Value);
+        command.ExecuteNonQuery();
     }
 
     private void InsertClientAchievement(int clientId, int achievementId, bool unlocked)
     {
-        using var cmd = new SqliteCommand(
+        using var command = new SqliteCommand(
             @"INSERT INTO CLIENT_ACHIEVEMENT (client_id, achievement_id, unlocked)
-              VALUES (@cid, @aid, @unlocked)",
+              VALUES (@clientId, @achievementId, @unlocked)",
             this.connection);
-        cmd.Parameters.AddWithValue("@cid", clientId);
-        cmd.Parameters.AddWithValue("@aid", achievementId);
-        cmd.Parameters.AddWithValue("@unlocked", unlocked ? 1 : 0);
-        cmd.ExecuteNonQuery();
+        command.Parameters.AddWithValue("@clientId", clientId);
+        command.Parameters.AddWithValue("@achievementId", achievementId);
+        command.Parameters.AddWithValue("@unlocked", unlocked ? DatabaseBooleanTrue : DatabaseBooleanFalse);
+        command.ExecuteNonQuery();
     }
 
     private bool GetClientAchievementUnlockedStatus(int clientId, int achievementId)
     {
-        using var cmd = new SqliteCommand(
+        using var command = new SqliteCommand(
             @"SELECT unlocked FROM CLIENT_ACHIEVEMENT 
-              WHERE client_id = @cid AND achievement_id = @aid",
+              WHERE client_id = @clientId AND achievement_id = @achievementId",
             this.connection);
-        cmd.Parameters.AddWithValue("@cid", clientId);
-        cmd.Parameters.AddWithValue("@aid", achievementId);
-        var result = cmd.ExecuteScalar();
-        return result != null && Convert.ToInt32(result) == 1;
+        command.Parameters.AddWithValue("@clientId", clientId);
+        command.Parameters.AddWithValue("@achievementId", achievementId);
+        var result = command.ExecuteScalar();
+        return result != null && Convert.ToInt32(result) == DatabaseBooleanTrue;
     }
 
     private bool HasClientAchievement(int clientId, int achievementId)
     {
-        using var cmd = new SqliteCommand(
+        using var command = new SqliteCommand(
             @"SELECT COUNT(1) FROM CLIENT_ACHIEVEMENT 
-              WHERE client_id = @cid AND achievement_id = @aid",
+              WHERE client_id = @clientId AND achievement_id = @achievementId",
             this.connection);
-        cmd.Parameters.AddWithValue("@cid", clientId);
-        cmd.Parameters.AddWithValue("@aid", achievementId);
-        return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
+        command.Parameters.AddWithValue("@clientId", clientId);
+        command.Parameters.AddWithValue("@achievementId", achievementId);
+        return Convert.ToInt32(command.ExecuteScalar()) > ExpectedCountZero;
     }
 
     private int GetClientAchievementCount(int clientId, int achievementId)
     {
-        using var cmd = new SqliteCommand(
+        using var command = new SqliteCommand(
             @"SELECT COUNT(1) FROM CLIENT_ACHIEVEMENT 
-              WHERE client_id = @cid AND achievement_id = @aid",
+              WHERE client_id = @clientId AND achievement_id = @achievementId",
             this.connection);
-        cmd.Parameters.AddWithValue("@cid", clientId);
-        cmd.Parameters.AddWithValue("@aid", achievementId);
-        return Convert.ToInt32(cmd.ExecuteScalar());
+        command.Parameters.AddWithValue("@clientId", clientId);
+        command.Parameters.AddWithValue("@achievementId", achievementId);
+        return Convert.ToInt32(command.ExecuteScalar());
     }
 }
