@@ -18,8 +18,7 @@ namespace VibeCoders.Tests.Unit.ViewModels
         public CreateWorkoutViewModelTests()
         {
             this.trainerServiceMock = Substitute.For<ITrainerService>();
-            this.trainerServiceMock.GetAllExerciseNames().Returns(new List<string> { "Squat", "Bench" });
-            
+            this.trainerServiceMock.GetAllExerciseNames().Returns(new List<string> { "Squat", "Bench" }); 
             this.systemUnderTest = new CreateWorkoutViewModel(this.trainerServiceMock);
         }
 

@@ -2,11 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
-using Microsoft.UI.Xaml;
 using NSubstitute;
 using VibeCoders.Models;
-using VibeCoders.Services;
 using VibeCoders.Services.Interfaces;
+using VibeCoders.Services;
 using VibeCoders.ViewModels;
 using Xunit;
 
@@ -14,121 +13,145 @@ namespace VibeCoders.Tests.Unit.ViewModels
 {
     public class TrainerDashboardViewModelTests
     {
+        private const int DefaultTrainerId = 1;
+        private const int DefaultClientId = 1;
+        private const int AlternateClientId = 5;
+        private const int InvalidRating = 0;
+        private const int ValidRating = 5;
+        private const int NutritionPlanDurationDays = 7;
+        private const int InvalidPlanOffsetDays = -1;
+        private const int ValidPlanOffsetDays = 5;
+        private const int TargetSetCount = 5;
+        private const int TargetRepCount = 5;
+        private const double TargetWeight = 100;
+        private const int FirstDetailIndex = 0;
+        private const int RoutineTemplateId = 5;
+        private const string AssignedClientUsername = "John";
+        private const string TestUserName = "TestUser";
+        private const string PrimaryExerciseName = "Squat";
+        private const string SecondaryExerciseName = "Pushup";
+        private const string PullupExerciseName = "Pullup";
+        private const string DefaultRoutineName = "Plan A";
+        private const string UpdatedRoutineName = "Best Routine";
+        private const string BuilderErrorMessage = "Error 1";
+
         private readonly ITrainerService trainerServiceMock;
-                private readonly INavigationService navigationMock;
-        private readonly TrainerDashboardViewModel systemUnderTest;
+        private readonly INavigationService navigationMock;
+        private readonly TrainerDashboardViewModel trainerDashboardViewModel;
 
         public TrainerDashboardViewModelTests()
         {
-            this.trainerServiceMockMock = Substitute.For<ITrainerService>();
-            
-            var clientList = new List<Client> { new Client { Id = 1, Username = "John" } };
-            this.trainerServiceMockMock.GetTrainerClient(1).Returns(clientList);
-            this.trainerServiceMockMock.GetAllExerciseNames().Returns(new List<string> { "Squat" });
+            this.trainerServiceMock = Substitute.For<ITrainerService>();
 
-            
+            var assignedClients = new List<Client> { new Client { Id = DefaultClientId, Username = AssignedClientUsername } };
+            this.trainerServiceMock.GetAssignedClients(DefaultTrainerId).Returns(assignedClients);
+            this.trainerServiceMock.GetClientWorkoutHistory(DefaultClientId).Returns(new List<WorkoutLog>());
+            this.trainerServiceMock.GetAvailableWorkouts(DefaultClientId).Returns(new List<WorkoutTemplate>());
+            this.trainerServiceMock.GetAllExerciseNames().Returns(new List<string> { PrimaryExerciseName });
+
             this.navigationMock = Substitute.For<INavigationService>();
 
-            this.systemUnderTest = new TrainerDashboardViewModel(this.trainerServiceMock, this.navigationMock);
+            this.trainerDashboardViewModel = new TrainerDashboardViewModel(this.trainerServiceMock, this.navigationMock);
         }
 
         [Fact]
         public void Constructor_InitializesState()
         {
-            this.systemUnderTest.AssignedClients.Should().HaveCount(1);
-            this.systemUnderTest.SelectedClient.Should().NotBeNull();
-            this.systemUnderTest.SelectedClient?.Id.Should().Be(1);
-            this.systemUnderTest.AvailableExercises.Should().Contain("Squat");
+            this.trainerDashboardViewModel.AssignedClients.Should().HaveCount(1);
+            this.trainerDashboardViewModel.SelectedClient.Should().NotBeNull();
+            this.trainerDashboardViewModel.SelectedClient?.Id.Should().Be(DefaultClientId);
+            this.trainerDashboardViewModel.FilteredAvailableExercises.Should().Contain(PrimaryExerciseName);
         }
 
         [Fact]
         public void SelectedClient_WhenChanged_ReloadsData()
         {
-            var log = new WorkoutLog { Id = 1 };
-            this.trainerServiceMockMock.GetWorkoutHistory(1).Returns(new List<WorkoutLog> { log });
-            
-            var template = new WorkoutTemplate { Type = WorkoutType.TRAINER_ASSIGNED };
-            this.trainerServiceMockMock.GetAvailableWorkouts(1).Returns(new List<WorkoutTemplate> { template });
+            var workoutLog = new WorkoutLog { Id = DefaultClientId };
+            this.trainerServiceMock.GetClientWorkoutHistory(DefaultClientId).Returns(new List<WorkoutLog> { workoutLog });
 
-            var newClient = new Client { Id = 1 };
-            this.systemUnderTest.SelectedClient = newClient;
+            var assignedWorkoutTemplate = new WorkoutTemplate { Type = WorkoutType.TRAINER_ASSIGNED };
+            this.trainerServiceMock.GetAvailableWorkouts(DefaultClientId).Returns(new List<WorkoutTemplate> { assignedWorkoutTemplate });
 
-            this.systemUnderTest.SelectedClientLogs.Should().ContainSingle();
-            this.systemUnderTest.AssignedWorkouts.Should().ContainSingle();
-            this.systemUnderTest.SelectedWorkoutLog.Should().Be(log);
+            var selectedClient = new Client { Id = DefaultClientId };
+            this.trainerDashboardViewModel.SelectedClient = selectedClient;
+
+            this.trainerDashboardViewModel.SelectedClientLogs.Should().ContainSingle();
+            this.trainerDashboardViewModel.ClientAssignedWorkouts.Should().ContainSingle();
+            this.trainerDashboardViewModel.SelectedWorkoutLog.Should().Be(workoutLog);
         }
 
         [Fact]
         public void LoadLogsForSelectedClient_WhenNullClient_ClearsLogs()
         {
-            this.systemUnderTest.SelectedClient = null;
+            this.trainerDashboardViewModel.SelectedClient = null;
 
-            this.systemUnderTest.LoadLogsForSelectedClient();
+            this.trainerDashboardViewModel.LoadLogsForSelectedClient();
 
-            this.systemUnderTest.SelectedClientLogs.Should().BeEmpty();
-            this.systemUnderTest.CurrentWorkoutDetails.Should().BeEmpty();
-            this.systemUnderTest.SelectedWorkoutLog.Should().BeNull();
+            this.trainerDashboardViewModel.SelectedClientLogs.Should().BeEmpty();
+            this.trainerDashboardViewModel.CurrentWorkoutDetails.Should().BeEmpty();
+            this.trainerDashboardViewModel.SelectedWorkoutLog.Should().BeNull();
         }
 
         [Fact]
         public void DateRangeProperties_TestValidation()
         {
-            this.systemUnderTest.PlanStartDate = DateTimeOffset.Now;
-            this.systemUnderTest.PlanEndDate = DateTimeOffset.Now.AddDays(-1);
+            this.trainerDashboardViewModel.PlanStartDate = DateTimeOffset.Now;
+            this.trainerDashboardViewModel.PlanEndDate = DateTimeOffset.Now.AddDays(InvalidPlanOffsetDays);
 
-            this.systemUnderTest.HasDateRangeError.Should().BeTrue();
-            this.systemUnderTest.DateRangeError.Should().NotBeEmpty();
-            this.systemUnderTest.CanAssignPlan.Should().BeFalse();
+            this.trainerDashboardViewModel.HasDateRangeError.Should().BeTrue();
+            this.trainerDashboardViewModel.DateRangeError.Should().NotBeEmpty();
+            this.trainerDashboardViewModel.CanAssignPlan.Should().BeFalse();
 
-            this.systemUnderTest.PlanEndDate = DateTimeOffset.Now.AddDays(5);
-            this.systemUnderTest.HasDateRangeError.Should().BeFalse();
-            this.systemUnderTest.DateRangeError.Should().BeEmpty();
-            
-            this.systemUnderTest.SelectedClient = new Client { Id = 1 };
-            this.systemUnderTest.CanAssignPlan.Should().BeTrue();
+            this.trainerDashboardViewModel.PlanEndDate = DateTimeOffset.Now.AddDays(ValidPlanOffsetDays);
+            this.trainerDashboardViewModel.HasDateRangeError.Should().BeFalse();
+            this.trainerDashboardViewModel.DateRangeError.Should().BeEmpty();
+
+            this.trainerDashboardViewModel.SelectedClient = new Client { Id = DefaultClientId };
+            this.trainerDashboardViewModel.CanAssignPlan.Should().BeTrue();
         }
 
         [Fact]
         public void PrepareForEdit_PopulatesBuilder()
         {
-            var template = new WorkoutTemplate { Id = 5, Name = "Plan A" };
-            var exercise = new TemplateExercise { Name = "Pushup" };
-            template.AddExercise(exercise);
+            var workoutTemplate = new WorkoutTemplate { Id = RoutineTemplateId, Name = DefaultRoutineName };
+            var templateExercise = new TemplateExercise { Name = SecondaryExerciseName };
+            workoutTemplate.AddExercise(templateExercise);
 
-            this.systemUnderTest.PrepareForEdit(template);
+            this.trainerDashboardViewModel.PrepareForEdit(workoutTemplate);
 
-            this.systemUnderTest.EditingTemplateId.Should().Be(5);
-            this.systemUnderTest.NewRoutineName.Should().Be("Plan A");
-            this.systemUnderTest.BuilderExercises.Should().Contain(exercise);
+            this.trainerDashboardViewModel.EditingTemplateId.Should().Be(RoutineTemplateId);
+            this.trainerDashboardViewModel.NewRoutineName.Should().Be(DefaultRoutineName);
+            this.trainerDashboardViewModel.RoutineBuilderExercises.Should().Contain(templateExercise);
         }
 
         [Fact]
         public void DeleteRoutine_WhenSuccessful_RemovesFromList()
         {
-            var template = new WorkoutTemplate { Id = 1 };
-            this.systemUnderTest.AssignedWorkouts.Add(template);
-            this.trainerServiceMockMock.DeleteWorkoutTemplate(1).Returns(true);
+            var workoutTemplate = new WorkoutTemplate { Id = DefaultClientId };
+            this.trainerDashboardViewModel.ClientAssignedWorkouts.Add(workoutTemplate);
+            this.trainerServiceMock.DeleteWorkoutTemplate(DefaultClientId).Returns(true);
 
-            var result = this.systemUnderTest.DeleteRoutine(template);
+            var result = this.trainerDashboardViewModel.DeleteRoutine(workoutTemplate);
 
             result.Should().BeTrue();
-            this.systemUnderTest.AssignedWorkouts.Should().BeEmpty();
+            this.trainerDashboardViewModel.ClientAssignedWorkouts.Should().BeEmpty();
         }
 
         [Fact]
         public void DeleteRoutine_WhenNull_ReturnsFalse()
         {
-            var result = this.systemUnderTest.DeleteRoutine(null!);
+            var result = this.trainerDashboardViewModel.DeleteRoutine(null!);
             result.Should().BeFalse();
         }
 
         [Fact]
-        public void SaveRoutine_ReturnsServiceResult()
+        public void BuildAndSaveRoutine_ReturnsServiceResult()
         {
-            var template = new WorkoutTemplate();
-            this.trainerServiceMockMock.SaveTrainerWorkout(template).Returns(true);
+            this.trainerDashboardViewModel.NewRoutineName = DefaultRoutineName;
+            this.trainerServiceMock.AssignNewRoutine(0, DefaultClientId, DefaultRoutineName, this.trainerDashboardViewModel.RoutineBuilderExercises)
+                .Returns((true, string.Empty));
 
-            var result = this.systemUnderTest.SaveRoutine(template);
+            var result = this.trainerDashboardViewModel.BuildAndSaveRoutine();
 
             result.Should().BeTrue();
         }
@@ -136,132 +159,139 @@ namespace VibeCoders.Tests.Unit.ViewModels
         [Fact]
         public void AddExerciseToRoutine_WhenValid_AddsToBuilder()
         {
-            this.systemUnderTest.SelectedNewExercise = "Squat";
-            this.systemUnderTest.NewExerciseSets = 5;
-            this.systemUnderTest.NewExerciseReps = 5;
-            this.systemUnderTest.NewExerciseWeight = 100;
+            this.trainerDashboardViewModel.SelectedNewExercise = PrimaryExerciseName;
+            this.trainerDashboardViewModel.NewExerciseSets = TargetSetCount;
+            this.trainerDashboardViewModel.NewExerciseReps = TargetRepCount;
+            this.trainerDashboardViewModel.NewExerciseWeight = TargetWeight;
 
-            this.systemUnderTest.AddExerciseToRoutine(null!, null!);
+            this.trainerDashboardViewModel.AddExerciseToRoutine(null!, null!);
 
-            this.systemUnderTest.BuilderExercises.Should().ContainSingle();
-            var ex = this.systemUnderTest.BuilderExercises.First();
-            ex.Name.Should().Be("Squat");
-            ex.TargetSets.Should().Be(5);
-            ex.TargetReps.Should().Be(5);
-            ex.TargetWeight.Should().Be(100);
-            this.systemUnderTest.SelectedNewExercise.Should().BeNull();
+            this.trainerDashboardViewModel.RoutineBuilderExercises.Should().ContainSingle();
+            var routineExercise = this.trainerDashboardViewModel.RoutineBuilderExercises.First();
+            routineExercise.Name.Should().Be(PrimaryExerciseName);
+            routineExercise.TargetSets.Should().Be(TargetSetCount);
+            routineExercise.TargetReps.Should().Be(TargetRepCount);
+            routineExercise.TargetWeight.Should().Be(TargetWeight);
+            this.trainerDashboardViewModel.SelectedNewExercise.Should().BeNull();
         }
 
         [Fact]
         public void AddExerciseToRoutine_WhenEmpty_DoesNothing()
         {
-            this.systemUnderTest.SelectedNewExercise = "";
-            this.systemUnderTest.AddExerciseToRoutine(null!, null!);
-            this.systemUnderTest.BuilderExercises.Should().BeEmpty();
+            this.trainerDashboardViewModel.SelectedNewExercise = string.Empty;
+            this.trainerDashboardViewModel.AddExerciseToRoutine(null!, null!);
+            this.trainerDashboardViewModel.RoutineBuilderExercises.Should().BeEmpty();
         }
 
         [Fact]
         public void RemoveExerciseFromRoutine_RemovesItem()
         {
-            var exercise = new TemplateExercise { Name = "Pullup" };
-            this.systemUnderTest.BuilderExercises.Add(exercise);
+            var routineExercise = new TemplateExercise { Name = PullupExerciseName };
+            this.trainerDashboardViewModel.RoutineBuilderExercises.Add(routineExercise);
 
-            this.systemUnderTest.RemoveExerciseFromRoutine(exercise);
+            this.trainerDashboardViewModel.RemoveExerciseFromRoutine(routineExercise);
 
-            this.systemUnderTest.BuilderExercises.Should().BeEmpty();
+            this.trainerDashboardViewModel.RoutineBuilderExercises.Should().BeEmpty();
         }
 
         [Fact]
         public void SaveCurrentFeedback_WhenValid_UpdatesStorageAndHidesForm()
         {
-            var log = new WorkoutLog { Id = 1, Rating = 5 };
-            this.systemUnderTest.SelectedWorkoutLog = log;
+            var workoutLog = new WorkoutLog { Id = DefaultClientId, Rating = ValidRating };
+            this.trainerDashboardViewModel.SelectedWorkoutLog = workoutLog;
 
-            this.trainerServiceMockMock.UpdateWorkoutLogFeedback(1, 5, Arg.Any<string>()).Returns(true);
+            this.trainerDashboardViewModel.SaveCurrentFeedback(null!, null!);
 
-            this.systemUnderTest.SaveCurrentFeedback(null!, null!);
-
-            this.trainerServiceMockMock.Received(1).UpdateWorkoutLogFeedback(1, 5, log.TrainerNotes);
-            this.systemUnderTest.IsFeedbackFormVisible.Should().BeFalse();
-            this.systemUnderTest.FeedbackErrorText.Should().BeEmpty();
+            this.trainerServiceMock.Received(1).SaveWorkoutFeedback(workoutLog);
+            this.trainerDashboardViewModel.IsFeedbackFormVisible.Should().BeFalse();
+            this.trainerDashboardViewModel.FeedbackErrorText.Should().BeEmpty();
         }
 
         [Fact]
         public void SaveCurrentFeedback_WhenRatingInvalid_ShowsError()
         {
-            var log = new WorkoutLog { Id = 1, Rating = 0 };
-            this.systemUnderTest.SelectedWorkoutLog = log;
+            var workoutLog = new WorkoutLog { Id = DefaultClientId, Rating = InvalidRating };
+            this.trainerDashboardViewModel.SelectedWorkoutLog = workoutLog;
 
-            this.systemUnderTest.SaveCurrentFeedback(null!, null!);
+            this.trainerDashboardViewModel.SaveCurrentFeedback(null!, null!);
 
-            this.trainerServiceMockMock.DidNotReceive().UpdateWorkoutLogFeedback(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<string>());
-            this.systemUnderTest.FeedbackErrorText.Should().Be("You cannot assign an empty feedback. Please select a star rating.");
+            this.trainerServiceMock.DidNotReceive().SaveWorkoutFeedback(Arg.Any<WorkoutLog>());
+            this.trainerDashboardViewModel.FeedbackErrorText.Should().Be("You cannot assign an empty feedback. Please select a star rating.");
         }
 
         [Fact]
         public void SaveCurrentFeedback_WhenNullLog_DoesNothing()
         {
-            this.systemUnderTest.SelectedWorkoutLog = null;
-            this.systemUnderTest.SaveCurrentFeedback(null!, null!);
-            this.trainerServiceMockMock.DidNotReceiveWithAnyArgs().UpdateWorkoutLogFeedback(default, default, default!);
+            this.trainerDashboardViewModel.SelectedWorkoutLog = null;
+            this.trainerDashboardViewModel.SaveCurrentFeedback(null!, null!);
+            this.trainerServiceMock.DidNotReceiveWithAnyArgs().SaveWorkoutFeedback(default!);
         }
 
         [Fact]
         public void AssignNutritionPlan_WhenValid_UpdatesStatus()
         {
-            this.systemUnderTest.SelectedClient = new Client { Id = 1, Username = "TestUser" };
-            this.systemUnderTest.PlanStartDate = DateTimeOffset.Now;
-            this.systemUnderTest.PlanEndDate = DateTimeOffset.Now.AddDays(7);
+            this.trainerDashboardViewModel.SelectedClient = new Client { Id = DefaultClientId, Username = TestUserName };
+            this.trainerDashboardViewModel.PlanStartDate = DateTimeOffset.Now;
+            this.trainerDashboardViewModel.PlanEndDate = DateTimeOffset.Now.AddDays(NutritionPlanDurationDays);
+            this.trainerServiceMock.CreateAndAssignNutritionPlan(
+                this.trainerDashboardViewModel.PlanStartDate.Date,
+                this.trainerDashboardViewModel.PlanEndDate.Date,
+                DefaultClientId).Returns(true);
 
-            this.systemUnderTest.AssignNutritionPlanCommand.Execute(null);
+            this.trainerDashboardViewModel.AssignNutritionPlanCommand.Execute(null);
 
-            this.trainerServiceMockMock.Received(1).SaveNutritionPlanForClient(Arg.Any<NutritionPlan>(), 1);
-            this.systemUnderTest.AssignmentStatus.Should().Contain("Plan assigned to TestUser");
+            this.trainerServiceMock.Received(1).CreateAndAssignNutritionPlan(
+                this.trainerDashboardViewModel.PlanStartDate.Date,
+                this.trainerDashboardViewModel.PlanEndDate.Date,
+                DefaultClientId);
+            this.trainerDashboardViewModel.AssignmentStatus.Should().Contain($"Plan assigned to {TestUserName}");
         }
 
         [Fact]
         public void NavigationCommands_ExecuteExpectedRoutes()
         {
-            this.systemUnderTest.SelectedClient = new Client { Id = 5 };
+            this.trainerServiceMock.GetClientWorkoutHistory(AlternateClientId).Returns(new List<WorkoutLog>());
+            this.trainerServiceMock.GetAvailableWorkouts(AlternateClientId).Returns(new List<WorkoutTemplate>());
+            this.trainerDashboardViewModel.SelectedClient = new Client { Id = AlternateClientId };
 
-            this.systemUnderTest.OpenClientProfileCommand.Execute(null);
-            this.navigationMock.Received(1).NavigateToClientProfile(5);
+            this.trainerDashboardViewModel.OpenClientProfileCommand.Execute(null);
+            this.navigationMock.Received(1).NavigateToClientProfile(AlternateClientId);
 
-            this.systemUnderTest.OpenWorkoutLogsCommand.Execute(null);
+            this.trainerDashboardViewModel.OpenWorkoutLogsCommand.Execute(null);
             this.navigationMock.Received(1).NavigateToWorkoutLogs();
 
-            this.systemUnderTest.OpenCalendarCommand.Execute(null);
+            this.trainerDashboardViewModel.OpenCalendarCommand.Execute(null);
             this.navigationMock.Received(1).NavigateToCalendarIntegration();
         }
 
         [Fact]
         public void Properties_Setters_UpdateValuesAndErrors()
         {
-            this.systemUnderTest.BuilderErrorText = "Error 1";
-            this.systemUnderTest.HasBuilderError.Should().BeTrue();
+            this.trainerDashboardViewModel.BuilderErrorText = BuilderErrorMessage;
+            this.trainerDashboardViewModel.HasBuilderError.Should().BeTrue();
 
-            this.systemUnderTest.BuilderErrorText = string.Empty;
-            this.systemUnderTest.HasBuilderError.Should().BeFalse();
+            this.trainerDashboardViewModel.BuilderErrorText = string.Empty;
+            this.trainerDashboardViewModel.HasBuilderError.Should().BeFalse();
 
-            this.systemUnderTest.NewRoutineName = "Best Routine";
-            this.systemUnderTest.NewRoutineName.Should().Be("Best Routine");
+            this.trainerDashboardViewModel.NewRoutineName = UpdatedRoutineName;
+            this.trainerDashboardViewModel.NewRoutineName.Should().Be(UpdatedRoutineName);
         }
 
         [Fact]
         public void OnWorkoutLogSelected_UpdatesCurrentDetails()
         {
-            var log = new WorkoutLog { Rating = 0 };
-            log.Exercises.Add(new LoggedExercise { ExerciseName = "Squat", Sets = new List<LoggedSet> { new LoggedSet() } });
+            var unratedWorkoutLog = new WorkoutLog { Rating = InvalidRating };
+            unratedWorkoutLog.Exercises.Add(new LoggedExercise { ExerciseName = PrimaryExerciseName, Sets = new List<LoggedSet> { new LoggedSet() } });
 
-            this.systemUnderTest.SelectedWorkoutLog = log;
+            this.trainerDashboardViewModel.SelectedWorkoutLog = unratedWorkoutLog;
 
-            this.systemUnderTest.CurrentWorkoutDetails.Should().ContainSingle();
-            this.systemUnderTest.CurrentWorkoutDetails[0].Name.Should().Be("Squat");
-            this.systemUnderTest.IsFeedbackFormVisible.Should().BeTrue();
+            this.trainerDashboardViewModel.CurrentWorkoutDetails.Should().ContainSingle();
+            this.trainerDashboardViewModel.CurrentWorkoutDetails[FirstDetailIndex].Name.Should().Be(PrimaryExerciseName);
+            this.trainerDashboardViewModel.IsFeedbackFormVisible.Should().BeTrue();
 
-            var ratedLog = new WorkoutLog { Rating = 4 };
-            this.systemUnderTest.SelectedWorkoutLog = ratedLog;
-            this.systemUnderTest.IsFeedbackFormVisible.Should().BeFalse();
+            var ratedWorkoutLog = new WorkoutLog { Rating = 4 };
+            this.trainerDashboardViewModel.SelectedWorkoutLog = ratedWorkoutLog;
+            this.trainerDashboardViewModel.IsFeedbackFormVisible.Should().BeFalse();
         }
     }
 }
