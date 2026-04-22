@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Threading.Tasks;
 using FluentAssertions;
 using NSubstitute;
 using VibeCoders.Models;
@@ -15,54 +11,52 @@ namespace VibeCoders.Tests.Unit.ViewModels
 {
     public class ClientProfileViewModelTests
     {
-        private readonly IRepositoryWorkoutLog _workoutLogRepo;
-        private readonly IRepositoryTrainer _trainerRepo;
-        private readonly IRepositoryNutrition _nutritionRepo;
-        private readonly ProgressionService _progressionService;
-        private readonly EvaluationEngine _evaluationEngine;
-        private readonly ClientService _clientService;
-        private readonly ClientProfileViewModel _sut;
+        private readonly IRepositoryWorkoutLog workoutLogRepo;
+        private readonly IRepositoryTrainer trainerRepo;
+        private readonly IRepositoryNutrition nutritionRepo;
+        private readonly ProgressionService progressionService;
+        private readonly EvaluationEngine evaluationEngine;
+        private readonly ClientService clientService;
+        private readonly ClientProfileViewModel sut;
+
+        private const string SyncFailedMessage = "Sync failed — start your local nutrition API (see NutritionSyncOptions default URL) or check the network.";
 
         public ClientProfileViewModelTests()
         {
-            _workoutLogRepo = Substitute.For<IRepositoryWorkoutLog>();
-            _trainerRepo = Substitute.For<IRepositoryTrainer>();
-            _nutritionRepo = Substitute.For<IRepositoryNutrition>();
-            _progressionService = new ProgressionService(Substitute.For<IRepositoryWorkoutTemplate>(), Substitute.For<IRepositoryNotification>());
-            _evaluationEngine = new EvaluationEngine(Substitute.For<IRepositoryAchievements>());
+            this.workoutLogRepo = Substitute.For<IRepositoryWorkoutLog>();
+            this.trainerRepo = Substitute.For<IRepositoryTrainer>();
+            this.nutritionRepo = Substitute.For<IRepositoryNutrition>();
+            this.progressionService = new ProgressionService(Substitute.For<IRepositoryWorkoutTemplate>(), Substitute.For<IRepositoryNotification>());
+            this.evaluationEngine = new EvaluationEngine(Substitute.For<IRepositoryAchievements>());
 
-            // ClientService is a concrete class but its methods are essentially dependent on the repositories
-            _clientService = new ClientService(
-                _workoutLogRepo,
-                _progressionService,
+            this.clientService = new ClientService(
+                this.workoutLogRepo,
+                this.progressionService,
                 Substitute.For<IHttpClientFactory>(),
-                _evaluationEngine,
+                this.evaluationEngine,
                 Substitute.For<IAchievementUnlockedBus>(),
                 new NutritionSyncOptions { Endpoint = "http://localhost/sync" },
-                _trainerRepo,
+                this.trainerRepo,
                 Substitute.For<IRepositoryNotification>(),
                 Substitute.For<IRepositoryAchievements>(),
-                _nutritionRepo,
+                this.nutritionRepo,
                 Substitute.For<IRepositoryWorkoutTemplate>()
             );
 
-            _sut = new ClientProfileViewModel(_clientService);
+            this.sut = new ClientProfileViewModel(this.clientService);
         }
 
         [Fact]
         public async Task SyncNutritionCommand_NoClientId_DoesNothing()
         {
-            // Act
-            await _sut.SyncNutritionCommand.ExecuteAsync(null);
+            await this.sut.SyncNutritionCommand.ExecuteAsync(null);
 
-            // Assert
-            _sut.SyncNutritionStatus.Should().BeEmpty();
+            this.sut.SyncNutritionStatus.Should().BeEmpty();
         }
 
         [Fact]
         public void LoadClientData_ValidClientId_UpdatesPropertiesCorrectly()
         {
-            // Arrange
             int clientId = 1;
 
             var history = new List<WorkoutLog>
@@ -80,64 +74,56 @@ namespace VibeCoders.Tests.Unit.ViewModels
                 }
             };
 
-            _workoutLogRepo.GetWorkoutHistory(clientId).Returns(history);
+            this.workoutLogRepo.GetWorkoutHistory(clientId).Returns(history);
 
             var activePlan = new NutritionPlan { PlanId = 5, StartDate = DateTime.Today.AddDays(-1), EndDate = DateTime.Today.AddDays(1) };
-            _nutritionRepo.GetNutritionPlansForClient(clientId).Returns(new List<NutritionPlan> { activePlan });
+            this.nutritionRepo.GetNutritionPlansForClient(clientId).Returns(new List<NutritionPlan> { activePlan });
 
             var meals = new List<Meal>
             {
                 new Meal { Name = "Chicken Rice" }
             };
-            _nutritionRepo.GetMealsForPlan(activePlan.PlanId).Returns(meals);
+            this.nutritionRepo.GetMealsForPlan(activePlan.PlanId).Returns(meals);
 
-            // Act
-            _sut.LoadClientData(clientId);
+            this.sut.LoadClientData(clientId);
 
-            // Assert
-            _sut.CaloriesSummary.Should().Be("Calories burned (all logged workouts): 500");
-            _sut.LatestSessionHint.Should().Be($"Latest session: Chest Day — {new DateTime(2023, 1, 1, 10, 0, 0):g}");
-            _sut.LoggedExercises.Should().HaveCount(1);
-            _sut.LoggedExercises[0].ExerciseName.Should().Be("Bench Press");
-            _sut.Meals.Should().HaveCount(1);
-            _sut.Meals[0].Name.Should().Be("Chicken Rice");
+            this.sut.CaloriesSummary.Should().Be("Calories burned (all logged workouts): 500");
+            this.sut.LatestSessionHint.Should().Be($"Latest session: Chest Day — {new DateTime(2023, 1, 1, 10, 0, 0):g}");
+            this.sut.LoggedExercises.Should().HaveCount(1);
+            this.sut.LoggedExercises[0].ExerciseName.Should().Be("Bench Press");
+            this.sut.Meals.Should().HaveCount(1);
+            this.sut.Meals[0].Name.Should().Be("Chicken Rice");
         }
 
         [Fact]
         public void LoadClientData_NoHistory_UpdatesPropertiesToEmptyState()
         {
-            // Arrange
             int clientId = 1;
-            _workoutLogRepo.GetWorkoutHistory(clientId).Returns(new List<WorkoutLog>());
-            _nutritionRepo.GetNutritionPlansForClient(clientId).Returns(new List<NutritionPlan>());
+            this.workoutLogRepo.GetWorkoutHistory(clientId).Returns(new List<WorkoutLog>());
+            this.nutritionRepo.GetNutritionPlansForClient(clientId).Returns(new List<NutritionPlan>());
 
-            // Act
-            _sut.LoadClientData(clientId);
+            this.sut.LoadClientData(clientId);
 
-            // Assert
-            _sut.CaloriesSummary.Should().Be("Calories burned (all logged workouts): 0");
-            _sut.LatestSessionHint.Should().Be("No completed workouts with exercises yet.");
-            _sut.LoggedExercises.Should().BeEmpty();
-            _sut.Meals.Should().BeEmpty();
+            this.sut.CaloriesSummary.Should().Be("Calories burned (all logged workouts): 0");
+            this.sut.LatestSessionHint.Should().Be("No completed workouts with exercises yet.");
+            this.sut.LoggedExercises.Should().BeEmpty();
+            this.sut.Meals.Should().BeEmpty();
         }
 
         [Fact]
         public async Task SyncNutritionCommand_SyncFails_UpdatesStatusCorrectly()
         {
-            // Arrange
             int clientId = 1;
 
-            _workoutLogRepo.GetWorkoutHistory(clientId).Returns(new List<WorkoutLog>());
-            _trainerRepo.GetTrainerClients(Arg.Any<int>()).Returns(x => throw new Exception("DB Error"));
-            _nutritionRepo.GetNutritionPlansForClient(clientId).Returns(new List<NutritionPlan>());
+            this.workoutLogRepo.GetWorkoutHistory(clientId).Returns(new List<WorkoutLog>());
+            this.trainerRepo.GetTrainerClients(Arg.Any<int>()).Returns(x => throw new Exception("DB Error"));
+            this.nutritionRepo.GetNutritionPlansForClient(clientId).Returns(new List<NutritionPlan>());
 
-            _sut.LoadClientData(clientId); // Sets loadedClientId
+            this.sut.LoadClientData(clientId); 
 
-            // Act
-            await _sut.SyncNutritionCommand.ExecuteAsync(null);
+            await this.sut.SyncNutritionCommand.ExecuteAsync(null);
 
-            // Assert
-            _sut.SyncNutritionStatus.Should().Be("Sync failed — start your local nutrition API (see NutritionSyncOptions default URL) or check the network.");
+            this.sut.SyncNutritionStatus.Should().Be(SyncFailedMessage);
         }
     }
 }
