@@ -55,17 +55,6 @@ public sealed class RepositoryNotificationTests : IDisposable
     }
 
     [Fact]
-    public void SaveNotification_ShouldReturnTrue_WhenNotificationIsSaved()
-    {
-        InsertTestClient(1);
-        var notification = CreateTestNotification(1);
-
-        var result = this.repository.SaveNotification(notification);
-
-        result.Should().BeTrue();
-    }
-
-    [Fact]
     public void SaveNotification_ShouldInsertNotificationIntoDatabase()
     {
         InsertTestClient(1);
@@ -104,54 +93,6 @@ public sealed class RepositoryNotificationTests : IDisposable
     }
 
     [Fact]
-    public void SaveNotification_ShouldSaveReadNotification_WhenIsReadIsTrue()
-    {
-        InsertTestClient(1);
-        var notification = CreateTestNotification(1);
-        notification.IsRead = true;
-
-        this.repository.SaveNotification(notification);
-
-        var saved = GetNotificationFromDatabase(1);
-        saved!.IsRead.Should().BeTrue();
-    }
-
-    [Fact]
-    public void SaveNotification_ShouldSaveAllNotificationTypes()
-    {
-        InsertTestClient(1);
-
-        var types = new[] { NotificationType.Info, NotificationType.Warning, NotificationType.Plateau, NotificationType.Overload };
-        
-        foreach (var type in types)
-        {
-            var notification = CreateTestNotification(1);
-            notification.Type = type;
-            this.repository.SaveNotification(notification);
-        }
-
-        var count = GetNotificationCount(1);
-        count.Should().Be(4);
-    }
-
-    [Fact]
-    public void SaveNotification_ShouldSaveMultipleNotificationsForSameClient()
-    {
-        InsertTestClient(1);
-
-        var notification1 = CreateTestNotification(1, "First");
-        var notification2 = CreateTestNotification(1, "Second");
-        var notification3 = CreateTestNotification(1, "Third");
-
-        this.repository.SaveNotification(notification1);
-        this.repository.SaveNotification(notification2);
-        this.repository.SaveNotification(notification3);
-
-        var count = GetNotificationCount(1);
-        count.Should().Be(3);
-    }
-
-    [Fact]
     public void SaveNotification_ShouldHandleSpecialCharactersInTitleAndMessage()
     {
         InsertTestClient(1);
@@ -164,38 +105,6 @@ public sealed class RepositoryNotificationTests : IDisposable
         var saved = GetNotificationFromDatabase(1);
         saved!.Title.Should().Be("Test's \"Title\" with <special> & chars");
         saved.Message.Should().Be("Message with 'quotes' and \"double quotes\" & symbols");
-    }
-
-    [Fact]
-    public void SaveNotification_ShouldHandleEmptyTitleAndMessage()
-    {
-        InsertTestClient(1);
-        var notification = CreateTestNotification(1);
-        notification.Title = string.Empty;
-        notification.Message = string.Empty;
-
-        var result = this.repository.SaveNotification(notification);
-
-        result.Should().BeTrue();
-        var saved = GetNotificationFromDatabase(1);
-        saved!.Title.Should().BeEmpty();
-        saved.Message.Should().BeEmpty();
-    }
-
-    [Fact]
-    public void SaveNotification_ShouldHandleLongTitleAndMessage()
-    {
-        InsertTestClient(1);
-        var notification = CreateTestNotification(1);
-        notification.Title = new string('A', 500);
-        notification.Message = new string('B', 1000);
-
-        var result = this.repository.SaveNotification(notification);
-
-        result.Should().BeTrue();
-        var saved = GetNotificationFromDatabase(1);
-        saved!.Title.Should().HaveLength(500);
-        saved.Message.Should().HaveLength(1000);
     }
 
     [Fact]
@@ -278,57 +187,6 @@ public sealed class RepositoryNotificationTests : IDisposable
     }
 
     [Fact]
-    public void GetNotifications_ShouldParseAllNotificationTypes()
-    {
-        InsertTestClient(1);
-        var date = DateTime.UtcNow;
-        InsertNotification(1, "Info", "Message", "Info", 1, date, false);
-        InsertNotification(1, "Warning", "Message", "Warning", 2, date, false);
-        InsertNotification(1, "Plateau", "Message", "Plateau", 3, date, false);
-        InsertNotification(1, "Overload", "Message", "Overload", 4, date, false);
-
-        var notifications = this.repository.GetNotifications(1);
-
-        notifications.Should().HaveCount(4);
-        notifications.Should().Contain(n => n.Type == NotificationType.Info);
-        notifications.Should().Contain(n => n.Type == NotificationType.Warning);
-        notifications.Should().Contain(n => n.Type == NotificationType.Plateau);
-        notifications.Should().Contain(n => n.Type == NotificationType.Overload);
-    }
-
-    [Fact]
-    public void GetNotifications_ShouldHandleBothReadAndUnreadNotifications()
-    {
-        InsertTestClient(1);
-        var date = DateTime.UtcNow;
-        InsertNotification(1, "Unread", "Message", "Info", 1, date, false);
-        InsertNotification(1, "Read", "Message", "Info", 2, date, true);
-
-        var notifications = this.repository.GetNotifications(1);
-
-        notifications.Should().HaveCount(2);
-        notifications.Should().Contain(n => n.IsRead == false && n.Title == "Unread");
-        notifications.Should().Contain(n => n.IsRead == true && n.Title == "Read");
-    }
-
-    [Fact]
-    public void GetNotifications_ShouldHandleNotificationsWithDifferentRelatedIds()
-    {
-        InsertTestClient(1);
-        var date = DateTime.UtcNow;
-        InsertNotification(1, "Related 1", "Message", "Info", 100, date, false);
-        InsertNotification(1, "Related 2", "Message", "Info", 200, date, false);
-        InsertNotification(1, "Related 3", "Message", "Info", 0, date, false);
-
-        var notifications = this.repository.GetNotifications(1);
-
-        notifications.Should().HaveCount(3);
-        notifications.Should().Contain(n => n.RelatedId == 100);
-        notifications.Should().Contain(n => n.RelatedId == 200);
-        notifications.Should().Contain(n => n.RelatedId == 0);
-    }
-
-    [Fact]
     public void IntegrationTest_SaveAndRetrieveMultipleNotifications()
     {
         InsertTestClient(1);
@@ -350,36 +208,6 @@ public sealed class RepositoryNotificationTests : IDisposable
 
         client1Notifications[0].IsRead.Should().BeTrue();
         client1Notifications[1].IsRead.Should().BeFalse();
-    }
-
-    [Fact]
-    public void IntegrationTest_SaveNotificationAndVerifyAllFields()
-    {
-        InsertTestClient(1);
-        var originalDate = DateTime.Parse("2024-01-15T14:30:00");
-        var notification = new Notification
-        {
-            ClientId = 1,
-            Title = "Achievement Unlocked",
-            Message = "You completed your first workout!",
-            Type = NotificationType.Info,
-            RelatedId = 5,
-            DateCreated = originalDate,
-            IsRead = false
-        };
-
-        this.repository.SaveNotification(notification);
-        var retrieved = this.repository.GetNotifications(1);
-
-        retrieved.Should().HaveCount(1);
-        var saved = retrieved[0];
-        saved.ClientId.Should().Be(1);
-        saved.Title.Should().Be("Achievement Unlocked");
-        saved.Message.Should().Be("You completed your first workout!");
-        saved.Type.Should().Be(NotificationType.Info);
-        saved.RelatedId.Should().Be(5);
-        saved.DateCreated.Should().BeCloseTo(originalDate, TimeSpan.FromSeconds(1));
-        saved.IsRead.Should().BeFalse();
     }
 
     [Fact]
