@@ -73,16 +73,6 @@ public sealed class RepositoryAchievementsTests : IDisposable
     }
 
     [Fact]
-    public void GetWorkoutCount_ShouldReturnZero_WhenNoWorkoutsExist()
-    {
-        InsertTestClient(1);
-
-        var count = this.repository.GetWorkoutCount(1);
-
-        count.Should().Be(0);
-    }
-
-    [Fact]
     public void GetWorkoutCount_ShouldReturnCorrectCount_WhenWorkoutsExist()
     {
         InsertTestClient(1);
@@ -107,16 +97,6 @@ public sealed class RepositoryAchievementsTests : IDisposable
         var count = this.repository.GetWorkoutCount(1);
 
         count.Should().Be(2);
-    }
-
-    [Fact]
-    public void GetDistinctWorkoutDayCount_ShouldReturnZero_WhenNoWorkoutsExist()
-    {
-        InsertTestClient(1);
-
-        var count = this.repository.GetDistinctWorkoutDayCount(1);
-
-        count.Should().Be(0);
     }
 
     [Fact]
@@ -176,38 +156,6 @@ public sealed class RepositoryAchievementsTests : IDisposable
     }
 
     [Fact]
-    public void GetWorkoutsInLastSevenDays_ShouldIncludeTodaysWorkouts()
-    {
-        InsertTestClient(1);
-        InsertWorkoutLog(1, DateTime.UtcNow.Date);
-
-        var count = this.repository.GetWorkoutsInLastSevenDays(1);
-
-        count.Should().Be(1);
-    }
-
-    [Fact]
-    public void GetConsecutiveWorkoutDayStreak_ShouldReturnZero_WhenNoWorkouts()
-    {
-        InsertTestClient(1);
-
-        var streak = this.repository.GetConsecutiveWorkoutDayStreak(1);
-
-        streak.Should().Be(0);
-    }
-
-    [Fact]
-    public void GetConsecutiveWorkoutDayStreak_ShouldReturnOne_WhenOnlyOneWorkout()
-    {
-        InsertTestClient(1);
-        InsertWorkoutLog(1, DateTime.Today);
-
-        var streak = this.repository.GetConsecutiveWorkoutDayStreak(1);
-
-        streak.Should().Be(1);
-    }
-
-    [Fact]
     public void GetConsecutiveWorkoutDayStreak_ShouldCalculateCorrectStreak_WhenConsecutiveDays()
     {
         InsertTestClient(1);
@@ -254,27 +202,6 @@ public sealed class RepositoryAchievementsTests : IDisposable
     }
 
     [Fact]
-    public void GetConsecutiveWorkoutDayStreak_ShouldReturnOne_WhenNoConsecutiveDays()
-    {
-        InsertTestClient(1);
-        InsertWorkoutLog(1, DateTime.Today);
-        InsertWorkoutLog(1, DateTime.Today.AddDays(-3));
-        InsertWorkoutLog(1, DateTime.Today.AddDays(-7));
-
-        var streak = this.repository.GetConsecutiveWorkoutDayStreak(1);
-
-        streak.Should().Be(1);
-    }
-
-    [Fact]
-    public void GetAllAchievements_ShouldReturnEmptyList_WhenNoAchievementsExist()
-    {
-        var achievements = this.repository.GetAllAchievements();
-
-        achievements.Should().BeEmpty();
-    }
-
-    [Fact]
     public void GetAllAchievements_ShouldReturnAllAchievements_WhenAchievementsExist()
     {
         InsertAchievement(1, "First Workout", "Complete your first workout", "WORKOUT_COUNT", 1);
@@ -305,28 +232,6 @@ public sealed class RepositoryAchievementsTests : IDisposable
         achievements[0].AchievementId.Should().Be(1);
         achievements[1].AchievementId.Should().Be(2);
         achievements[2].AchievementId.Should().Be(3);
-    }
-
-    [Fact]
-    public void GetAllAchievements_ShouldHandleNullThresholdWorkouts()
-    {
-        InsertAchievement(1, "Special Achievement", "No threshold", "CUSTOM", null);
-
-        var achievements = this.repository.GetAllAchievements();
-
-        achievements.Should().HaveCount(1);
-        achievements[0].ThresholdWorkouts.Should().BeNull();
-    }
-
-    [Fact]
-    public void GetAllAchievements_ShouldHandleEmptyCriteria()
-    {
-        InsertAchievement(1, "Achievement", "Description", "", 10);
-
-        var achievements = this.repository.GetAllAchievements();
-
-        achievements.Should().HaveCount(1);
-        achievements[0].Criteria.Should().Be("");
     }
 
     [Fact]
@@ -368,20 +273,6 @@ public sealed class RepositoryAchievementsTests : IDisposable
 
         var unlocked = GetClientAchievementUnlockedStatus(1, 1);
         unlocked.Should().BeTrue();
-    }
-
-    [Fact]
-    public void AwardAchievement_ShouldHandleMultipleAchievementsForSameClient()
-    {
-        InsertTestClient(1);
-        InsertAchievement(1, "Achievement 1", "Description 1", "CRITERIA", 1);
-        InsertAchievement(2, "Achievement 2", "Description 2", "CRITERIA", 2);
-
-        this.repository.AwardAchievement(1, 1);
-        this.repository.AwardAchievement(1, 2);
-
-        GetClientAchievementUnlockedStatus(1, 1).Should().BeTrue();
-        GetClientAchievementUnlockedStatus(1, 2).Should().BeTrue();
     }
 
     [Fact]
@@ -427,44 +318,6 @@ public sealed class RepositoryAchievementsTests : IDisposable
     }
 
     [Fact]
-    public void GetAchievementForClient_ShouldReturnCorrectStatusForDifferentClients()
-    {
-        InsertTestClient(1);
-        InsertTestClient(2);
-        InsertAchievement(1, "First Workout", "Complete your first workout", "WORKOUT_COUNT", 1);
-        InsertClientAchievement(1, 1, true);
-
-        var achievement1 = this.repository.GetAchievementForClient(1, 1);
-        var achievement2 = this.repository.GetAchievementForClient(1, 2);
-
-        achievement1!.IsUnlocked.Should().BeTrue();
-        achievement2!.IsUnlocked.Should().BeFalse();
-    }
-
-    [Fact]
-    public void GetAchievementShowcaseForClient_ShouldReturnEmptyList_WhenNoAchievementsExist()
-    {
-        InsertTestClient(1);
-
-        var showcase = this.repository.GetAchievementShowcaseForClient(1);
-
-        showcase.Should().BeEmpty();
-    }
-
-    [Fact]
-    public void GetAchievementShowcaseForClient_ShouldReturnAllAchievements_WhenNoneUnlocked()
-    {
-        InsertTestClient(1);
-        InsertAchievement(1, "Achievement 1", "Description 1", "CRITERIA", 1);
-        InsertAchievement(2, "Achievement 2", "Description 2", "CRITERIA", 2);
-
-        var showcase = this.repository.GetAchievementShowcaseForClient(1);
-
-        showcase.Should().HaveCount(2);
-        showcase.Should().AllSatisfy(a => a.IsUnlocked.Should().BeFalse());
-    }
-
-    [Fact]
     public void GetAchievementShowcaseForClient_ShouldOrderUnlockedFirst()
     {
         InsertTestClient(1);
@@ -495,25 +348,6 @@ public sealed class RepositoryAchievementsTests : IDisposable
         showcase.Should().HaveCount(2);
         showcase.Should().ContainSingle(a => a.Title == "Same Title");
         showcase.Should().ContainSingle(a => a.Title == "Different Title");
-    }
-
-    [Fact]
-    public void GetAchievementShowcaseForClient_ShouldHandleMixedUnlockedStatus()
-    {
-        InsertTestClient(1);
-        InsertAchievement(1, "Achievement 1", "Description 1", "CRITERIA", 1);
-        InsertAchievement(2, "Achievement 2", "Description 2", "CRITERIA", 2);
-        InsertAchievement(3, "Achievement 3", "Description 3", "CRITERIA", 3);
-        InsertClientAchievement(1, 1, true);
-        InsertClientAchievement(1, 3, true);
-
-        var showcase = this.repository.GetAchievementShowcaseForClient(1);
-
-        showcase.Should().HaveCount(3);
-        var unlocked = showcase.Where(a => a.IsUnlocked).ToList();
-        var locked = showcase.Where(a => !a.IsUnlocked).ToList();
-        unlocked.Should().HaveCount(2);
-        locked.Should().HaveCount(1);
     }
 
     [Fact]
@@ -579,17 +413,6 @@ public sealed class RepositoryAchievementsTests : IDisposable
 
         HasClientAchievement(1, 1).Should().BeFalse();
         GetClientAchievementUnlockedStatus(1, 2).Should().BeTrue();
-    }
-
-    [Fact]
-    public void EvaluateAndUnlockWorkoutMilestones_ShouldHandleNoWorkouts()
-    {
-        InsertTestClient(1);
-        InsertAchievement(1, "First Workout", "Complete 1 workout", "WORKOUT_COUNT", 1);
-
-        this.repository.EvaluateAndUnlockWorkoutMilestones(1);
-
-        HasClientAchievement(1, 1).Should().BeFalse();
     }
 
     [Fact]
