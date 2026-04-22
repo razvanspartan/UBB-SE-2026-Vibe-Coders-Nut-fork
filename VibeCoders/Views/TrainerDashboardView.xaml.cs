@@ -29,7 +29,6 @@ namespace VibeCoders.Views
 
         public TrainerDashboardView()
         {
-            var service = App.GetService<TrainerService>();
             var viewModel = App.GetService<TrainerDashboardViewModel>();
             this.ViewModel = viewModel;
             this.InitializeComponent();

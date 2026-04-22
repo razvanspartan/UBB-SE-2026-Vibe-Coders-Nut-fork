@@ -8,8 +8,9 @@ namespace VibeCoders.Services
     using VibeCoders.Models;
     using VibeCoders.Repositories;
     using VibeCoders.Repositories.Interfaces;
+    using VibeCoders.Services.Interfaces;
 
-    public sealed class TrainerService
+    public sealed class TrainerService : ITrainerService
     {
         private readonly IRepositoryWorkoutTemplate workoutTemplateRepository;
         private readonly IRepositoryWorkoutLog workoutLogRepository;

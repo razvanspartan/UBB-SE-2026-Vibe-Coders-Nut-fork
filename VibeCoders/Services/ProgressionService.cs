@@ -3,9 +3,10 @@ namespace VibeCoders.Services
     using VibeCoders.Models;
     using VibeCoders.Repositories;
     using VibeCoders.Repositories.Interfaces;
+    using VibeCoders.Services.Interfaces;
     using VibeCoders.Utils;
 
-    public sealed class ProgressionService
+    public sealed class ProgressionService : IProgressionService
     {
         private readonly IRepositoryWorkoutTemplate workoutTemplateRepository;
         private readonly IRepositoryNotification notificationRepository;
