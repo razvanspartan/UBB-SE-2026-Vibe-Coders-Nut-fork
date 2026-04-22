@@ -1,13 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
 using FluentAssertions;
 using NSubstitute;
-using VibeCoders.Domain;
 using VibeCoders.Models;
 using VibeCoders.Models.Integration;
 using VibeCoders.Repositories.Interfaces;
@@ -18,6 +10,16 @@ namespace VibeCoders.Tests.Unit.Services
 {
     public class ClientServiceTests
     {
+        private const int ValidClientIdentifier = 1;
+        private const int InvalidClientIdentifier = 0;
+        private const double DefaultClientWeightInKilograms = 80;
+        private const string NutritionSyncEndpointUrl = "http://localhost/sync";
+        private const string SquatExerciseName = "Squat";
+        private const float SquatMetabolicEquivalent = 5.0f;  // Changed from double to float
+        private const int SixtyMinutesInSeconds = 60;
+        private const string EmptyDurationDisplay = "00:00";
+        private const int FirstSetIndex = 1;
+
         private readonly IRepositoryWorkoutLog _workoutLogRepository;
         private readonly ProgressionService _progressionService;
         private readonly IHttpClientFactory _httpClientFactory;
@@ -29,7 +31,7 @@ namespace VibeCoders.Tests.Unit.Services
         private readonly IRepositoryAchievements _achievementsRepository;
         private readonly IRepositoryNutrition _nutritionRepository;
         private readonly IRepositoryWorkoutTemplate _workoutTemplateRepository;
-        private readonly ClientService _sut;
+        private readonly ClientService _systemUnderTest;
 
         public ClientServiceTests()
         {
@@ -38,14 +40,14 @@ namespace VibeCoders.Tests.Unit.Services
             _httpClientFactory = Substitute.For<IHttpClientFactory>();
             _evaluationEngine = new EvaluationEngine(Substitute.For<IRepositoryAchievements>());
             _achievementBus = Substitute.For<IAchievementUnlockedBus>();
-            _nutritionSync = new NutritionSyncOptions { Endpoint = "http://localhost/sync" };
+            _nutritionSync = new NutritionSyncOptions { Endpoint = NutritionSyncEndpointUrl };
             _trainerRepository = Substitute.For<IRepositoryTrainer>();
             _notificationRepository = Substitute.For<IRepositoryNotification>();
             _achievementsRepository = Substitute.For<IRepositoryAchievements>();
             _nutritionRepository = Substitute.For<IRepositoryNutrition>();
             _workoutTemplateRepository = Substitute.For<IRepositoryWorkoutTemplate>();
 
-            _sut = new ClientService(
+            _systemUnderTest = new ClientService(
                 _workoutLogRepository,
                 _progressionService,
                 _httpClientFactory,
@@ -62,93 +64,76 @@ namespace VibeCoders.Tests.Unit.Services
         [Fact]
         public void GetWorkoutHistoryForClient_ValidClientId_ReturnsWorkoutLogs()
         {
-            // Arrange
-            var clientId = 1;
-            var expectedLogs = new List<WorkoutLog> { new WorkoutLog { Id = 1, ClientId = clientId } };
+            var clientId = ValidClientIdentifier;
+            var expectedLogs = new List<WorkoutLog> { new WorkoutLog { Id = ValidClientIdentifier, ClientId = clientId } };
             _workoutLogRepository.GetWorkoutHistory(clientId).Returns(expectedLogs);
 
-            // Act
-            var result = _sut.GetWorkoutHistoryForClient(clientId);
+            var result = _systemUnderTest.GetWorkoutHistoryForClient(clientId);
 
-            // Assert
             result.Should().BeEquivalentTo(expectedLogs);
         }
 
         [Fact]
         public void GetWorkoutHistoryForClient_RepositoryThrowsException_ReturnsEmptyList()
         {
-            // Arrange
-            var clientId = 1;
-            _workoutLogRepository.When(x => x.GetWorkoutHistory(clientId)).Do(x => { throw new Exception("DB Error"); });
+            var clientId = ValidClientIdentifier;
+            _workoutLogRepository.When(x => x.GetWorkoutHistory(clientId)).Do(x => { throw new Exception("Database Error"); });
 
-            // Act
-            var result = _sut.GetWorkoutHistoryForClient(clientId);
+            var result = _systemUnderTest.GetWorkoutHistoryForClient(clientId);
 
-            // Assert
             result.Should().BeEmpty();
         }
 
         [Fact]
         public void UpdateWorkoutLog_ValidLog_ReturnsTrue()
         {
-            // Arrange
-            var log = new WorkoutLog { Id = 1 };
+            var log = new WorkoutLog { Id = ValidClientIdentifier };
             _workoutLogRepository.UpdateWorkoutLog(log).Returns(true);
 
-            // Act
-            var result = _sut.UpdateWorkoutLog(log);
+            var result = _systemUnderTest.UpdateWorkoutLog(log);
 
-            // Assert
             result.Should().BeTrue();
         }
 
         [Fact]
         public void UpdateWorkoutLog_RepositoryThrowsException_ReturnsFalse()
         {
-            // Arrange
-            var log = new WorkoutLog { Id = 1 };
-            _workoutLogRepository.When(x => x.UpdateWorkoutLog(log)).Do(x => { throw new Exception("DB Error"); });
+            var log = new WorkoutLog { Id = ValidClientIdentifier };
+            _workoutLogRepository.When(x => x.UpdateWorkoutLog(log)).Do(x => { throw new Exception("Database Error"); });
 
-            // Act
-            var result = _sut.UpdateWorkoutLog(log);
+            var result = _systemUnderTest.UpdateWorkoutLog(log);
 
-            // Assert
             result.Should().BeFalse();
         }
 
         [Fact]
         public void FinalizeWorkout_NullLog_ReturnsFalse()
         {
-            // Act
-            var result = _sut.FinalizeWorkout(null!);
+            var result = _systemUnderTest.FinalizeWorkout(null!);
 
-            // Assert
             result.Should().BeFalse();
         }
 
         [Fact]
         public void FinalizeWorkout_ValidLog_ReturnsTrue()
         {
-            // Arrange
-            var log = new WorkoutLog 
-            { 
-                Id = 1, 
-                ClientId = 1, 
+            var log = new WorkoutLog
+            {
+                Id = ValidClientIdentifier,
+                ClientId = ValidClientIdentifier,
                 Exercises = new List<LoggedExercise>
                 {
-                    new LoggedExercise { ExerciseName = "Squat", MetabolicEquivalent = 5.0f }
+                    new LoggedExercise { ExerciseName = SquatExerciseName, MetabolicEquivalent = SquatMetabolicEquivalent }
                 },
-                Duration = TimeSpan.FromMinutes(60)
+                Duration = TimeSpan.FromMinutes(SixtyMinutesInSeconds)
             };
 
-            _workoutLogRepository.GetClientWeight(1).Returns(80);
+            _workoutLogRepository.GetClientWeight(ValidClientIdentifier).Returns(DefaultClientWeightInKilograms);
             _workoutLogRepository.SaveWorkoutLog(log).Returns(true);
-            _achievementsRepository.GetAchievementShowcaseForClient(1).Returns(new List<AchievementShowcaseItem>());
+            _achievementsRepository.GetAchievementShowcaseForClient(ValidClientIdentifier).Returns(new List<AchievementShowcaseItem>());
 
-            // Act
-            var result = _sut.FinalizeWorkout(log);
+            var result = _systemUnderTest.FinalizeWorkout(log);
 
-            // Assert
             result.Should().BeTrue();
             _workoutLogRepository.Received(1).SaveWorkoutLog(log);
         }
@@ -156,89 +141,71 @@ namespace VibeCoders.Tests.Unit.Services
         [Fact]
         public void SaveSet_NullLog_ReturnsFalse()
         {
-            // Act
-            var result = _sut.SaveSet(null!, "Squat", new LoggedSet());
+            var result = _systemUnderTest.SaveSet(null!, SquatExerciseName, new LoggedSet());
 
-            // Assert
             result.Should().BeFalse();
         }
 
         [Fact]
         public void SaveSet_ValidSet_AddsSetToExerciseAndReturnsTrue()
         {
-            // Arrange
-            var log = new WorkoutLog { Id = 1, Exercises = new List<LoggedExercise>() };
-            var set = new LoggedSet { ActualWeight = 100 };
+            var log = new WorkoutLog { Id = ValidClientIdentifier, Exercises = new List<LoggedExercise>() };
+            var loggedSet = new LoggedSet();
 
-            // Act
-            var result = _sut.SaveSet(log, "Squat", set);
+            var result = _systemUnderTest.SaveSet(log, SquatExerciseName, loggedSet);
 
-            // Assert
             result.Should().BeTrue();
-            log.Exercises.Should().ContainSingle(e => e.ExerciseName == "Squat");
-            log.Exercises.First().Sets.Should().ContainSingle(s => s == set);
-            set.SetIndex.Should().Be(1);
+            log.Exercises.Should().ContainSingle(exercise => exercise.ExerciseName == SquatExerciseName);
+            log.Exercises.First().Sets.Should().ContainSingle(set => set == loggedSet);
+            loggedSet.SetIndex.Should().Be(FirstSetIndex);
         }
 
         [Fact]
         public void ModifyWorkout_NullLog_ReturnsFalse()
         {
-            // Act
-            var result = _sut.ModifyWorkout(null!);
+            var result = _systemUnderTest.ModifyWorkout(null!);
 
-            // Assert
             result.Should().BeFalse();
         }
 
         [Fact]
         public void ModifyWorkout_ValidLog_ReturnsTrue()
         {
-            // Arrange
-            var log = new WorkoutLog { Id = 1 };
+            var log = new WorkoutLog { Id = ValidClientIdentifier };
             _workoutLogRepository.SaveWorkoutLog(log).Returns(true);
 
-            // Act
-            var result = _sut.ModifyWorkout(log);
+            var result = _systemUnderTest.ModifyWorkout(log);
 
-            // Assert
             result.Should().BeTrue();
         }
 
         [Fact]
         public void GetActiveNutritionPlan_InvalidClientId_ReturnsNull()
         {
-            // Act
-            var result = _sut.GetActiveNutritionPlan(0);
+            var result = _systemUnderTest.GetActiveNutritionPlan(InvalidClientIdentifier);
 
-            // Assert
             result.Should().BeNull();
         }
 
         [Fact]
-        public void BuildEstimatedWorkoutDurationDisplay_NoExercises_Returns00_00()
+        public void BuildEstimatedWorkoutDurationDisplay_NoExercises_ReturnsEmptyDurationPlaceholder()
         {
-            // Arrange
             var exercises = new List<LoggedExercise>();
 
-            // Act
-            var result = _sut.BuildEstimatedWorkoutDurationDisplay(exercises);
+            var result = _systemUnderTest.BuildEstimatedWorkoutDurationDisplay(exercises);
 
-            // Assert
-            result.Should().Be("00:00");
+            result.Should().Be(EmptyDurationDisplay);
         }
 
         [Fact]
         public void GetAvailableWorkoutsForClient_ValidClientId_ReturnsWorkouts()
         {
-            // Arrange
-            var clientId = 1;
-            var expectedWorkouts = new List<WorkoutTemplate> { new WorkoutTemplate { Id = 1 } };
+            var clientId = ValidClientIdentifier;
+            var expectedWorkouts = new List<WorkoutTemplate> { new WorkoutTemplate { Id = ValidClientIdentifier } };
             _workoutTemplateRepository.GetAvailableWorkouts(clientId).Returns(expectedWorkouts);
 
-            // Act
-            var result = _sut.GetAvailableWorkoutsForClient(clientId);
+            var result = _systemUnderTest.GetAvailableWorkoutsForClient(clientId);
 
-            // Assert
             result.Should().BeEquivalentTo(expectedWorkouts);
         }
     }
