@@ -8,6 +8,22 @@ namespace VibeCoders.Tests.Integration.Repositories;
 
 public sealed class RepositoryNutritionTests : IDisposable
 {
+    private const int DefaultClientId = 1;
+    private const int SecondClientId = 2;
+    private const int ThirdClientId = 3;
+    private const int DefaultTrainerId = 1;
+    private const double DefaultWeightInKg = 75.0;
+    private const double DefaultHeightInCm = 180.0;
+    private const int UserIdOffset = 1000;
+    private const int StandardPlanDurationInDays = 30;
+    private const int WeekDurationInDays = 7;
+    private const int TestYear = 2024;
+    private const int FirstMealCount = 2;
+    private const int SecondMealCount = 3;
+    private const int SingleMealCount = 1;
+    private const int ThreeMealCount = 3;
+    private const int FourIngredientCount = 4;
+
     private readonly SqliteConnection connection;
     private readonly string connectionString;
     private readonly RepositoryNutrition repository;
@@ -30,7 +46,7 @@ public sealed class RepositoryNutritionTests : IDisposable
 
     private static void CreateSchema(SqliteConnection connection)
     {
-        using var cmd = new SqliteCommand(
+        using var command = new SqliteCommand(
             @"
             CREATE TABLE IF NOT EXISTS CLIENT (
                 client_id  INTEGER PRIMARY KEY,
@@ -62,7 +78,7 @@ public sealed class RepositoryNutritionTests : IDisposable
                 FOREIGN KEY (client_id)         REFERENCES CLIENT(client_id),
                 FOREIGN KEY (nutrition_plan_id) REFERENCES NUTRITION_PLAN(nutrition_plan_id)
             );", connection);
-        cmd.ExecuteNonQuery();
+        command.ExecuteNonQuery();
     }
 
     [Fact]
@@ -70,9 +86,9 @@ public sealed class RepositoryNutritionTests : IDisposable
     {
         var plan = CreateTestNutritionPlan();
 
-        var planId = this.repository.InsertNutritionPlan(plan);
+        var nutritionPlanId = this.repository.InsertNutritionPlan(plan);
 
-        planId.Should().BeGreaterThan(0);
+        nutritionPlanId.Should().BeGreaterThan(0);
     }
 
     [Fact]
@@ -80,9 +96,9 @@ public sealed class RepositoryNutritionTests : IDisposable
     {
         var plan = CreateTestNutritionPlan();
 
-        var planId = this.repository.InsertNutritionPlan(plan);
+        var nutritionPlanId = this.repository.InsertNutritionPlan(plan);
 
-        var exists = NutritionPlanExists(planId);
+        var exists = NutritionPlanExists(nutritionPlanId);
         exists.Should().BeTrue();
     }
 
@@ -91,13 +107,13 @@ public sealed class RepositoryNutritionTests : IDisposable
     {
         var plan = new NutritionPlan
         {
-            StartDate = new DateTime(2024, 1, 15),
-            EndDate = new DateTime(2024, 2, 15)
+            StartDate = new DateTime(TestYear, 1, 15),
+            EndDate = new DateTime(TestYear, 2, 15)
         };
 
-        var planId = this.repository.InsertNutritionPlan(plan);
+        var nutritionPlanId = this.repository.InsertNutritionPlan(plan);
 
-        var saved = GetNutritionPlanFromDatabase(planId);
+        var saved = GetNutritionPlanFromDatabase(nutritionPlanId);
         saved.Should().NotBeNull();
         saved!.StartDate.Should().Be("2024-01-15");
         saved.EndDate.Should().Be("2024-02-15");
@@ -108,13 +124,13 @@ public sealed class RepositoryNutritionTests : IDisposable
     {
         var plan = new NutritionPlan
         {
-            StartDate = new DateTime(2024, 1, 15, 14, 30, 45),
-            EndDate = new DateTime(2024, 2, 15, 18, 45, 30)
+            StartDate = new DateTime(TestYear, 1, 15, 14, 30, 45),
+            EndDate = new DateTime(TestYear, 2, 15, 18, 45, 30)
         };
 
-        var planId = this.repository.InsertNutritionPlan(plan);
+        var nutritionPlanId = this.repository.InsertNutritionPlan(plan);
 
-        var saved = GetNutritionPlanFromDatabase(planId);
+        var saved = GetNutritionPlanFromDatabase(nutritionPlanId);
         saved.Should().NotBeNull();
         saved!.StartDate.Should().Be("2024-01-15");
         saved.EndDate.Should().Be("2024-02-15");
@@ -123,19 +139,19 @@ public sealed class RepositoryNutritionTests : IDisposable
     [Fact]
     public void InsertMeal_ShouldInsertMealIntoDatabase()
     {
-        var planId = InsertTestNutritionPlan();
+        var nutritionPlanId = InsertTestNutritionPlan();
         var meal = CreateTestMeal("Breakfast");
 
-        this.repository.InsertMeal(meal, planId);
+        this.repository.InsertMeal(meal, nutritionPlanId);
 
-        var count = GetMealCountForPlan(planId);
-        count.Should().Be(1);
+        var count = GetMealCountForPlan(nutritionPlanId);
+        count.Should().Be(SingleMealCount);
     }
 
     [Fact]
     public void InsertMeal_ShouldSaveAllMealProperties()
     {
-        var planId = InsertTestNutritionPlan();
+        var nutritionPlanId = InsertTestNutritionPlan();
         var meal = new Meal
         {
             Name = "Grilled Chicken Salad",
@@ -143,9 +159,9 @@ public sealed class RepositoryNutritionTests : IDisposable
             Instructions = "Grill chicken, chop vegetables, mix together"
         };
 
-        this.repository.InsertMeal(meal, planId);
+        this.repository.InsertMeal(meal, nutritionPlanId);
 
-        var saved = GetMealFromDatabase(planId);
+        var saved = GetMealFromDatabase(nutritionPlanId);
         saved.Should().NotBeNull();
         saved!.Name.Should().Be("Grilled Chicken Salad");
         saved.Ingredients.Should().Contain("Chicken breast");
@@ -158,7 +174,7 @@ public sealed class RepositoryNutritionTests : IDisposable
     [Fact]
     public void InsertMeal_ShouldSerializeIngredientsAsJson()
     {
-        var planId = InsertTestNutritionPlan();
+        var nutritionPlanId = InsertTestNutritionPlan();
         var meal = new Meal
         {
             Name = "Test Meal",
@@ -166,9 +182,9 @@ public sealed class RepositoryNutritionTests : IDisposable
             Instructions = "Test instructions"
         };
 
-        this.repository.InsertMeal(meal, planId);
+        this.repository.InsertMeal(meal, nutritionPlanId);
 
-        var rawIngredients = GetRawIngredientsFromDatabase(planId);
+        var rawIngredients = GetRawIngredientsFromDatabase(nutritionPlanId);
         rawIngredients.Should().Contain("Ingredient 1");
         rawIngredients.Should().Contain("Ingredient 2");
         rawIngredients.Should().Contain("[");
@@ -178,7 +194,7 @@ public sealed class RepositoryNutritionTests : IDisposable
     [Fact]
     public void InsertMeal_ShouldHandleEmptyIngredientsList()
     {
-        var planId = InsertTestNutritionPlan();
+        var nutritionPlanId = InsertTestNutritionPlan();
         var meal = new Meal
         {
             Name = "Test Meal",
@@ -186,9 +202,9 @@ public sealed class RepositoryNutritionTests : IDisposable
             Instructions = "Test instructions"
         };
 
-        this.repository.InsertMeal(meal, planId);
+        this.repository.InsertMeal(meal, nutritionPlanId);
 
-        var saved = GetMealFromDatabase(planId);
+        var saved = GetMealFromDatabase(nutritionPlanId);
         saved.Should().NotBeNull();
         saved!.Ingredients.Should().BeEmpty();
     }
@@ -196,7 +212,7 @@ public sealed class RepositoryNutritionTests : IDisposable
     [Fact]
     public void InsertMeal_ShouldHandleEmptyNameAndInstructions()
     {
-        var planId = InsertTestNutritionPlan();
+        var nutritionPlanId = InsertTestNutritionPlan();
         var meal = new Meal
         {
             Name = string.Empty,
@@ -204,9 +220,9 @@ public sealed class RepositoryNutritionTests : IDisposable
             Instructions = string.Empty
         };
 
-        this.repository.InsertMeal(meal, planId);
+        this.repository.InsertMeal(meal, nutritionPlanId);
 
-        var saved = GetMealFromDatabase(planId);
+        var saved = GetMealFromDatabase(nutritionPlanId);
         saved.Should().NotBeNull();
         saved!.Name.Should().BeEmpty();
         saved.Instructions.Should().BeEmpty();
@@ -215,37 +231,37 @@ public sealed class RepositoryNutritionTests : IDisposable
     [Fact]
     public void AssignNutritionPlanToClient_ShouldCreateAssignment()
     {
-        InsertTestClient(1);
-        var planId = InsertTestNutritionPlan();
+        InsertTestClient(DefaultClientId);
+        var nutritionPlanId = InsertTestNutritionPlan();
 
-        this.repository.AssignNutritionPlanToClient(1, planId);
+        this.repository.AssignNutritionPlanToClient(DefaultClientId, nutritionPlanId);
 
-        var assigned = IsNutritionPlanAssignedToClient(1, planId);
+        var assigned = IsNutritionPlanAssignedToClient(DefaultClientId, nutritionPlanId);
         assigned.Should().BeTrue();
     }
 
     [Fact]
     public void AssignNutritionPlanToClient_ShouldIgnoreDuplicateAssignments()
     {
-        InsertTestClient(1);
-        var planId = InsertTestNutritionPlan();
+        InsertTestClient(DefaultClientId);
+        var nutritionPlanId = InsertTestNutritionPlan();
 
-        this.repository.AssignNutritionPlanToClient(1, planId);
-        this.repository.AssignNutritionPlanToClient(1, planId);
-        this.repository.AssignNutritionPlanToClient(1, planId);
+        this.repository.AssignNutritionPlanToClient(DefaultClientId, nutritionPlanId);
+        this.repository.AssignNutritionPlanToClient(DefaultClientId, nutritionPlanId);
+        this.repository.AssignNutritionPlanToClient(DefaultClientId, nutritionPlanId);
 
-        var count = GetAssignedPlanCountForClient(1);
-        count.Should().Be(1);
+        var count = GetAssignedPlanCountForClient(DefaultClientId);
+        count.Should().Be(SingleMealCount);
     }
 
     [Fact]
     public void SaveNutritionPlanForClient_ShouldSavePlanAndMealsAndAssignment()
     {
-        InsertTestClient(1);
+        InsertTestClient(DefaultClientId);
         var plan = new NutritionPlan
         {
             StartDate = DateTime.Today,
-            EndDate = DateTime.Today.AddDays(30),
+            EndDate = DateTime.Today.AddDays(StandardPlanDurationInDays),
             Meals = new List<Meal>
             {
                 CreateTestMeal("Breakfast"),
@@ -254,52 +270,52 @@ public sealed class RepositoryNutritionTests : IDisposable
             }
         };
 
-        this.repository.SaveNutritionPlanForClient(plan, 1);
+        this.repository.SaveNutritionPlanForClient(plan, DefaultClientId);
 
-        var plans = this.repository.GetNutritionPlansForClient(1);
-        plans.Should().HaveCount(1);
-        plans[0].Meals.Should().HaveCount(3);
+        var plans = this.repository.GetNutritionPlansForClient(DefaultClientId);
+        plans.Should().HaveCount(SingleMealCount);
+        plans[0].Meals.Should().HaveCount(ThreeMealCount);
     }
 
     [Fact]
     public void SaveNutritionPlanForClient_ShouldHandleEmptyMealsList()
     {
-        InsertTestClient(1);
+        InsertTestClient(DefaultClientId);
         var plan = new NutritionPlan
         {
             StartDate = DateTime.Today,
-            EndDate = DateTime.Today.AddDays(7),
+            EndDate = DateTime.Today.AddDays(WeekDurationInDays),
             Meals = new List<Meal>()
         };
 
-        this.repository.SaveNutritionPlanForClient(plan, 1);
+        this.repository.SaveNutritionPlanForClient(plan, DefaultClientId);
 
-        var plans = this.repository.GetNutritionPlansForClient(1);
-        plans.Should().HaveCount(1);
+        var plans = this.repository.GetNutritionPlansForClient(DefaultClientId);
+        plans.Should().HaveCount(SingleMealCount);
         plans[0].Meals.Should().BeEmpty();
     }
 
     [Fact]
     public void SaveNutritionPlanForClient_ShouldSaveMultiplePlansForClient()
     {
-        InsertTestClient(1);
+        InsertTestClient(DefaultClientId);
 
-        var plan1 = CreateCompleteNutritionPlan(DateTime.Today, 2);
-        var plan2 = CreateCompleteNutritionPlan(DateTime.Today.AddDays(7), 3);
+        var plan1 = CreateCompleteNutritionPlan(DateTime.Today, FirstMealCount);
+        var plan2 = CreateCompleteNutritionPlan(DateTime.Today.AddDays(WeekDurationInDays), SecondMealCount);
 
-        this.repository.SaveNutritionPlanForClient(plan1, 1);
-        this.repository.SaveNutritionPlanForClient(plan2, 1);
+        this.repository.SaveNutritionPlanForClient(plan1, DefaultClientId);
+        this.repository.SaveNutritionPlanForClient(plan2, DefaultClientId);
 
-        var plans = this.repository.GetNutritionPlansForClient(1);
-        plans.Should().HaveCount(2);
+        var plans = this.repository.GetNutritionPlansForClient(DefaultClientId);
+        plans.Should().HaveCount(FirstMealCount);
     }
 
     [Fact]
     public void GetNutritionPlansForClient_ShouldReturnEmptyList_WhenNoPlansExist()
     {
-        InsertTestClient(1);
+        InsertTestClient(DefaultClientId);
 
-        var plans = this.repository.GetNutritionPlansForClient(1);
+        var plans = this.repository.GetNutritionPlansForClient(DefaultClientId);
 
         plans.Should().BeEmpty();
     }
@@ -307,68 +323,68 @@ public sealed class RepositoryNutritionTests : IDisposable
     [Fact]
     public void GetNutritionPlansForClient_ShouldReturnAllPlansForClient()
     {
-        InsertTestClient(1);
-        var plan1 = CreateCompleteNutritionPlan(DateTime.Today, 2);
-        var plan2 = CreateCompleteNutritionPlan(DateTime.Today.AddDays(30), 3);
+        InsertTestClient(DefaultClientId);
+        var plan1 = CreateCompleteNutritionPlan(DateTime.Today, FirstMealCount);
+        var plan2 = CreateCompleteNutritionPlan(DateTime.Today.AddDays(StandardPlanDurationInDays), SecondMealCount);
 
-        this.repository.SaveNutritionPlanForClient(plan1, 1);
-        this.repository.SaveNutritionPlanForClient(plan2, 1);
+        this.repository.SaveNutritionPlanForClient(plan1, DefaultClientId);
+        this.repository.SaveNutritionPlanForClient(plan2, DefaultClientId);
 
-        var plans = this.repository.GetNutritionPlansForClient(1);
+        var plans = this.repository.GetNutritionPlansForClient(DefaultClientId);
 
-        plans.Should().HaveCount(2);
-        plans[0].Meals.Should().HaveCount(2);
-        plans[1].Meals.Should().HaveCount(3);
+        plans.Should().HaveCount(FirstMealCount);
+        plans[0].Meals.Should().HaveCount(FirstMealCount);
+        plans[1].Meals.Should().HaveCount(SecondMealCount);
     }
 
     [Fact]
     public void GetNutritionPlansForClient_ShouldReturnPlansOnlyForSpecificClient()
     {
-        InsertTestClient(1);
-        InsertTestClient(2);
+        InsertTestClient(DefaultClientId);
+        InsertTestClient(SecondClientId);
 
-        var plan1 = CreateCompleteNutritionPlan(DateTime.Today, 2);
-        var plan2 = CreateCompleteNutritionPlan(DateTime.Today.AddDays(30), 1);
+        var plan1 = CreateCompleteNutritionPlan(DateTime.Today, FirstMealCount);
+        var plan2 = CreateCompleteNutritionPlan(DateTime.Today.AddDays(StandardPlanDurationInDays), SingleMealCount);
 
-        this.repository.SaveNutritionPlanForClient(plan1, 1);
-        this.repository.SaveNutritionPlanForClient(plan2, 2);
+        this.repository.SaveNutritionPlanForClient(plan1, DefaultClientId);
+        this.repository.SaveNutritionPlanForClient(plan2, SecondClientId);
 
-        var client1Plans = this.repository.GetNutritionPlansForClient(1);
-        var client2Plans = this.repository.GetNutritionPlansForClient(2);
+        var client1Plans = this.repository.GetNutritionPlansForClient(DefaultClientId);
+        var client2Plans = this.repository.GetNutritionPlansForClient(SecondClientId);
 
-        client1Plans.Should().HaveCount(1);
-        client2Plans.Should().HaveCount(1);
-        client1Plans[0].Meals.Should().HaveCount(2);
-        client2Plans[0].Meals.Should().HaveCount(1);
+        client1Plans.Should().HaveCount(SingleMealCount);
+        client2Plans.Should().HaveCount(SingleMealCount);
+        client1Plans[0].Meals.Should().HaveCount(FirstMealCount);
+        client2Plans[0].Meals.Should().HaveCount(SingleMealCount);
     }
 
     [Fact]
     public void GetNutritionPlansForClient_ShouldOrderByStartDate()
     {
-        InsertTestClient(1);
+        InsertTestClient(DefaultClientId);
 
-        var plan1 = CreateCompleteNutritionPlan(new DateTime(2024, 3, 1), 1);
-        var plan2 = CreateCompleteNutritionPlan(new DateTime(2024, 1, 1), 1);
-        var plan3 = CreateCompleteNutritionPlan(new DateTime(2024, 2, 1), 1);
+        var plan1 = CreateCompleteNutritionPlan(new DateTime(TestYear, 3, 1), SingleMealCount);
+        var plan2 = CreateCompleteNutritionPlan(new DateTime(TestYear, 1, 1), SingleMealCount);
+        var plan3 = CreateCompleteNutritionPlan(new DateTime(TestYear, 2, 1), SingleMealCount);
 
-        this.repository.SaveNutritionPlanForClient(plan1, 1);
-        this.repository.SaveNutritionPlanForClient(plan2, 1);
-        this.repository.SaveNutritionPlanForClient(plan3, 1);
+        this.repository.SaveNutritionPlanForClient(plan1, DefaultClientId);
+        this.repository.SaveNutritionPlanForClient(plan2, DefaultClientId);
+        this.repository.SaveNutritionPlanForClient(plan3, DefaultClientId);
 
-        var plans = this.repository.GetNutritionPlansForClient(1);
+        var plans = this.repository.GetNutritionPlansForClient(DefaultClientId);
 
-        plans.Should().HaveCount(3);
-        plans[0].StartDate.Should().Be(new DateTime(2024, 1, 1));
-        plans[1].StartDate.Should().Be(new DateTime(2024, 2, 1));
-        plans[2].StartDate.Should().Be(new DateTime(2024, 3, 1));
+        plans.Should().HaveCount(ThreeMealCount);
+        plans[0].StartDate.Should().Be(new DateTime(TestYear, 1, 1));
+        plans[1].StartDate.Should().Be(new DateTime(TestYear, 2, 1));
+        plans[2].StartDate.Should().Be(new DateTime(TestYear, 3, 1));
     }
 
     [Fact]
     public void GetNutritionPlansForClient_ShouldMapAllPropertiesCorrectly()
     {
-        InsertTestClient(1);
-        var startDate = new DateTime(2024, 1, 15);
-        var endDate = new DateTime(2024, 2, 15);
+        InsertTestClient(DefaultClientId);
+        var startDate = new DateTime(TestYear, 1, 15);
+        var endDate = new DateTime(TestYear, 2, 15);
 
         var plan = new NutritionPlan
         {
@@ -385,51 +401,51 @@ public sealed class RepositoryNutritionTests : IDisposable
             }
         };
 
-        this.repository.SaveNutritionPlanForClient(plan, 1);
+        this.repository.SaveNutritionPlanForClient(plan, DefaultClientId);
 
-        var plans = this.repository.GetNutritionPlansForClient(1);
+        var plans = this.repository.GetNutritionPlansForClient(DefaultClientId);
 
-        plans.Should().HaveCount(1);
+        plans.Should().HaveCount(SingleMealCount);
         var retrieved = plans[0];
         retrieved.PlanId.Should().BeGreaterThan(0);
         retrieved.StartDate.Date.Should().Be(startDate.Date);
         retrieved.EndDate.Date.Should().Be(endDate.Date);
-        retrieved.Meals.Should().HaveCount(1);
+        retrieved.Meals.Should().HaveCount(SingleMealCount);
         retrieved.Meals[0].Name.Should().Be("Test Meal");
-        retrieved.Meals[0].Ingredients.Should().HaveCount(2);
+        retrieved.Meals[0].Ingredients.Should().HaveCount(FirstMealCount);
         retrieved.Meals[0].Instructions.Should().Be("Test instructions");
     }
 
     [Fact]
     public void GetMealsForPlan_ShouldReturnAllMealsForPlan()
     {
-        var planId = InsertTestNutritionPlan();
+        var nutritionPlanId = InsertTestNutritionPlan();
 
         var meal1 = CreateTestMeal("Breakfast");
         var meal2 = CreateTestMeal("Lunch");
         var meal3 = CreateTestMeal("Dinner");
 
-        this.repository.InsertMeal(meal1, planId);
-        this.repository.InsertMeal(meal2, planId);
-        this.repository.InsertMeal(meal3, planId);
+        this.repository.InsertMeal(meal1, nutritionPlanId);
+        this.repository.InsertMeal(meal2, nutritionPlanId);
+        this.repository.InsertMeal(meal3, nutritionPlanId);
 
-        var meals = this.repository.GetMealsForPlan(planId);
+        var meals = this.repository.GetMealsForPlan(nutritionPlanId);
 
-        meals.Should().HaveCount(3);
+        meals.Should().HaveCount(ThreeMealCount);
     }
 
     [Fact]
     public void GetMealsForPlan_ShouldOrderByMealId()
     {
-        var planId = InsertTestNutritionPlan();
+        var nutritionPlanId = InsertTestNutritionPlan();
 
-        this.repository.InsertMeal(CreateTestMeal("First"), planId);
-        this.repository.InsertMeal(CreateTestMeal("Second"), planId);
-        this.repository.InsertMeal(CreateTestMeal("Third"), planId);
+        this.repository.InsertMeal(CreateTestMeal("First"), nutritionPlanId);
+        this.repository.InsertMeal(CreateTestMeal("Second"), nutritionPlanId);
+        this.repository.InsertMeal(CreateTestMeal("Third"), nutritionPlanId);
 
-        var meals = this.repository.GetMealsForPlan(planId);
+        var meals = this.repository.GetMealsForPlan(nutritionPlanId);
 
-        meals.Should().HaveCount(3);
+        meals.Should().HaveCount(ThreeMealCount);
         meals[0].Name.Should().Be("First");
         meals[1].Name.Should().Be("Second");
         meals[2].Name.Should().Be("Third");
@@ -438,7 +454,7 @@ public sealed class RepositoryNutritionTests : IDisposable
     [Fact]
     public void GetMealsForPlan_ShouldDeserializeIngredientsCorrectly()
     {
-        var planId = InsertTestNutritionPlan();
+        var nutritionPlanId = InsertTestNutritionPlan();
         var meal = new Meal
         {
             Name = "Complex Meal",
@@ -446,12 +462,12 @@ public sealed class RepositoryNutritionTests : IDisposable
             Instructions = "Cook everything together"
         };
 
-        this.repository.InsertMeal(meal, planId);
+        this.repository.InsertMeal(meal, nutritionPlanId);
 
-        var meals = this.repository.GetMealsForPlan(planId);
+        var meals = this.repository.GetMealsForPlan(nutritionPlanId);
 
-        meals.Should().HaveCount(1);
-        meals[0].Ingredients.Should().HaveCount(4);
+        meals.Should().HaveCount(SingleMealCount);
+        meals[0].Ingredients.Should().HaveCount(FourIngredientCount);
         meals[0].Ingredients.Should().Contain("Chicken");
         meals[0].Ingredients.Should().Contain("Rice");
         meals[0].Ingredients.Should().Contain("Vegetables");
@@ -461,7 +477,7 @@ public sealed class RepositoryNutritionTests : IDisposable
     [Fact]
     public void GetMealsForPlan_ShouldMapAllPropertiesCorrectly()
     {
-        var planId = InsertTestNutritionPlan();
+        var nutritionPlanId = InsertTestNutritionPlan();
         var meal = new Meal
         {
             Name = "Test Meal",
@@ -469,14 +485,14 @@ public sealed class RepositoryNutritionTests : IDisposable
             Instructions = "Test instructions"
         };
 
-        this.repository.InsertMeal(meal, planId);
+        this.repository.InsertMeal(meal, nutritionPlanId);
 
-        var meals = this.repository.GetMealsForPlan(planId);
+        var meals = this.repository.GetMealsForPlan(nutritionPlanId);
 
-        meals.Should().HaveCount(1);
+        meals.Should().HaveCount(SingleMealCount);
         var retrieved = meals[0];
         retrieved.MealId.Should().BeGreaterThan(0);
-        retrieved.NutritionPlanId.Should().Be(planId);
+        retrieved.NutritionPlanId.Should().Be(nutritionPlanId);
         retrieved.Name.Should().Be("Test Meal");
         retrieved.Ingredients.Should().BeEquivalentTo(new List<string> { "Ingredient 1", "Ingredient 2" });
         retrieved.Instructions.Should().Be("Test instructions");
@@ -485,12 +501,12 @@ public sealed class RepositoryNutritionTests : IDisposable
     [Fact]
     public void IntegrationTest_CompleteNutritionPlanFlow()
     {
-        InsertTestClient(1);
+        InsertTestClient(DefaultClientId);
 
         var plan = new NutritionPlan
         {
-            StartDate = new DateTime(2024, 1, 1),
-            EndDate = new DateTime(2024, 1, 31),
+            StartDate = new DateTime(TestYear, 1, 1),
+            EndDate = new DateTime(TestYear, 1, 31),
             Meals = new List<Meal>
             {
                 new Meal
@@ -514,15 +530,15 @@ public sealed class RepositoryNutritionTests : IDisposable
             }
         };
 
-        this.repository.SaveNutritionPlanForClient(plan, 1);
+        this.repository.SaveNutritionPlanForClient(plan, DefaultClientId);
 
-        var retrievedPlans = this.repository.GetNutritionPlansForClient(1);
+        var retrievedPlans = this.repository.GetNutritionPlansForClient(DefaultClientId);
 
-        retrievedPlans.Should().HaveCount(1);
+        retrievedPlans.Should().HaveCount(SingleMealCount);
         var retrievedPlan = retrievedPlans[0];
-        retrievedPlan.StartDate.Date.Should().Be(new DateTime(2024, 1, 1));
-        retrievedPlan.EndDate.Date.Should().Be(new DateTime(2024, 1, 31));
-        retrievedPlan.Meals.Should().HaveCount(3);
+        retrievedPlan.StartDate.Date.Should().Be(new DateTime(TestYear, 1, 1));
+        retrievedPlan.EndDate.Date.Should().Be(new DateTime(TestYear, 1, 31));
+        retrievedPlan.Meals.Should().HaveCount(ThreeMealCount);
         retrievedPlan.Meals[0].Name.Should().Be("Protein Breakfast");
         retrievedPlan.Meals[1].Name.Should().Be("Healthy Lunch");
         retrievedPlan.Meals[2].Name.Should().Be("Light Dinner");
@@ -531,65 +547,72 @@ public sealed class RepositoryNutritionTests : IDisposable
     [Fact]
     public void IntegrationTest_MultipleClientsMultiplePlans()
     {
-        InsertTestClient(1);
-        InsertTestClient(2);
+        InsertTestClient(DefaultClientId);
+        InsertTestClient(SecondClientId);
 
-        var plan1 = CreateCompleteNutritionPlan(DateTime.Today, 2);
-        var plan2 = CreateCompleteNutritionPlan(DateTime.Today.AddDays(30), 3);
-        var plan3 = CreateCompleteNutritionPlan(DateTime.Today, 1);
+        var plan1 = CreateCompleteNutritionPlan(DateTime.Today, FirstMealCount);
+        var plan2 = CreateCompleteNutritionPlan(DateTime.Today.AddDays(StandardPlanDurationInDays), SecondMealCount);
+        var plan3 = CreateCompleteNutritionPlan(DateTime.Today, SingleMealCount);
 
-        this.repository.SaveNutritionPlanForClient(plan1, 1);
-        this.repository.SaveNutritionPlanForClient(plan2, 1);
-        this.repository.SaveNutritionPlanForClient(plan3, 2);
+        this.repository.SaveNutritionPlanForClient(plan1, DefaultClientId);
+        this.repository.SaveNutritionPlanForClient(plan2, DefaultClientId);
+        this.repository.SaveNutritionPlanForClient(plan3, SecondClientId);
 
-        var client1Plans = this.repository.GetNutritionPlansForClient(1);
-        var client2Plans = this.repository.GetNutritionPlansForClient(2);
+        var client1Plans = this.repository.GetNutritionPlansForClient(DefaultClientId);
+        var client2Plans = this.repository.GetNutritionPlansForClient(SecondClientId);
 
-        client1Plans.Should().HaveCount(2);
-        client2Plans.Should().HaveCount(1);
-        client1Plans[0].Meals.Should().HaveCount(2);
-        client1Plans[1].Meals.Should().HaveCount(3);
-        client2Plans[0].Meals.Should().HaveCount(1);
+        client1Plans.Should().HaveCount(FirstMealCount);
+        client2Plans.Should().HaveCount(SingleMealCount);
+        client1Plans[0].Meals.Should().HaveCount(FirstMealCount);
+        client1Plans[1].Meals.Should().HaveCount(SecondMealCount);
+        client2Plans[0].Meals.Should().HaveCount(SingleMealCount);
     }
 
     [Fact]
     public void MultipleOperations_ShouldMaintainDataIntegrity()
     {
-        InsertTestClient(1);
-        InsertTestClient(2);
+        const int firstClientPlanCount = 3;
+        const int secondClientPlanCount = 2;
+        const int totalPlanCount = 5;
 
-        for (int i = 0; i < 3; i++)
+        InsertTestClient(DefaultClientId);
+        InsertTestClient(SecondClientId);
+
+        for (int planIndex = 0; planIndex < firstClientPlanCount; planIndex++)
         {
-            var plan = CreateCompleteNutritionPlan(DateTime.Today.AddDays(i * 30), 2);
-            this.repository.SaveNutritionPlanForClient(plan, 1);
+            var plan = CreateCompleteNutritionPlan(DateTime.Today.AddDays(planIndex * StandardPlanDurationInDays), FirstMealCount);
+            this.repository.SaveNutritionPlanForClient(plan, DefaultClientId);
         }
 
-        for (int i = 0; i < 2; i++)
+        for (int planIndex = 0; planIndex < secondClientPlanCount; planIndex++)
         {
-            var plan = CreateCompleteNutritionPlan(DateTime.Today.AddDays(i * 30), 3);
-            this.repository.SaveNutritionPlanForClient(plan, 2);
+            var plan = CreateCompleteNutritionPlan(DateTime.Today.AddDays(planIndex * StandardPlanDurationInDays), SecondMealCount);
+            this.repository.SaveNutritionPlanForClient(plan, SecondClientId);
         }
 
-        var client1Plans = this.repository.GetNutritionPlansForClient(1);
-        var client2Plans = this.repository.GetNutritionPlansForClient(2);
+        var client1Plans = this.repository.GetNutritionPlansForClient(DefaultClientId);
+        var client2Plans = this.repository.GetNutritionPlansForClient(SecondClientId);
         var totalPlans = GetTotalNutritionPlanCount();
 
-        client1Plans.Should().HaveCount(3);
-        client2Plans.Should().HaveCount(2);
-        totalPlans.Should().Be(5);
+        client1Plans.Should().HaveCount(firstClientPlanCount);
+        client2Plans.Should().HaveCount(secondClientPlanCount);
+        totalPlans.Should().Be(totalPlanCount);
 
-        client1Plans.Should().AllSatisfy(p => p.Meals.Should().HaveCount(2));
-        client2Plans.Should().AllSatisfy(p => p.Meals.Should().HaveCount(3));
+        client1Plans.Should().AllSatisfy(plan => plan.Meals.Should().HaveCount(FirstMealCount));
+        client2Plans.Should().AllSatisfy(plan => plan.Meals.Should().HaveCount(SecondMealCount));
     }
 
     private void InsertTestClient(int clientId)
     {
-        using var cmd = new SqliteCommand(
-            "INSERT INTO CLIENT (client_id, user_id, trainer_id, weight, height) VALUES (@id, @uid, 1, 75.0, 180.0)",
+        using var command = new SqliteCommand(
+            "INSERT INTO CLIENT (client_id, user_id, trainer_id, weight, height) VALUES (@clientId, @userId, @trainerId, @weight, @height)",
             this.connection);
-        cmd.Parameters.AddWithValue("@id", clientId);
-        cmd.Parameters.AddWithValue("@uid", clientId + 1000);
-        cmd.ExecuteNonQuery();
+        command.Parameters.AddWithValue("@clientId", clientId);
+        command.Parameters.AddWithValue("@userId", clientId + UserIdOffset);
+        command.Parameters.AddWithValue("@trainerId", DefaultTrainerId);
+        command.Parameters.AddWithValue("@weight", DefaultWeightInKg);
+        command.Parameters.AddWithValue("@height", DefaultHeightInCm);
+        command.ExecuteNonQuery();
     }
 
     private int InsertTestNutritionPlan()
@@ -603,7 +626,7 @@ public sealed class RepositoryNutritionTests : IDisposable
         return new NutritionPlan
         {
             StartDate = DateTime.Today,
-            EndDate = DateTime.Today.AddDays(30)
+            EndDate = DateTime.Today.AddDays(StandardPlanDurationInDays)
         };
     }
 
@@ -620,36 +643,36 @@ public sealed class RepositoryNutritionTests : IDisposable
     private NutritionPlan CreateCompleteNutritionPlan(DateTime startDate, int mealCount)
     {
         var meals = new List<Meal>();
-        for (int i = 0; i < mealCount; i++)
+        for (int mealIndex = 0; mealIndex < mealCount; mealIndex++)
         {
-            meals.Add(CreateTestMeal($"Meal {i + 1}"));
+            meals.Add(CreateTestMeal($"Meal {mealIndex + 1}"));
         }
 
         return new NutritionPlan
         {
             StartDate = startDate,
-            EndDate = startDate.AddDays(30),
+            EndDate = startDate.AddDays(StandardPlanDurationInDays),
             Meals = meals
         };
     }
 
-    private bool NutritionPlanExists(int planId)
+    private bool NutritionPlanExists(int nutritionPlanId)
     {
-        using var cmd = new SqliteCommand(
-            "SELECT COUNT(*) FROM NUTRITION_PLAN WHERE nutrition_plan_id = @planId",
+        using var command = new SqliteCommand(
+            "SELECT COUNT(*) FROM NUTRITION_PLAN WHERE nutrition_plan_id = @nutritionPlanId",
             this.connection);
-        cmd.Parameters.AddWithValue("@planId", planId);
-        return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
+        command.Parameters.AddWithValue("@nutritionPlanId", nutritionPlanId);
+        return Convert.ToInt32(command.ExecuteScalar()) > 0;
     }
 
-    private NutritionPlanData? GetNutritionPlanFromDatabase(int planId)
+    private NutritionPlanData? GetNutritionPlanFromDatabase(int nutritionPlanId)
     {
-        using var cmd = new SqliteCommand(
-            "SELECT start_date, end_date FROM NUTRITION_PLAN WHERE nutrition_plan_id = @planId",
+        using var command = new SqliteCommand(
+            "SELECT start_date, end_date FROM NUTRITION_PLAN WHERE nutrition_plan_id = @nutritionPlanId",
             this.connection);
-        cmd.Parameters.AddWithValue("@planId", planId);
+        command.Parameters.AddWithValue("@nutritionPlanId", nutritionPlanId);
 
-        using var reader = cmd.ExecuteReader();
+        using var reader = command.ExecuteReader();
         if (!reader.Read())
         {
             return null;
@@ -662,27 +685,27 @@ public sealed class RepositoryNutritionTests : IDisposable
         };
     }
 
-    private int GetMealCountForPlan(int planId)
+    private int GetMealCountForPlan(int nutritionPlanId)
     {
-        using var cmd = new SqliteCommand(
-            "SELECT COUNT(*) FROM MEAL WHERE nutrition_plan_id = @planId",
+        using var command = new SqliteCommand(
+            "SELECT COUNT(*) FROM MEAL WHERE nutrition_plan_id = @nutritionPlanId",
             this.connection);
-        cmd.Parameters.AddWithValue("@planId", planId);
-        return Convert.ToInt32(cmd.ExecuteScalar());
+        command.Parameters.AddWithValue("@nutritionPlanId", nutritionPlanId);
+        return Convert.ToInt32(command.ExecuteScalar());
     }
 
-    private MealData? GetMealFromDatabase(int planId)
+    private MealData? GetMealFromDatabase(int nutritionPlanId)
     {
-        using var cmd = new SqliteCommand(
+        using var command = new SqliteCommand(
             @"SELECT name, ingredients, instructions 
               FROM MEAL 
-              WHERE nutrition_plan_id = @planId 
+              WHERE nutrition_plan_id = @nutritionPlanId 
               ORDER BY meal_id DESC 
               LIMIT 1",
             this.connection);
-        cmd.Parameters.AddWithValue("@planId", planId);
+        command.Parameters.AddWithValue("@nutritionPlanId", nutritionPlanId);
 
-        using var reader = cmd.ExecuteReader();
+        using var reader = command.ExecuteReader();
         if (!reader.Read())
         {
             return null;
@@ -699,41 +722,41 @@ public sealed class RepositoryNutritionTests : IDisposable
         };
     }
 
-    private string GetRawIngredientsFromDatabase(int planId)
+    private string GetRawIngredientsFromDatabase(int nutritionPlanId)
     {
-        using var cmd = new SqliteCommand(
-            "SELECT ingredients FROM MEAL WHERE nutrition_plan_id = @planId LIMIT 1",
+        using var command = new SqliteCommand(
+            "SELECT ingredients FROM MEAL WHERE nutrition_plan_id = @nutritionPlanId LIMIT 1",
             this.connection);
-        cmd.Parameters.AddWithValue("@planId", planId);
-        return cmd.ExecuteScalar()?.ToString() ?? string.Empty;
+        command.Parameters.AddWithValue("@nutritionPlanId", nutritionPlanId);
+        return command.ExecuteScalar()?.ToString() ?? string.Empty;
     }
 
-    private bool IsNutritionPlanAssignedToClient(int clientId, int planId)
+    private bool IsNutritionPlanAssignedToClient(int clientId, int nutritionPlanId)
     {
-        using var cmd = new SqliteCommand(
+        using var command = new SqliteCommand(
             @"SELECT COUNT(*) FROM CLIENT_NUTRITION_PLAN 
-              WHERE client_id = @clientId AND nutrition_plan_id = @planId",
+              WHERE client_id = @clientId AND nutrition_plan_id = @nutritionPlanId",
             this.connection);
-        cmd.Parameters.AddWithValue("@clientId", clientId);
-        cmd.Parameters.AddWithValue("@planId", planId);
-        return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
+        command.Parameters.AddWithValue("@clientId", clientId);
+        command.Parameters.AddWithValue("@nutritionPlanId", nutritionPlanId);
+        return Convert.ToInt32(command.ExecuteScalar()) > 0;
     }
 
     private int GetAssignedPlanCountForClient(int clientId)
     {
-        using var cmd = new SqliteCommand(
+        using var command = new SqliteCommand(
             "SELECT COUNT(*) FROM CLIENT_NUTRITION_PLAN WHERE client_id = @clientId",
             this.connection);
-        cmd.Parameters.AddWithValue("@clientId", clientId);
-        return Convert.ToInt32(cmd.ExecuteScalar());
+        command.Parameters.AddWithValue("@clientId", clientId);
+        return Convert.ToInt32(command.ExecuteScalar());
     }
 
     private int GetTotalNutritionPlanCount()
     {
-        using var cmd = new SqliteCommand(
+        using var command = new SqliteCommand(
             "SELECT COUNT(*) FROM NUTRITION_PLAN",
             this.connection);
-        return Convert.ToInt32(cmd.ExecuteScalar());
+        return Convert.ToInt32(command.ExecuteScalar());
     }
 
     private class NutritionPlanData
