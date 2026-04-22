@@ -55,7 +55,7 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
     private string preferredWorkoutDisplay = "-";
 
     [ObservableProperty]
-    private ObservableCollection<ConsistencyWeekBucket> consistencyBuckets = new ();
+    private ObservableCollection<ConsistencyWeekBucket> consistencyBuckets = new();
 
     [ObservableProperty]
     private ISeries[] chartSeries = Array.Empty<ISeries>();
@@ -87,9 +87,9 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
     [ObservableProperty]
     private bool showEmptyState = true;
 
-    public ObservableCollection<WorkoutHistoryItemViewModel> HistoryItems { get; } = new ();
+    public ObservableCollection<WorkoutHistoryItemViewModel> HistoryItems { get; } = new();
 
-    public ObservableCollection<AchievementShowcaseItem> RecentAchievements { get; } = new ();
+    public ObservableCollection<AchievementShowcaseItem> RecentAchievements { get; } = new();
 
     public int PageSize { get; set; } = DefaultPageSize;
 
@@ -110,11 +110,7 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
     [RelayCommand]
     private async Task NextPageAsync()
     {
-        if (!CanGoNext)
-        {
-            return;
-        }
-
+        if (!CanGoNext) return;
         CurrentPage++;
         await LoadHistoryPageAsync().ConfigureAwait(true);
     }
@@ -122,11 +118,7 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
     [RelayCommand]
     private async Task PreviousPageAsync()
     {
-        if (!CanGoPrevious)
-        {
-            return;
-        }
-
+        if (!CanGoPrevious) return;
         CurrentPage--;
         await LoadHistoryPageAsync().ConfigureAwait(true);
     }
