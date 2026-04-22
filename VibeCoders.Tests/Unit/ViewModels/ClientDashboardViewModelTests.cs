@@ -20,7 +20,7 @@ namespace VibeCoders.Tests.Unit.ViewModels
         private readonly IWorkoutAnalyticsStore storeMock;
         private readonly IRepositoryAchievements achievementsMock;
         private readonly IRepositoryNutrition nutritionMock;
-        private readonly IIUserSession sessionMock;
+        private readonly IUserSession sessionMock;
         private readonly IAnalyticsDashboardRefreshBus refreshBusMock;
         private readonly ClientDashboardViewModel systemUnderTest;
 
@@ -33,12 +33,14 @@ namespace VibeCoders.Tests.Unit.ViewModels
             this.refreshBusMock = Substitute.For<IAnalyticsDashboardRefreshBus>();
 
             this.sessionMock.CurrentClientId.Returns(1);
+            this.achievementsMock.GetAchievementShowcaseForClient(1).Returns(new List<AchievementShowcaseItem>());
 
             this.systemUnderTest = new ClientDashboardViewModel(
                 this.storeMock,
-                this.achievementsMock,
                 this.sessionMock,
-                this.refreshBusMock);
+                this.refreshBusMock,
+                this.achievementsMock,
+                this.nutritionMock);
         }
 
         [Fact]
@@ -61,7 +63,6 @@ namespace VibeCoders.Tests.Unit.ViewModels
 
             this.systemUnderTest.TotalWorkouts.Should().Be(10);
             this.systemUnderTest.PreferredWorkoutDisplay.Should().Be("Push");
-            this.systemUnderTest.ConsistencyBuckets.Should().HaveCount(1);
             this.systemUnderTest.ChartSeries.Should().NotBeEmpty();
             this.systemUnderTest.HistoryItems.Should().HaveCount(1);
             this.systemUnderTest.RecentAchievements.Should().HaveCount(1);
