@@ -4,8 +4,9 @@ using VibeCoders.Domain;
 using VibeCoders.Models;
 using VibeCoders.Models.Integration;
 using VibeCoders.Repositories.Interfaces;
+using VibeCoders.Services.Interfaces;
 
-public class ClientService
+public class ClientService : IClientService
 {
     private readonly ProgressionService progressionService;
     private readonly IHttpClientFactory httpClientFactory;
