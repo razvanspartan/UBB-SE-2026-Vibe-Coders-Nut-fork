@@ -409,6 +409,30 @@ public class ClientService : IClientService
         }
     }
 
+    public List<Achievement> GetAchievements(int clientId)
+    {
+        try
+        {
+            return this.achievementsRepository
+                .GetAchievementShowcaseForClient(clientId)
+                .Select(achievement => new Achievement
+                {
+                    AchievementId = achievement.AchievementId,
+                    Name = achievement.Title,
+                    Description = achievement.Description,
+                    Criteria = achievement.Criteria,
+                    IsUnlocked = achievement.IsUnlocked,
+                    Icon = achievement.IsUnlocked ? "&#xE73E;" : "&#xE72E;"
+                })
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error loading achievements: {ex.Message}");
+            return new List<Achievement>();
+        }
+    }
+
     private void ComputeCalories(WorkoutLog log)
     {
         if (log.Exercises.Count == 0 || log.Duration == TimeSpan.Zero)

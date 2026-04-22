@@ -38,6 +38,8 @@ namespace VibeCoders.Services.Interfaces
 
         Dictionary<string, double> GetPreviousBestWeights(int clientId);
 
+        List<Achievement> GetAchievements(int clientId);
+
         List<Notification> GetNotifications(int clientId);
 
         void ConfirmDeload(Notification notification);
