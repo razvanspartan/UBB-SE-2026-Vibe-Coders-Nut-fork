@@ -1,8 +1,9 @@
-﻿using System;
+﻿using FluentAssertions;
+using System;
 using System.Threading.Tasks;
-using FluentAssertions;
 using VibeCoders.Models;
 using VibeCoders.Services;
+using VibeCoders.Tests.Mocks.DataFactories;
 using Xunit;
 
 namespace VibeCoders.Tests.Unit.Services
@@ -44,23 +45,23 @@ namespace VibeCoders.Tests.Unit.Services
             act.Should().Throw<ArgumentOutOfRangeException>();
         }
 
+       
+
         [Fact]
         public void GenerateCalendar_Should_GenerateCorrectNumberOfEvents_ForMultipleWeeks()
         {
-           
-            var workoutTemplate = new WorkoutTemplate { Id = 1, Name = "Full Body" };
+            
+            var workoutTemplate = WorkoutTemplateFactory.CreateFullBodyTemplate();
             int weeks = 3;
-            int[] days = { 1, 3, 5 }; 
+            int[] days = { 1, 3, 5 };
 
-           
             var result = this.calendarExportService.GenerateCalendar(workoutTemplate, weeks, days);
 
-            
             int eventCount = this.CountStringOccurrences(result, "BEGIN:VEVENT");
-            eventCount.Should().Be(9);
+            eventCount.Should().Be(9); 
         }
 
-      
+
         [Fact]
         public async Task SaveCalendarToDownloadsAsync_Should_ReturnNull_When_ContentIsEmpty()
         {
@@ -96,6 +97,32 @@ namespace VibeCoders.Tests.Unit.Services
             }
 
             return count;
+        }
+
+        [Fact]
+        public void GenerateCalendar_Should_IncludeFormattedExerciseDescription_InIcsOutput()
+        {
+
+            var workoutTemplate = WorkoutTemplateFactory.CreateTemplateWithSpecificExercises();
+            int[] selectedDays = { 1 }; 
+
+            string expectedLine = "Deadlift - 5x5 @ 100kg";
+
+            var result = this.calendarExportService.GenerateCalendar(workoutTemplate, 1, selectedDays);
+
+            result.Should().Contain(expectedLine);
+        }
+
+        [Fact]
+        public void GenerateCalendar_Should_ShowNoExercisesMessage_When_TemplateIsEmpty()
+        {
+           
+            var emptyTemplate = new WorkoutTemplate { Name = "Empty" };
+            int[] selectedDays = { 1 };
+
+            var result = this.calendarExportService.GenerateCalendar(emptyTemplate, 1, selectedDays);
+
+            result.Should().Contain("No exercises specified.");
         }
 
     }

@@ -1,11 +1,13 @@
-﻿using System;
+﻿using FluentAssertions;
+using NSubstitute;
+using NSubstitute.ExceptionExtensions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using FluentAssertions;
-using NSubstitute;
 using VibeCoders.Models;
 using VibeCoders.Repositories.Interfaces;
 using VibeCoders.Services;
+using VibeCoders.Tests.Mocks.DataFactories;
 using Xunit;
 
 namespace VibeCoders.Tests.Unit.Services;
@@ -105,6 +107,53 @@ public class TrainerServiceTests
         result.Should().BeTrue();
         this.mockNutritionRepository.Received(1).SaveNutritionPlanForClient(plan, validClientId);
     }
+    [Fact]
+    public void AssignNewRoutine_Should_ReturnError_When_DatabaseSaveFails()
+    {
+        
+        var exercises = new List<TemplateExercise> { new TemplateExercise { Name = "Pushup" } };
+       
+        this.mockTrainerRepository.SaveTrainerWorkout(Arg.Any<WorkoutTemplate>()).Returns(false);
+
+    
+        var result = this.trainerService.AssignNewRoutine(null, 1, "Fail Routine", exercises);
+
+    
+        result.Success.Should().BeFalse();
+        result.ErrorMessage.Should().Be("Could not save routine to database.");
+    }
+
+    [Fact]
+    public void AssignWorkout_Should_ThrowNotImplementedException()
+    {
+      
+        var client = new Client();
+        var log = new WorkoutLog();
+
+        Action act = () => this.trainerService.AssignWorkout(client, log);
+
+        act.Should().Throw<NotImplementedException>()
+           .WithMessage("Workout assignment coming in Slice 2!");
+    }
+
+
+    [Fact]
+    public void CreateAndAssignNutritionPlan_Should_CreatePlanWithDateOnly()
+    {
+       
+        var start = new DateTime(2026, 1, 1, 10, 30, 0); // 10:30 AM
+        var end = new DateTime(2026, 1, 7, 18, 0, 0);   // 6:00 PM
+        int clientId = 99;
+
+      
+        this.trainerService.CreateAndAssignNutritionPlan(start, end, clientId);
+
+       
+        this.mockNutritionRepository.Received(1).SaveNutritionPlanForClient(
+            Arg.Is<NutritionPlan>(p => p.StartDate == new DateTime(2026, 1, 1) && p.EndDate == new DateTime(2026, 1, 7)),
+            clientId);
+    }
+
 
     [Fact]
     public void CreateAndAssignNutritionPlan_Should_SetDatesToMidnight()
@@ -119,4 +168,27 @@ public class TrainerServiceTests
             Arg.Is<NutritionPlan>(p => p.StartDate == start.Date && p.EndDate == end.Date),
             clientId);
     }
+
+    [Fact]
+    public void GetClientWorkoutHistory_Should_ReturnLogsFromRepository()
+    {
+        var mockLogs = new List<WorkoutLog> { WorkoutLogFactory.CreateHighIntensityWorkoutLog() };
+        this.mockWorkoutLogRepository.GetWorkoutHistory(1).Returns(mockLogs);
+
+        var result = this.trainerService.GetClientWorkoutHistory(1);
+
+        result.Should().HaveCount(1);
+        result.First().WorkoutName.Should().Be("High Intensity Strength Session");
+    }
+    [Fact]
+    public void SaveTrainerWorkout_Should_ReturnFalse_When_TemplateIsNull()
+    {
+       
+        bool result = this.trainerService.SaveTrainerWorkout(null!);
+
+       
+        result.Should().BeFalse();
+    }
+
+
 }
