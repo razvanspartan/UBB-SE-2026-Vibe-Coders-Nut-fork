@@ -10,6 +10,7 @@ using Microsoft.UI.Xaml;
 using VibeCoders.Repositories;
 using VibeCoders.Repositories.Interfaces;
 using VibeCoders.Services;
+using VibeCoders.Services.Interfaces;
 using VibeCoders.ViewModels;
 
 public partial class App : Application
@@ -72,6 +73,7 @@ public partial class App : Application
         var connectionString = DatabasePaths.GetConnectionString();
         services.AddSingleton(new DatabaseDataInitializer(connectionString));
         services.AddSingleton(new DatabaseSchemaManager(connectionString));
+        services.AddSingleton<IClientService, ClientService>();
         services.AddSingleton<IRepositoryWorkoutTemplate>(new RepositoryWorkoutTemplate(connectionString));
         services.AddSingleton<IRepositoryNutrition>(new RepositoryNutrition(connectionString));
         services.AddSingleton<IRepositoryAchievements>(new RepositoryAchievements(connectionString));
@@ -94,7 +96,6 @@ public partial class App : Application
 
         services.AddSingleton(new VibeCoders.Models.Integration.NutritionSyncOptions { Endpoint = "http://localhost:5000/api/nutrition/sync" });
         services.AddSingleton<ProgressionService>();
-        services.AddSingleton<ClientService>();
         services.AddSingleton<EvaluationEngine>();
         services.AddSingleton<TrainerService>();
         services.AddTransient<ClientDashboardViewModel>();

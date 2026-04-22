@@ -1,3 +1,4 @@
+using VibeCoders.Services.Interfaces;
 namespace VibeCoders.ViewModels
 {
     using System.Collections.ObjectModel;
@@ -10,7 +11,7 @@ namespace VibeCoders.ViewModels
 
     public partial class ActiveWorkoutViewModel : ObservableObject
     {
-        private readonly ClientService clientService;
+        private readonly IClientService clientService;
         private readonly INavigationService navigation;
         private readonly WorkoutUiState workoutUiState;
         private WorkoutLog activeLog;
@@ -21,7 +22,7 @@ namespace VibeCoders.ViewModels
         private const int HourInSeconds = 3600;
 
         public ActiveWorkoutViewModel(
-            ClientService clientService,
+            IClientService clientService,
             INavigationService navigation,
             WorkoutUiState workoutUiState)
         {

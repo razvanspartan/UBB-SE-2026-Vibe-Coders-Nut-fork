@@ -3,13 +3,13 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using VibeCoders.Models;
-using VibeCoders.Services;
+using VibeCoders.Services.Interfaces;
 
 namespace VibeCoders.ViewModels;
 
 public partial class ClientProfileViewModel : ObservableObject
 {
-    private readonly ClientService clientService;
+    private readonly IClientService clientService;
     private int loadedClientId;
 
     [ObservableProperty]
@@ -27,7 +27,7 @@ public partial class ClientProfileViewModel : ObservableObject
     [ObservableProperty]
     public partial string SyncNutritionStatus { get; set; } = string.Empty;
 
-    public ClientProfileViewModel(ClientService clientService)
+    public ClientProfileViewModel(IClientService clientService)
     {
         this.clientService = clientService;
     }
