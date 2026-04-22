@@ -1,33 +1,21 @@
-namespace VibeCoders.Tests;
+namespace VibeCoders.Tests.Mocks.DataFactories.dbSchema;
 
 using Microsoft.Data.Sqlite;
 
-/// <summary>
-/// Manages test database schema creation for in-memory SQLite databases used in unit tests.
-/// </summary>
+
 public class TestDatabaseSchema
 {
-    /// <summary>
-    /// Creates and returns a connection string for an in-memory SQLite database.
-    /// The database will exist only for the lifetime of the connection.
-    /// </summary>
+    
     public static string CreateInMemoryConnectionString()
     {
         return "Data Source=:memory:";
     }
 
-    /// <summary>
-    /// Creates and returns a connection string for a shared in-memory SQLite database.
-    /// The database will exist as long as at least one connection remains open.
-    /// </summary>
     public static string CreateSharedInMemoryConnectionString()
     {
         return $"Data Source=TestDb_{Guid.NewGuid():N};Mode=Memory;Cache=Shared";
     }
 
-    /// <summary>
-    /// Creates the full database schema on the provided connection.
-    /// </summary>
     public static void CreateSchema(SqliteConnection connection)
     {
         if (connection.State != System.Data.ConnectionState.Open)
@@ -39,11 +27,7 @@ public class TestDatabaseSchema
         using var command = new SqliteCommand(schemaSql, connection);
         command.ExecuteNonQuery();
     }
-
-    /// <summary>
-    /// Creates a new in-memory database with schema and returns an open connection.
-    /// The caller is responsible for disposing the connection.
-    /// </summary>
+    
     public static SqliteConnection CreateInMemoryDatabase()
     {
         var connection = new SqliteConnection(CreateInMemoryConnectionString());
@@ -51,10 +35,7 @@ public class TestDatabaseSchema
         CreateSchema(connection);
         return connection;
     }
-
-    /// <summary>
-    /// Seeds the database with test data.
-    /// </summary>
+   
     public static void SeedTestData(SqliteConnection connection)
     {
         string seedSql = @"
@@ -77,7 +58,6 @@ INSERT INTO CLIENT (client_id, user_id, trainer_id, weight, height) VALUES
         using var command = new SqliteCommand(seedSql, connection);
         command.ExecuteNonQuery();
     }
-
     private static string GetSchemaSql()
     {
         return @"
@@ -109,18 +89,6 @@ CREATE TABLE IF NOT EXISTS EXERCISE (
     name         TEXT NOT NULL UNIQUE,
     muscle_group TEXT NOT NULL
 );
-
-INSERT OR IGNORE INTO EXERCISE (name, muscle_group) VALUES
-    ('Bench Press',           'CHEST'),
-    ('Incline Dumbbell Press','CHEST'),
-    ('Barbell Squat',         'LEGS'),
-    ('Leg Press',             'LEGS'),
-    ('Deadlift',              'BACK'),
-    ('Pull-Ups',              'BACK'),
-    ('Overhead Press',        'SHOULDERS'),
-    ('Side Laterals',         'SHOULDERS'),
-    ('Bicep Curls',           'ARMS'),
-    ('Tricep Pushdowns',      'ARMS');
 
 CREATE TABLE IF NOT EXISTS WORKOUT_TEMPLATE (
     workout_template_id INTEGER PRIMARY KEY,
