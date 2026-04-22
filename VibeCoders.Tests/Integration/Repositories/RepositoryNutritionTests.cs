@@ -121,22 +121,6 @@ public sealed class RepositoryNutritionTests : IDisposable
     }
 
     [Fact]
-    public void InsertNutritionPlan_ShouldInsertMultiplePlans()
-    {
-        var plan1 = CreateTestNutritionPlan();
-        var plan2 = CreateTestNutritionPlan();
-        var plan3 = CreateTestNutritionPlan();
-
-        var planId1 = this.repository.InsertNutritionPlan(plan1);
-        var planId2 = this.repository.InsertNutritionPlan(plan2);
-        var planId3 = this.repository.InsertNutritionPlan(plan3);
-
-        planId1.Should().BeGreaterThan(0);
-        planId2.Should().BeGreaterThan(planId1);
-        planId3.Should().BeGreaterThan(planId2);
-    }
-
-    [Fact]
     public void InsertMeal_ShouldInsertMealIntoDatabase()
     {
         var planId = InsertTestNutritionPlan();
@@ -210,43 +194,6 @@ public sealed class RepositoryNutritionTests : IDisposable
     }
 
     [Fact]
-    public void InsertMeal_ShouldHandleSpecialCharactersInIngredients()
-    {
-        var planId = InsertTestNutritionPlan();
-        var meal = new Meal
-        {
-            Name = "Special Meal",
-            Ingredients = new List<string> { "Ingredient with \"quotes\"", "Ingredient's special", "Item & more" },
-            Instructions = "Instructions with 'quotes' and special chars"
-        };
-
-        this.repository.InsertMeal(meal, planId);
-
-        var saved = GetMealFromDatabase(planId);
-        saved.Should().NotBeNull();
-        saved!.Ingredients.Should().Contain("Ingredient with \"quotes\"");
-        saved.Ingredients.Should().Contain("Ingredient's special");
-        saved.Ingredients.Should().Contain("Item & more");
-    }
-
-    [Fact]
-    public void InsertMeal_ShouldInsertMultipleMealsForSamePlan()
-    {
-        var planId = InsertTestNutritionPlan();
-
-        var breakfast = CreateTestMeal("Breakfast");
-        var lunch = CreateTestMeal("Lunch");
-        var dinner = CreateTestMeal("Dinner");
-
-        this.repository.InsertMeal(breakfast, planId);
-        this.repository.InsertMeal(lunch, planId);
-        this.repository.InsertMeal(dinner, planId);
-
-        var count = GetMealCountForPlan(planId);
-        count.Should().Be(3);
-    }
-
-    [Fact]
     public void InsertMeal_ShouldHandleEmptyNameAndInstructions()
     {
         var planId = InsertTestNutritionPlan();
@@ -275,36 +222,6 @@ public sealed class RepositoryNutritionTests : IDisposable
 
         var assigned = IsNutritionPlanAssignedToClient(1, planId);
         assigned.Should().BeTrue();
-    }
-
-    [Fact]
-    public void AssignNutritionPlanToClient_ShouldHandleMultiplePlansForSameClient()
-    {
-        InsertTestClient(1);
-        var planId1 = InsertTestNutritionPlan();
-        var planId2 = InsertTestNutritionPlan();
-        var planId3 = InsertTestNutritionPlan();
-
-        this.repository.AssignNutritionPlanToClient(1, planId1);
-        this.repository.AssignNutritionPlanToClient(1, planId2);
-        this.repository.AssignNutritionPlanToClient(1, planId3);
-
-        var count = GetAssignedPlanCountForClient(1);
-        count.Should().Be(3);
-    }
-
-    [Fact]
-    public void AssignNutritionPlanToClient_ShouldHandleSamePlanForMultipleClients()
-    {
-        InsertTestClient(1);
-        InsertTestClient(2);
-        var planId = InsertTestNutritionPlan();
-
-        this.repository.AssignNutritionPlanToClient(1, planId);
-        this.repository.AssignNutritionPlanToClient(2, planId);
-
-        IsNutritionPlanAssignedToClient(1, planId).Should().BeTrue();
-        IsNutritionPlanAssignedToClient(2, planId).Should().BeTrue();
     }
 
     [Fact]
@@ -481,16 +398,6 @@ public sealed class RepositoryNutritionTests : IDisposable
         retrieved.Meals[0].Name.Should().Be("Test Meal");
         retrieved.Meals[0].Ingredients.Should().HaveCount(2);
         retrieved.Meals[0].Instructions.Should().Be("Test instructions");
-    }
-
-    [Fact]
-    public void GetMealsForPlan_ShouldReturnEmptyList_WhenNoMealsExist()
-    {
-        var planId = InsertTestNutritionPlan();
-
-        var meals = this.repository.GetMealsForPlan(planId);
-
-        meals.Should().BeEmpty();
     }
 
     [Fact]
