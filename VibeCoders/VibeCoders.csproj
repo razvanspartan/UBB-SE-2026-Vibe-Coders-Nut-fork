@@ -17,12 +17,12 @@
     <WindowsAppSDKSelfContained>false</WindowsAppSDKSelfContained>
     <WinUISDKReferences>false</WinUISDKReferences>
     <EnableMsixTooling>false</EnableMsixTooling>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)SE.ruleset</CodeAnalysisRuleSet>
-    <Deterministic>true</Deterministic>
-    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
-    <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
+	<Nullable>enable</Nullable>
+	<ImplicitUsings>enable</ImplicitUsings>
+	<CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)SE.ruleset</CodeAnalysisRuleSet>
+	<Deterministic>true</Deterministic>
+	<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+	<RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
 	<LangVersion>preview</LangVersion>
   </PropertyGroup>
   <ItemGroup>
