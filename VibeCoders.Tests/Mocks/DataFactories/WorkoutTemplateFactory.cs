@@ -7,20 +7,19 @@ public static class WorkoutTemplateFactory
 {
     public static WorkoutTemplate CreateFullBodyTemplate()
     {
-        // 1. Initialize the main object
+        
         var template = new WorkoutTemplate
         {
             Id = 1,
             Name = "Full Body"
         };
 
-        // 2. Add exercises one by one using the method we know exists
         template.AddExercise(new TemplateExercise
         {
             Name = "Squat",
             TargetSets = 3,
             TargetReps = 10,
-            MuscleGroup = MuscleGroup.LEGS // Added based on your TemplateExercise model
+            MuscleGroup = MuscleGroup.LEGS 
         });
 
         template.AddExercise(new TemplateExercise
