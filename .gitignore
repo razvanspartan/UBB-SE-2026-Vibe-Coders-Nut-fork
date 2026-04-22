@@ -20,3 +20,7 @@ obj/
 .github/copilot-instructions.md
 .github/instructions/
 *.instructions.md
+
+coveragereport/
+
+TestResults/
