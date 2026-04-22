@@ -13,7 +13,7 @@ namespace VibeCoders.Tests.Unit.ViewModels
         private readonly ICalendarWorkoutCatalogService workoutCatalogService;
         private readonly ICalendarExportService calendarExportService;
         private readonly IUserSession userSession;
-        private readonly CalendarIntegrationViewModel sut;
+        private readonly CalendarIntegrationViewModel systemUnderTest;
 
         public CalendarIntegrationViewModelTests()
         {
@@ -24,21 +24,21 @@ namespace VibeCoders.Tests.Unit.ViewModels
             this.userSession.CurrentClientId.Returns(1);
             this.workoutCatalogService.GetFallbackWorkouts(1).Returns(new List<WorkoutTemplate>());
 
-            this.sut = new CalendarIntegrationViewModel(this.workoutCatalogService, this.calendarExportService, this.userSession);
+            this.systemUnderTest = new CalendarIntegrationViewModel(this.workoutCatalogService, this.calendarExportService, this.userSession);
         }
 
         [Fact]
         public void InitializeDaySelection_SetsDefaultDaysCorrectly()
         {
-            this.sut.SelectedDays.Should().HaveCount(7);
+            this.systemUnderTest.SelectedDays.Should().HaveCount(7);
 
-            this.sut.SelectedDays[0].IsSelected.Should().BeFalse(); 
-            this.sut.SelectedDays[1].IsSelected.Should().BeTrue();  
-            this.sut.SelectedDays[2].IsSelected.Should().BeTrue();  
-            this.sut.SelectedDays[3].IsSelected.Should().BeTrue();  
-            this.sut.SelectedDays[4].IsSelected.Should().BeTrue();  
-            this.sut.SelectedDays[5].IsSelected.Should().BeTrue();  
-            this.sut.SelectedDays[6].IsSelected.Should().BeFalse(); 
+            this.systemUnderTest.SelectedDays[0].IsSelected.Should().BeFalse(); 
+            this.systemUnderTest.SelectedDays[1].IsSelected.Should().BeTrue();  
+            this.systemUnderTest.SelectedDays[2].IsSelected.Should().BeTrue();  
+            this.systemUnderTest.SelectedDays[3].IsSelected.Should().BeTrue();  
+            this.systemUnderTest.SelectedDays[4].IsSelected.Should().BeTrue();  
+            this.systemUnderTest.SelectedDays[5].IsSelected.Should().BeTrue();  
+            this.systemUnderTest.SelectedDays[6].IsSelected.Should().BeFalse(); 
         }
 
         [Fact]
@@ -52,34 +52,34 @@ namespace VibeCoders.Tests.Unit.ViewModels
 
             this.workoutCatalogService.GetAvailableWorkoutsAsync(1, Arg.Any<TimeSpan>()).Returns(workouts);
 
-            await this.sut.LoadAvailableWorkoutsAsync();
+            await this.systemUnderTest.LoadAvailableWorkoutsAsync();
 
-            this.sut.AvailableWorkouts.Should().HaveCount(2);
-            this.sut.SelectedWorkout.Should().Be(workouts[0]);
-            this.sut.IsLoading.Should().BeFalse();
+            this.systemUnderTest.AvailableWorkouts.Should().HaveCount(2);
+            this.systemUnderTest.SelectedWorkout.Should().Be(workouts[0]);
+            this.systemUnderTest.IsLoading.Should().BeFalse();
         }
 
         [Fact]
         public async Task EnsureWorkoutsLoadedAsync_NotLoadingAndEmpty_CallsLoad()
         {
-            this.sut.IsLoading = false;
-            this.sut.AvailableWorkouts.Clear();
+            this.systemUnderTest.IsLoading = false;
+            this.systemUnderTest.AvailableWorkouts.Clear();
             var workouts = new List<WorkoutTemplate> { new WorkoutTemplate { Id = 1 } };
             this.workoutCatalogService.GetAvailableWorkoutsAsync(1, Arg.Any<TimeSpan>()).Returns(workouts);
 
-            await this.sut.EnsureWorkoutsLoadedAsync();
+            await this.systemUnderTest.EnsureWorkoutsLoadedAsync();
 
-            this.sut.AvailableWorkouts.Should().HaveCount(1);
+            this.systemUnderTest.AvailableWorkouts.Should().HaveCount(1);
         }
 
         [Fact]
         public void GetSelectedDaysOfWeek_ReturnsCorrectIndexes()
         {
-            this.sut.SelectedDays[0].IsSelected = true;  
-            this.sut.SelectedDays[1].IsSelected = false; 
-            this.sut.SelectedDays[2].IsSelected = true;  
+            this.systemUnderTest.SelectedDays[0].IsSelected = true;  
+            this.systemUnderTest.SelectedDays[1].IsSelected = false; 
+            this.systemUnderTest.SelectedDays[2].IsSelected = true;  
 
-            var result = this.sut.GetSelectedDaysOfWeek();
+            var result = this.systemUnderTest.GetSelectedDaysOfWeek();
 
             result.Should().Contain(new[] { 0, 2, 3, 4, 5 });
             result.Should().NotContain(1);
@@ -88,9 +88,9 @@ namespace VibeCoders.Tests.Unit.ViewModels
         [Fact]
         public void ValidateInput_NoWorkoutSelected_ReturnsErrorMessage()
         {
-            this.sut.SelectedWorkout = null;
+            this.systemUnderTest.SelectedWorkout = null;
 
-            var result = this.sut.ValidateInput();
+            var result = this.systemUnderTest.ValidateInput();
 
             result.Should().Be("Please select a workout from the dropdown.");
         }
@@ -98,10 +98,10 @@ namespace VibeCoders.Tests.Unit.ViewModels
         [Fact]
         public void ValidateInput_InvalidDuration_ReturnsErrorMessage()
         {
-            this.sut.SelectedWorkout = new WorkoutTemplate();
-            this.sut.DurationWeeks = 0;
+            this.systemUnderTest.SelectedWorkout = new WorkoutTemplate();
+            this.systemUnderTest.DurationWeeks = 0;
 
-            var result = this.sut.ValidateInput();
+            var result = this.systemUnderTest.ValidateInput();
 
             result.Should().Be("Duration must be between 1 and 52 weeks.");
         }
@@ -109,14 +109,14 @@ namespace VibeCoders.Tests.Unit.ViewModels
         [Fact]
         public void ValidateInput_NoDaysSelected_ReturnsErrorMessage()
         {
-            this.sut.SelectedWorkout = new WorkoutTemplate();
-            this.sut.DurationWeeks = 4;
-            foreach (var day in this.sut.SelectedDays)
+            this.systemUnderTest.SelectedWorkout = new WorkoutTemplate();
+            this.systemUnderTest.DurationWeeks = 4;
+            foreach (var day in this.systemUnderTest.SelectedDays)
             {
                 day.IsSelected = false;
             }
 
-            var result = this.sut.ValidateInput();
+            var result = this.systemUnderTest.ValidateInput();
 
             result.Should().Be("Please select at least one training day.");
         }
@@ -124,11 +124,11 @@ namespace VibeCoders.Tests.Unit.ViewModels
         [Fact]
         public void ValidateInput_ValidInput_ReturnsNull()
         {
-            this.sut.SelectedWorkout = new WorkoutTemplate();
-            this.sut.DurationWeeks = 4;
-            this.sut.SelectedDays[1].IsSelected = true;
+            this.systemUnderTest.SelectedWorkout = new WorkoutTemplate();
+            this.systemUnderTest.DurationWeeks = 4;
+            this.systemUnderTest.SelectedDays[1].IsSelected = true;
 
-            var result = this.sut.ValidateInput();
+            var result = this.systemUnderTest.ValidateInput();
 
             result.Should().BeNull();
         }
@@ -136,27 +136,27 @@ namespace VibeCoders.Tests.Unit.ViewModels
         [Fact]
         public async Task GenerateCalendarAsync_ValidInput_SetsGeneratedContentAndReturnsIt()
         {
-            this.sut.SelectedWorkout = new WorkoutTemplate { Id = 1 };
-            this.sut.DurationWeeks = 4;
+            this.systemUnderTest.SelectedWorkout = new WorkoutTemplate { Id = 1 };
+            this.systemUnderTest.DurationWeeks = 4;
 
             this.calendarExportService.GenerateCalendar(Arg.Any<WorkoutTemplate>(), 4, Arg.Any<int[]>())
                 .Returns("ICS CONTENT");
 
-            var result = await this.sut.GenerateCalendarAsync();
+            var result = await this.systemUnderTest.GenerateCalendarAsync();
 
             result.Should().Be("ICS CONTENT");
-            this.sut.GeneratedIcsContent.Should().Be("ICS CONTENT");
+            this.systemUnderTest.GeneratedIcsContent.Should().Be("ICS CONTENT");
         }
 
         [Fact]
         public async Task GenerateCalendarForExportAsync_ValidInput_ReturnsSuccessResult()
         {
-            this.sut.SelectedWorkout = new WorkoutTemplate { Id = 1 };
+            this.systemUnderTest.SelectedWorkout = new WorkoutTemplate { Id = 1 };
 
             this.calendarExportService.GenerateCalendar(Arg.Any<WorkoutTemplate>(), Arg.Any<int>(), Arg.Any<int[]>())
                 .Returns("ICS CONTENT");
 
-            var result = await this.sut.GenerateCalendarForExportAsync();
+            var result = await this.systemUnderTest.GenerateCalendarForExportAsync();
 
             result.IsSuccessful.Should().BeTrue();
             result.GeneratedCalendarContent.Should().Be("ICS CONTENT");
@@ -165,9 +165,9 @@ namespace VibeCoders.Tests.Unit.ViewModels
         [Fact]
         public async Task GenerateCalendarForExportAsync_ValidationFails_ReturnsFailureResult()
         {
-            this.sut.SelectedWorkout = null;
+            this.systemUnderTest.SelectedWorkout = null;
 
-            var result = await this.sut.GenerateCalendarForExportAsync();
+            var result = await this.systemUnderTest.GenerateCalendarForExportAsync();
 
             result.IsSuccessful.Should().BeFalse();
             result.Message.Should().Be("Please select a workout from the dropdown.");
@@ -176,13 +176,13 @@ namespace VibeCoders.Tests.Unit.ViewModels
         [Fact]
         public async Task SaveGeneratedCalendarToDownloadsFallbackAsync_CallsService()
         {
-            this.sut.GeneratedIcsContent = "ICS CONTENT";
-            this.sut.SelectedWorkout = new WorkoutTemplate { Name = "My Workout" };
+            this.systemUnderTest.GeneratedIcsContent = "ICS CONTENT";
+            this.systemUnderTest.SelectedWorkout = new WorkoutTemplate { Name = "My Workout" };
 
             this.calendarExportService.SaveCalendarToDownloadsAsync("ICS CONTENT", "My Workout")
                 .Returns(Task.FromResult((string?)"C:\\Downloads\\My_Workout.ics"));
 
-            var result = await this.sut.SaveGeneratedCalendarToDownloadsFallbackAsync();
+            var result = await this.systemUnderTest.SaveGeneratedCalendarToDownloadsFallbackAsync();
 
             result.Should().Be("C:\\Downloads\\My_Workout.ics");
         }
@@ -190,51 +190,51 @@ namespace VibeCoders.Tests.Unit.ViewModels
         [Fact]
         public void SetErrorStatus_UpdatesStateCorrectly()
         {
-            this.sut.SetErrorStatus("An error occurred");
+            this.systemUnderTest.SetErrorStatus("An error occurred");
 
-            this.sut.StatusSeverity.Should().Be(InfoBarSeverity.Error);
-            this.sut.StatusTitle.Should().Be("Error");
-            this.sut.StatusMessage.Should().Be("An error occurred");
-            this.sut.IsStatusOpen.Should().BeTrue();
+            this.systemUnderTest.StatusSeverity.Should().Be(InfoBarSeverity.Error);
+            this.systemUnderTest.StatusTitle.Should().Be("Error");
+            this.systemUnderTest.StatusMessage.Should().Be("An error occurred");
+            this.systemUnderTest.IsStatusOpen.Should().BeTrue();
         }
 
         [Fact]
         public void SetSuccessStatus_UpdatesStateCorrectly()
         {
-            this.sut.SetSuccessStatus("Success message");
+            this.systemUnderTest.SetSuccessStatus("Success message");
 
-            this.sut.StatusSeverity.Should().Be(InfoBarSeverity.Success);
-            this.sut.StatusTitle.Should().Be("Success");
-            this.sut.StatusMessage.Should().Be("Success message");
-            this.sut.IsStatusOpen.Should().BeTrue();
+            this.systemUnderTest.StatusSeverity.Should().Be(InfoBarSeverity.Success);
+            this.systemUnderTest.StatusTitle.Should().Be("Success");
+            this.systemUnderTest.StatusMessage.Should().Be("Success message");
+            this.systemUnderTest.IsStatusOpen.Should().BeTrue();
         }
 
         [Fact]
         public void ClearStatus_ResetsStateCorrectly()
         {
-            this.sut.SetErrorStatus("An error occurred");
+            this.systemUnderTest.SetErrorStatus("An error occurred");
 
-            this.sut.ClearStatus();
+            this.systemUnderTest.ClearStatus();
 
-            this.sut.StatusTitle.Should().BeEmpty();
-            this.sut.StatusMessage.Should().BeEmpty();
-            this.sut.IsStatusOpen.Should().BeFalse();
+            this.systemUnderTest.StatusTitle.Should().BeEmpty();
+            this.systemUnderTest.StatusMessage.Should().BeEmpty();
+            this.systemUnderTest.IsStatusOpen.Should().BeFalse();
         }
 
         [Fact]
         public void ToggleDaySelection_TogglesSelectionCorrectly()
         {
-            bool initialState = this.sut.SelectedDays[1].IsSelected; 
+            bool initialState = this.systemUnderTest.SelectedDays[1].IsSelected; 
 
-            this.sut.ToggleDaySelection(1);
+            this.systemUnderTest.ToggleDaySelection(1);
 
-            this.sut.SelectedDays[1].IsSelected.Should().Be(!initialState);
+            this.systemUnderTest.SelectedDays[1].IsSelected.Should().Be(!initialState);
         }
 
         [Fact]
         public void ToggleDaySelection_UnknownDay_DoesNothing()
         {
-            var exception = Record.Exception(() => this.sut.ToggleDaySelection(99));
+            var exception = Record.Exception(() => this.systemUnderTest.ToggleDaySelection(99));
 
             exception.Should().BeNull();
         }
@@ -252,45 +252,45 @@ namespace VibeCoders.Tests.Unit.ViewModels
 
             this.workoutCatalogService.GetFallbackWorkouts(1).Returns(fallbackWorkouts);
 
-            await this.sut.LoadAvailableWorkoutsAsync();
+            await this.systemUnderTest.LoadAvailableWorkoutsAsync();
 
-            this.sut.AvailableWorkouts.Should().HaveCount(1);
-            this.sut.SelectedWorkout.Should().Be(fallbackWorkouts[0]);
-            this.sut.IsLoading.Should().BeFalse();
+            this.systemUnderTest.AvailableWorkouts.Should().HaveCount(1);
+            this.systemUnderTest.SelectedWorkout.Should().Be(fallbackWorkouts[0]);
+            this.systemUnderTest.IsLoading.Should().BeFalse();
         }
 
         [Fact]
         public async Task EnsureWorkoutsLoadedAsync_AlreadyLoading_DoesNotCallLoad()
         {
             this.workoutCatalogService.ClearReceivedCalls();
-            this.sut.IsLoading = true;
-            this.sut.AvailableWorkouts.Clear();
+            this.systemUnderTest.IsLoading = true;
+            this.systemUnderTest.AvailableWorkouts.Clear();
 
-            await this.sut.EnsureWorkoutsLoadedAsync();
+            await this.systemUnderTest.EnsureWorkoutsLoadedAsync();
 
             await this.workoutCatalogService.DidNotReceiveWithAnyArgs().GetAvailableWorkoutsAsync(default, default);
-            this.sut.AvailableWorkouts.Should().BeEmpty();
+            this.systemUnderTest.AvailableWorkouts.Should().BeEmpty();
         }
 
         [Fact]
         public async Task EnsureWorkoutsLoadedAsync_AlreadyHasWorkouts_DoesNotCallLoad()
         {
             this.workoutCatalogService.ClearReceivedCalls();
-            this.sut.IsLoading = false;
-            this.sut.AvailableWorkouts.Add(new WorkoutTemplate { Id = 1 });
+            this.systemUnderTest.IsLoading = false;
+            this.systemUnderTest.AvailableWorkouts.Add(new WorkoutTemplate { Id = 1 });
 
-            await this.sut.EnsureWorkoutsLoadedAsync();
+            await this.systemUnderTest.EnsureWorkoutsLoadedAsync();
 
             await this.workoutCatalogService.DidNotReceiveWithAnyArgs().GetAvailableWorkoutsAsync(default, default);
-            this.sut.AvailableWorkouts.Should().HaveCount(1);
+            this.systemUnderTest.AvailableWorkouts.Should().HaveCount(1);
         }
 
         [Fact]
         public async Task GenerateCalendarAsync_SelectedWorkoutNull_ThrowsException()
         {
-            this.sut.SelectedWorkout = null;
+            this.systemUnderTest.SelectedWorkout = null;
 
-            var exception = await Record.ExceptionAsync(async () => await this.sut.GenerateCalendarAsync());
+            var exception = await Record.ExceptionAsync(async () => await this.systemUnderTest.GenerateCalendarAsync());
 
             exception.Should().NotBeNull();
             exception.Should().BeOfType<InvalidOperationException>();
@@ -300,13 +300,13 @@ namespace VibeCoders.Tests.Unit.ViewModels
         [Fact]
         public async Task GenerateCalendarForExportAsync_EmptyContent_ReturnsFailureResult()
         {
-            this.sut.SelectedWorkout = new WorkoutTemplate { Id = 1 };
-            this.sut.DurationWeeks = 4;
+            this.systemUnderTest.SelectedWorkout = new WorkoutTemplate { Id = 1 };
+            this.systemUnderTest.DurationWeeks = 4;
 
             this.calendarExportService.GenerateCalendar(Arg.Any<WorkoutTemplate>(), Arg.Any<int>(), Arg.Any<int[]>())
                 .Returns(string.Empty);
 
-            var result = await this.sut.GenerateCalendarForExportAsync();
+            var result = await this.systemUnderTest.GenerateCalendarForExportAsync();
 
             result.IsSuccessful.Should().BeFalse();
             result.Message.Should().Be("Failed to generate calendar file. Please try again.");
@@ -315,13 +315,13 @@ namespace VibeCoders.Tests.Unit.ViewModels
         [Fact]
         public async Task SaveGeneratedCalendarToDownloadsFallbackAsync_NullWorkout_UsesFallbackName()
         {
-            this.sut.GeneratedIcsContent = "ICS CONTENT";
-            this.sut.SelectedWorkout = null;
+            this.systemUnderTest.GeneratedIcsContent = "ICS CONTENT";
+            this.systemUnderTest.SelectedWorkout = null;
 
             this.calendarExportService.SaveCalendarToDownloadsAsync("ICS CONTENT", "Workout")
                 .Returns(Task.FromResult((string?)"C:\\Downloads\\Workout.ics"));
 
-            var result = await this.sut.SaveGeneratedCalendarToDownloadsFallbackAsync();
+            var result = await this.systemUnderTest.SaveGeneratedCalendarToDownloadsFallbackAsync();
 
             result.Should().Be("C:\\Downloads\\Workout.ics");
         }
