@@ -149,11 +149,11 @@ namespace VibeCoders.Tests.Unit.ViewModels
 
             this.systemUnderTest.SaveWorkoutCommand.Execute(null);
 
-            this.trainerServiceMock.Received(1).SaveTrainerWorkout(Arg.Is<WorkoutTemplate>(w =>
-                w.Name == "Back Day" &&
-                w.ClientId == 1 &&
-                w.Type == WorkoutType.CUSTOM &&
-                w.GetExercises().Count == 1));
+            this.trainerServiceMock.Received(1).SaveTrainerWorkout(Arg.Is<WorkoutTemplate>(workout =>
+                workout.Name == "Back Day" &&
+                workout.ClientId == 1 &&
+                workout.Type == WorkoutType.CUSTOM &&
+                workout.GetExercises().Count == 1));
             savedInvoked.Should().BeTrue();
         }
     }
