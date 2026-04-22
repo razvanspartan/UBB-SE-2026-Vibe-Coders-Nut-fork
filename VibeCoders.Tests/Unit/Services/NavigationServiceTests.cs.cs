@@ -11,22 +11,22 @@ namespace VibeCoders.Tests.Unit.Services
 {
     public class NavigationServiceTests
     {
-        private readonly IAnalyticsDashboardRefreshBus _refreshBus;
-        private readonly NavigationService _systemUnderTest;
+        private readonly IAnalyticsDashboardRefreshBus refreshBus;
+        private readonly NavigationService systemUnderTest;
 
         public NavigationServiceTests()
         {
-            _refreshBus = Substitute.For<IAnalyticsDashboardRefreshBus>();
-            _systemUnderTest = new NavigationService(_refreshBus);
+            refreshBus = Substitute.For<IAnalyticsDashboardRefreshBus>();
+            systemUnderTest = new NavigationService(refreshBus);
         }
 
         [Fact]
         public void NavigateToClientDashboard_WithRequestRefresh_RequestsRefresh()
         {
             bool wasRefreshRequested = false;
-            _refreshBus.When(refreshBus => refreshBus.RequestRefresh()).Do(call => wasRefreshRequested = true);
+            refreshBus.When(bus => bus.RequestRefresh()).Do(call => wasRefreshRequested = true);
 
-            _systemUnderTest.NavigateToClientDashboard(true);
+            systemUnderTest.NavigateToClientDashboard(true);
 
             wasRefreshRequested.Should().BeTrue();
         }
@@ -35,9 +35,9 @@ namespace VibeCoders.Tests.Unit.Services
         public void NavigateToClientDashboard_WithoutRequestRefresh_DoesNotRequestRefresh()
         {
             bool wasRefreshRequested = false;
-            _refreshBus.When(refreshBus => refreshBus.RequestRefresh()).Do(call => wasRefreshRequested = true);
+            refreshBus.When(bus => bus.RequestRefresh()).Do(call => wasRefreshRequested = true);
 
-            _systemUnderTest.NavigateToClientDashboard(false);
+            systemUnderTest.NavigateToClientDashboard(false);
 
             wasRefreshRequested.Should().BeFalse();
         }
