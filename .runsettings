@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat Code Coverage">
+        <Configuration>
+          <Format>cobertura</Format>
+          <Exclude>[Microsoft.*]*,[System.*]*,[*.Migrations]*,[*]*Tests*,[*]*XamlTypeInfo*,[*]*_XamlTypeInfo*,[Microsoft.Windows.ApplicationModel*]*</Exclude>
+          <ExcludeByFile>**/obj/**/*.cs,**/Migrations/*.cs,**/*.g.cs,**/*.i.cs,**/*.g.i.cs</ExcludeByFile>
+          <ExcludeByAttribute>GeneratedCodeAttribute,CompilerGeneratedAttribute</ExcludeByAttribute>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>
