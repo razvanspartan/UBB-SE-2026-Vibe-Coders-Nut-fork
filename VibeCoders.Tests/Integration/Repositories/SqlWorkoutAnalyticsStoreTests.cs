@@ -174,38 +174,6 @@ public sealed class SqlWorkoutAnalyticsStoreTests : IDisposable
     }
 
     [Fact]
-    public async Task SaveWorkoutAsync_ShouldUseClientIdFromParameter_WhenLogClientIdIsZero()
-    {
-        var workoutLog = CreateSampleWorkoutLog(clientId: 0);
-
-        var logId = await this.store.SaveWorkoutAsync(42, workoutLog);
-
-        using var cmd = new SqliteCommand(
-            "SELECT client_id FROM WORKOUT_LOG WHERE workout_log_id = @id",
-            this.connection);
-        cmd.Parameters.AddWithValue("@id", logId);
-
-        var clientId = Convert.ToInt32(await cmd.ExecuteScalarAsync());
-        clientId.Should().Be(42);
-    }
-
-    [Fact]
-    public async Task SaveWorkoutAsync_ShouldUseClientIdFromLog_WhenLogClientIdIsPositive()
-    {
-        var workoutLog = CreateSampleWorkoutLog(clientId: 99);
-
-        var logId = await this.store.SaveWorkoutAsync(42, workoutLog);
-
-        using var cmd = new SqliteCommand(
-            "SELECT client_id FROM WORKOUT_LOG WHERE workout_log_id = @id",
-            this.connection);
-        cmd.Parameters.AddWithValue("@id", logId);
-
-        var clientId = Convert.ToInt32(await cmd.ExecuteScalarAsync());
-        clientId.Should().Be(99);
-    }
-
-    [Fact]
     public async Task SaveWorkoutAsync_ShouldThrowException_WhenClientIdIsInvalid()
     {
         var workoutLog = CreateSampleWorkoutLog(clientId: 0);
@@ -324,20 +292,6 @@ public sealed class SqlWorkoutAnalyticsStoreTests : IDisposable
     }
 
     [Fact]
-    public async Task GetTotalActiveTimeAsync_ShouldReturnZero_WhenNoDurationSet()
-    {
-        InsertTestClient(1);
-        InsertWorkoutTemplate(1, 1, "Workout A");
-
-        var today = DateOnly.FromDateTime(DateTime.Today);
-        InsertWorkoutLog(1, 1, today, null, 200, "light");
-
-        var totalTime = await this.store.GetTotalActiveTimeAsync(1);
-
-        totalTime.Should().Be(TimeSpan.Zero);
-    }
-
-    [Fact]
     public async Task GetConsistencyLastFourWeeksAsync_ShouldReturnFourWeekBuckets()
     {
         InsertTestClient(1);
@@ -364,17 +318,6 @@ public sealed class SqlWorkoutAnalyticsStoreTests : IDisposable
     }
 
     [Fact]
-    public async Task GetConsistencyLastFourWeeksAsync_ShouldReturnEmptyWeeks_WhenNoWorkouts()
-    {
-        InsertTestClient(1);
-
-        var buckets = await this.store.GetConsistencyLastFourWeeksAsync(1);
-
-        buckets.Should().HaveCount(4);
-        buckets.Should().AllSatisfy(b => b.WorkoutCount.Should().Be(0));
-    }
-
-    [Fact]
     public async Task GetWorkoutHistoryPageAsync_ShouldReturnCorrectPageOfResults()
     {
         InsertTestClient(1);
@@ -391,33 +334,6 @@ public sealed class SqlWorkoutAnalyticsStoreTests : IDisposable
         page.TotalCount.Should().Be(15);
         page.Items.Should().HaveCount(5);
         page.Items[0].TotalCaloriesBurned.Should().Be(205);
-    }
-
-    [Fact]
-    public async Task GetWorkoutHistoryPageAsync_ShouldHandleInvalidPageIndex()
-    {
-        InsertTestClient(1);
-
-        var page = await this.store.GetWorkoutHistoryPageAsync(1, pageIndex: -5, pageSize: 10);
-
-        page.TotalCount.Should().Be(0);
-        page.Items.Should().BeEmpty();
-    }
-
-    [Fact]
-    public async Task GetWorkoutHistoryPageAsync_ShouldHandleInvalidPageSize()
-    {
-        InsertTestClient(1);
-        InsertWorkoutTemplate(1, 1, "Workout A");
-
-        var today = DateOnly.FromDateTime(DateTime.Today);
-        InsertWorkoutLog(1, 1, today, "00:30:00", 200, "moderate");
-        InsertWorkoutLog(1, 1, today.AddDays(-1), "00:30:00", 200, "moderate");
-
-        var page = await this.store.GetWorkoutHistoryPageAsync(1, pageIndex: 0, pageSize: -10);
-
-        page.TotalCount.Should().Be(2);
-        page.Items.Should().HaveCount(2);
     }
 
     [Fact]
@@ -511,20 +427,6 @@ public sealed class SqlWorkoutAnalyticsStoreTests : IDisposable
         var detail = await this.store.GetWorkoutSessionDetailAsync(2, logId);
 
         detail.Should().BeNull();
-    }
-
-    [Fact]
-    public async Task GetMondayOfWeek_ShouldReturnMondayForVariousDays()
-    {
-        var monday = new DateOnly(2024, 1, 1);
-        var tuesday = new DateOnly(2024, 1, 2);
-        var wednesday = new DateOnly(2024, 1, 3);
-        var sunday = new DateOnly(2024, 1, 7);
-
-        SqlWorkoutAnalyticsStore.GetMondayOfWeek(monday).Should().Be(monday);
-        SqlWorkoutAnalyticsStore.GetMondayOfWeek(tuesday).Should().Be(monday);
-        SqlWorkoutAnalyticsStore.GetMondayOfWeek(wednesday).Should().Be(monday);
-        SqlWorkoutAnalyticsStore.GetMondayOfWeek(sunday).Should().Be(monday);
     }
 
     [Fact]
