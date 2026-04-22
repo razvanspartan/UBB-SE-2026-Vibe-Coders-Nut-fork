@@ -11,7 +11,11 @@ namespace VibeCoders.Utils
 
         public static double CalculateRatio(int actualReps, int targetReps)
         {
-            if (targetReps <= 0) return 0;
+            if (targetReps <= 0)
+            {
+                return 0;
+            }
+
             return (double)actualReps / targetReps;
         }
 
