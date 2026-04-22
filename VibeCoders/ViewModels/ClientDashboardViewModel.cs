@@ -1,10 +1,5 @@
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LiveChartsCore;
@@ -14,7 +9,6 @@ using SkiaSharp;
 using VibeCoders.Domain;
 using VibeCoders.Models;
 using VibeCoders.Models.Analytics;
-using VibeCoders.Repositories;
 using VibeCoders.Repositories.Interfaces;
 using VibeCoders.Services;
 
@@ -46,50 +40,49 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
     }
 
     [ObservableProperty]
-    private int totalWorkouts;
+    public partial int TotalWorkouts { get; set; }
 
     [ObservableProperty]
-    private string activeTimeSevenDaysDisplay = "0:00:00";
+    public partial string ActiveTimeSevenDaysDisplay { get; set; } = "0:00:00";
 
     [ObservableProperty]
-    private string preferredWorkoutDisplay = "-";
+    public partial string PreferredWorkoutDisplay { get; set; } = "-";
+
+    private ObservableCollection<ConsistencyWeekBucket> consistencyBuckets = new ();
 
     [ObservableProperty]
-    private ObservableCollection<ConsistencyWeekBucket> consistencyBuckets = new();
+    public partial ISeries[] ChartSeries { get; set; } = Array.Empty<ISeries>();
 
     [ObservableProperty]
-    private ISeries[] chartSeries = Array.Empty<ISeries>();
+    public partial Axis[] ChartXAxes { get; set; } = new[] { new Axis() };
 
     [ObservableProperty]
-    private Axis[] chartXAxes = new[] { new Axis() };
+    public partial int CurrentPage { get; set; }
 
     [ObservableProperty]
-    private int currentPage;
+    public partial int TotalCount { get; set; }
 
     [ObservableProperty]
-    private int totalCount;
+    public partial bool CanGoPrevious { get; set; }
 
     [ObservableProperty]
-    private bool canGoPrevious;
+    public partial bool CanGoNext { get; set; }
 
     [ObservableProperty]
-    private bool canGoNext;
+    public partial bool IsLoadingSummary { get; set; }
 
     [ObservableProperty]
-    private bool isLoadingSummary;
+    public partial bool IsLoadingHistory { get; set; }
 
     [ObservableProperty]
-    private bool isLoadingHistory;
+    public partial bool IsLoadingChart { get; set; }
 
     [ObservableProperty]
-    private bool isLoadingChart;
+    public partial bool ShowEmptyState { get; set; } = true;
 
-    [ObservableProperty]
-    private bool showEmptyState = true;
+    public ObservableCollection<WorkoutHistoryItemViewModel> HistoryItems { get; } = new ();
 
-    public ObservableCollection<WorkoutHistoryItemViewModel> HistoryItems { get; } = new();
-
-    public ObservableCollection<AchievementShowcaseItem> RecentAchievements { get; } = new();
+    public ObservableCollection<AchievementShowcaseItem> RecentAchievements { get; } = new ();
 
     public int PageSize { get; set; } = DefaultPageSize;
 
@@ -110,16 +103,22 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
     [RelayCommand]
     private async Task NextPageAsync()
     {
-        if (!CanGoNext) return;
-        CurrentPage++;
+        if (!this.CanGoNext)
+        {
+            return;
+        }
+        this.CurrentPage++;
         await LoadHistoryPageAsync().ConfigureAwait(true);
     }
 
     [RelayCommand]
     private async Task PreviousPageAsync()
     {
-        if (!CanGoPrevious) return;
-        CurrentPage--;
+        if (!this.CanGoPrevious)
+        {
+            return;
+        }
+        this.CurrentPage--;
         await LoadHistoryPageAsync().ConfigureAwait(true);
     }
 
@@ -130,8 +129,8 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
     private async Task LoadAllAsync()
     {
         CancelPendingLoad();
-        var token = loadCts!.Token;
-        var clientId = session.CurrentClientId;
+        var token = this.loadCts!.Token;
+        var clientId = this.session.CurrentClientId;
 
         try
         {
@@ -139,12 +138,12 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
             IsLoadingChart = true;
             IsLoadingHistory = true;
 
-            await store.EnsureCreatedAsync(token).ConfigureAwait(true);
+            await this.store.EnsureCreatedAsync(token).ConfigureAwait(true);
 
-            var summaryTask = store.GetDashboardSummaryAsync(clientId, token);
-            var bucketsTask = store.GetConsistencyLastFourWeeksAsync(clientId, token);
+            var summaryTask = this.store.GetDashboardSummaryAsync(clientId, token);
+            var bucketsTask = this.store.GetConsistencyLastFourWeeksAsync(clientId, token);
             CurrentPage = 0;
-            var historyTask = store.GetWorkoutHistoryPageAsync(clientId, CurrentPage, PageSize, token);
+            var historyTask = this.store.GetWorkoutHistoryPageAsync(clientId, CurrentPage, PageSize, token);
 
             await Task.WhenAll(summaryTask, bucketsTask, historyTask).ConfigureAwait(true);
             token.ThrowIfCancellationRequested();
@@ -172,16 +171,16 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
     private async Task LoadHistoryPageAsync()
     {
         CancelPendingLoad();
-        var token = loadCts!.Token;
+        var token = this.loadCts!.Token;
         IsLoadingHistory = true;
 
         try
         {
-            await store.EnsureCreatedAsync(token).ConfigureAwait(true);
-            var result = await store.GetWorkoutHistoryPageAsync(
-                session.CurrentClientId, CurrentPage, PageSize, token).ConfigureAwait(true);
+            await this.store.EnsureCreatedAsync(token).ConfigureAwait(true);
+            var result = await this.store.GetWorkoutHistoryPageAsync(
+                this.session.CurrentClientId, CurrentPage, PageSize, token).ConfigureAwait(true);
             token.ThrowIfCancellationRequested();
-            ApplyHistory(result, session.CurrentClientId);
+            ApplyHistory(result, this.session.CurrentClientId);
         }
         catch (OperationCanceledException)
         {
@@ -192,13 +191,13 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
         }
     }
     public void ReloadAchievementsPreview() =>
-        LoadRecentAchievements((int)session.CurrentClientId);
+        LoadRecentAchievements((int)this.session.CurrentClientId);
 
     private void LoadRecentAchievements(int clientId)
     {
         RecentAchievements.Clear();
 
-        var items = achievementsRepository.GetAchievementShowcaseForClient(clientId)
+        var items = this.achievementsRepository.GetAchievementShowcaseForClient(clientId)
             .Where(a => a.IsUnlocked)
             .OrderByDescending(a => a.AchievementId)
             .Take(3);
@@ -211,9 +210,9 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
 
     private void CancelPendingLoad()
     {
-        loadCts?.Cancel();
-        loadCts?.Dispose();
-        loadCts = new CancellationTokenSource();
+        this.loadCts?.Cancel();
+        this.loadCts?.Dispose();
+        this.loadCts = new CancellationTokenSource();
     }
 
     private void ApplySummary(DashboardSummary summary)
@@ -228,13 +227,13 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
 
     private void ApplyBuckets(IReadOnlyList<ConsistencyWeekBucket> buckets)
     {
-        ConsistencyBuckets.Clear();
+        this.consistencyBuckets.Clear();
         foreach (var b in buckets)
         {
-            ConsistencyBuckets.Add(b);
+            consistencyBuckets.Add(b);
         }
 
-        ChartSeries = new ISeries[]
+        this.ChartSeries = new ISeries[]
         {
             new LineSeries<int>
             {
@@ -251,7 +250,7 @@ public sealed partial class ClientDashboardViewModel : ObservableObject
             }
         };
 
-        ChartXAxes = new Axis[]
+        this.ChartXAxes = new Axis[]
         {
             new Axis
             {
