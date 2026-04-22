@@ -8,9 +8,9 @@ using VibeCoders.Services.Interfaces;
 
 public class ClientService : IClientService
 {
-    private readonly ProgressionService progressionService;
+    private readonly IProgressionService progressionService;
     private readonly IHttpClientFactory httpClientFactory;
-    private readonly EvaluationEngine evaluationEngine;
+    private readonly IEvaluationEngine evaluationEngine;
     private readonly IAchievementUnlockedBus achievementBus;
     private readonly NutritionSyncOptions nutritionSync;
     private readonly IRepositoryWorkoutLog workoutLogRepository;
@@ -22,9 +22,9 @@ public class ClientService : IClientService
 
     public ClientService(
         IRepositoryWorkoutLog workoutLogRepository,
-        ProgressionService progressionService,
+        IProgressionService progressionService,
         IHttpClientFactory httpClientFactory,
-        EvaluationEngine evaluationEngine,
+        IEvaluationEngine evaluationEngine,
         IAchievementUnlockedBus achievementBus,
         NutritionSyncOptions nutritionSync,
         IRepositoryTrainer trainerRepository,

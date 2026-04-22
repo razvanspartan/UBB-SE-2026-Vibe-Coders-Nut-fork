@@ -95,9 +95,9 @@ public partial class App : Application
         services.AddHttpClient();
 
         services.AddSingleton(new VibeCoders.Models.Integration.NutritionSyncOptions { Endpoint = "http://localhost:5000/api/nutrition/sync" });
-        services.AddSingleton<ProgressionService>();
-        services.AddSingleton<EvaluationEngine>();
-        services.AddSingleton<TrainerService>();
+        services.AddSingleton<IProgressionService, ProgressionService>();
+        services.AddSingleton<IEvaluationEngine, EvaluationEngine>();
+        services.AddSingleton<ITrainerService, TrainerService>();
         services.AddTransient<ClientDashboardViewModel>();
         services.AddTransient<CalendarIntegrationViewModel>();
         services.AddTransient<RankShowcaseViewModel>();
@@ -111,7 +111,7 @@ public partial class App : Application
 
     private static TrainerDashboardViewModel CreateTrainerDashboardViewModel(IServiceProvider serviceProvider)
     {
-        var trainerService = serviceProvider.GetRequiredService<TrainerService>();
+        var trainerService = serviceProvider.GetRequiredService<ITrainerService>();
         var navService = serviceProvider.GetRequiredService<INavigationService>();
         return new TrainerDashboardViewModel(trainerService, navService);
     }
