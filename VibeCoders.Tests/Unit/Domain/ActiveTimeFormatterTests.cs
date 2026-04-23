@@ -13,7 +13,7 @@ namespace VibeCoders.Tests.Unit.Domain
         private const double ExpectedDecimalHours = 1.5;
         private const double ZeroHours = 0.0;
 
-        private static readonly TimeSpan OneHourTwoMinutesThreeSeconds = new(0, 1, 2, 3);
+        private static readonly TimeSpan OneHourTwoMinutesThreeSeconds = new (0, 1, 2, 3);
         private static readonly TimeSpan NegativeDuration = TimeSpan.FromSeconds(-1);
 
         [Fact]

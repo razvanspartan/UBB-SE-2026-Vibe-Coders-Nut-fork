@@ -1,9 +1,9 @@
-﻿using FluentAssertions;
-using NSubstitute;
-using NSubstitute.ExceptionExtensions;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using FluentAssertions;
+using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using VibeCoders.Models;
 using VibeCoders.Repositories.Interfaces;
 using VibeCoders.Services;
@@ -110,15 +110,12 @@ public class TrainerServiceTests
     [Fact]
     public void AssignNewRoutine_Should_ReturnError_When_DatabaseSaveFails()
     {
-        
         var exercises = new List<TemplateExercise> { new TemplateExercise { Name = "Pushup" } };
-       
+
         this.mockTrainerRepository.SaveTrainerWorkout(Arg.Any<WorkoutTemplate>()).Returns(false);
 
-    
         var result = this.trainerService.AssignNewRoutine(null, 1, "Fail Routine", exercises);
 
-    
         result.Success.Should().BeFalse();
         result.ErrorMessage.Should().Be("Could not save routine to database.");
     }
@@ -126,7 +123,6 @@ public class TrainerServiceTests
     [Fact]
     public void AssignWorkout_Should_ThrowNotImplementedException()
     {
-      
         var client = new Client();
         var log = new WorkoutLog();
 
@@ -136,24 +132,19 @@ public class TrainerServiceTests
            .WithMessage("Workout assignment coming in Slice 2!");
     }
 
-
     [Fact]
     public void CreateAndAssignNutritionPlan_Should_CreatePlanWithDateOnly()
     {
-       
         var start = new DateTime(2026, 1, 1, 10, 30, 0); // 10:30 AM
         var end = new DateTime(2026, 1, 7, 18, 0, 0);   // 6:00 PM
         int clientId = 99;
 
-      
         this.trainerService.CreateAndAssignNutritionPlan(start, end, clientId);
 
-       
         this.mockNutritionRepository.Received(1).SaveNutritionPlanForClient(
             Arg.Is<NutritionPlan>(p => p.StartDate == new DateTime(2026, 1, 1) && p.EndDate == new DateTime(2026, 1, 7)),
             clientId);
     }
-
 
     [Fact]
     public void CreateAndAssignNutritionPlan_Should_SetDatesToMidnight()
@@ -183,12 +174,8 @@ public class TrainerServiceTests
     [Fact]
     public void SaveTrainerWorkout_Should_ReturnFalse_When_TemplateIsNull()
     {
-       
         bool result = this.trainerService.SaveTrainerWorkout(null!);
 
-       
         result.Should().BeFalse();
     }
-
-
 }

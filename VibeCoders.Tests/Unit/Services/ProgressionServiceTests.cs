@@ -21,24 +21,24 @@ namespace VibeCoders.Tests.Unit.Services
         private const int PlateauRepetitionValue = 5;
         private const double PlateauWeightValue = 50;
 
-        private readonly IRepositoryWorkoutTemplate _workoutTemplateRepository;
-        private readonly IRepositoryNotification _notificationRepository;
-        private readonly ProgressionService _systemUnderTest;
+        private readonly IRepositoryWorkoutTemplate workoutTemplateRepository;
+        private readonly IRepositoryNotification notificationRepository;
+        private readonly ProgressionService systemUnderTest;
 
         public ProgressionServiceTests()
         {
-            _workoutTemplateRepository = Substitute.For<IRepositoryWorkoutTemplate>();
-            _notificationRepository = Substitute.For<IRepositoryNotification>();
-            _systemUnderTest = new ProgressionService(_workoutTemplateRepository, _notificationRepository);
+            workoutTemplateRepository = Substitute.For<IRepositoryWorkoutTemplate>();
+            notificationRepository = Substitute.For<IRepositoryNotification>();
+            systemUnderTest = new ProgressionService(workoutTemplateRepository, notificationRepository);
         }
 
         [Fact]
         public void EvaluateWorkout_NullLog_DoesNothing()
         {
-            var exception = Record.Exception(() => _systemUnderTest.EvaluateWorkout(null!));
+            var exception = Record.Exception(() => systemUnderTest.EvaluateWorkout(null!));
 
             exception.Should().BeNull();
-            _workoutTemplateRepository.DidNotReceiveWithAnyArgs().GetTemplateExercise(default);
+            workoutTemplateRepository.DidNotReceiveWithAnyArgs().GetTemplateExercise(default);
         }
 
         [Fact]
@@ -46,10 +46,10 @@ namespace VibeCoders.Tests.Unit.Services
         {
             var log = new WorkoutLog { Exercises = null! };
 
-            var exception = Record.Exception(() => _systemUnderTest.EvaluateWorkout(log));
+            var exception = Record.Exception(() => systemUnderTest.EvaluateWorkout(log));
 
             exception.Should().BeNull();
-            _workoutTemplateRepository.DidNotReceiveWithAnyArgs().GetTemplateExercise(default);
+            workoutTemplateRepository.DidNotReceiveWithAnyArgs().GetTemplateExercise(default);
         }
 
         [Fact]
@@ -64,9 +64,9 @@ namespace VibeCoders.Tests.Unit.Services
                 }
             };
 
-            _systemUnderTest.EvaluateWorkout(log);
+            systemUnderTest.EvaluateWorkout(log);
 
-            _workoutTemplateRepository.DidNotReceiveWithAnyArgs().GetTemplateExercise(default);
+            workoutTemplateRepository.DidNotReceiveWithAnyArgs().GetTemplateExercise(default);
         }
 
         [Fact]
@@ -85,12 +85,12 @@ namespace VibeCoders.Tests.Unit.Services
                 }
             };
 
-            _workoutTemplateRepository.GetTemplateExercise(DefaultParentTemplateExerciseIdentifier).Returns((TemplateExercise)null!);
+            workoutTemplateRepository.GetTemplateExercise(DefaultParentTemplateExerciseIdentifier).Returns((TemplateExercise)null!);
 
-            _systemUnderTest.EvaluateWorkout(log);
+            systemUnderTest.EvaluateWorkout(log);
 
-            _workoutTemplateRepository.DidNotReceiveWithAnyArgs().UpdateTemplateWeight(default, default);
-            _notificationRepository.DidNotReceiveWithAnyArgs().SaveNotification(default!);
+            workoutTemplateRepository.DidNotReceiveWithAnyArgs().UpdateTemplateWeight(default, default);
+            notificationRepository.DidNotReceiveWithAnyArgs().SaveNotification(default!);
         }
 
         [Fact]
@@ -116,12 +116,12 @@ namespace VibeCoders.Tests.Unit.Services
                 MuscleGroup = MuscleGroup.CHEST
             };
 
-            _workoutTemplateRepository.GetTemplateExercise(DefaultParentTemplateExerciseIdentifier).Returns(template);
-            _workoutTemplateRepository.UpdateTemplateWeight(DefaultParentTemplateExerciseIdentifier, DefaultTargetWeight + WeightProgressionIncrement).Returns(true);
+            workoutTemplateRepository.GetTemplateExercise(DefaultParentTemplateExerciseIdentifier).Returns(template);
+            workoutTemplateRepository.UpdateTemplateWeight(DefaultParentTemplateExerciseIdentifier, DefaultTargetWeight + WeightProgressionIncrement).Returns(true);
 
-            _systemUnderTest.EvaluateWorkout(log);
+            systemUnderTest.EvaluateWorkout(log);
 
-            _workoutTemplateRepository.Received(1).UpdateTemplateWeight(DefaultParentTemplateExerciseIdentifier, DefaultTargetWeight + WeightProgressionIncrement);
+            workoutTemplateRepository.Received(1).UpdateTemplateWeight(DefaultParentTemplateExerciseIdentifier, DefaultTargetWeight + WeightProgressionIncrement);
             exercise.IsSystemAdjusted.Should().BeTrue();
             exercise.PerformanceRatio.Should().Be(PerfectPerformanceRatio);
         }
@@ -154,11 +154,11 @@ namespace VibeCoders.Tests.Unit.Services
                 MuscleGroup = MuscleGroup.CHEST
             };
 
-            _workoutTemplateRepository.GetTemplateExercise(DefaultParentTemplateExerciseIdentifier).Returns(template);
+            workoutTemplateRepository.GetTemplateExercise(DefaultParentTemplateExerciseIdentifier).Returns(template);
 
-            _systemUnderTest.EvaluateWorkout(log);
+            systemUnderTest.EvaluateWorkout(log);
 
-            _notificationRepository.Received(1).SaveNotification(Arg.Is<Notification>(notification =>
+            notificationRepository.Received(1).SaveNotification(Arg.Is<Notification>(notification =>
                 notification.Type == NotificationType.Plateau &&
                 notification.ClientId == DefaultClientIdentifier &&
                 notification.RelatedId == DefaultParentTemplateExerciseIdentifier));
@@ -168,21 +168,21 @@ namespace VibeCoders.Tests.Unit.Services
         [Fact]
         public void ProcessDeloadConfirmation_NullNotification_DoesNothing()
         {
-            var exception = Record.Exception(() => _systemUnderTest.ProcessDeloadConfirmation(null!));
+            var exception = Record.Exception(() => systemUnderTest.ProcessDeloadConfirmation(null!));
 
             exception.Should().BeNull();
-            _workoutTemplateRepository.DidNotReceiveWithAnyArgs().GetTemplateExercise(default);
+            workoutTemplateRepository.DidNotReceiveWithAnyArgs().GetTemplateExercise(default);
         }
 
         [Fact]
         public void ProcessDeloadConfirmation_TemplateNotFound_DoesNothing()
         {
             var notification = new Notification(title: "test", message: "test", type: NotificationType.Plateau, relatedId: DefaultParentTemplateExerciseIdentifier);
-            _workoutTemplateRepository.GetTemplateExercise(DefaultParentTemplateExerciseIdentifier).Returns((TemplateExercise)null!);
+            workoutTemplateRepository.GetTemplateExercise(DefaultParentTemplateExerciseIdentifier).Returns((TemplateExercise)null!);
 
-            _systemUnderTest.ProcessDeloadConfirmation(notification);
+            systemUnderTest.ProcessDeloadConfirmation(notification);
 
-            _workoutTemplateRepository.DidNotReceiveWithAnyArgs().UpdateTemplateWeight(default, default);
+            workoutTemplateRepository.DidNotReceiveWithAnyArgs().UpdateTemplateWeight(default, default);
         }
 
         [Fact]
@@ -194,12 +194,12 @@ namespace VibeCoders.Tests.Unit.Services
             };
             var template = new TemplateExercise { Id = DefaultParentTemplateExerciseIdentifier, TargetWeight = 100 };
 
-            _workoutTemplateRepository.GetTemplateExercise(DefaultParentTemplateExerciseIdentifier).Returns(template);
-            _workoutTemplateRepository.UpdateTemplateWeight(DefaultParentTemplateExerciseIdentifier, 100 * DeloadPercentage).Returns(true);
+            workoutTemplateRepository.GetTemplateExercise(DefaultParentTemplateExerciseIdentifier).Returns(template);
+            workoutTemplateRepository.UpdateTemplateWeight(DefaultParentTemplateExerciseIdentifier, 100 * DeloadPercentage).Returns(true);
 
-            _systemUnderTest.ProcessDeloadConfirmation(notification);
+            systemUnderTest.ProcessDeloadConfirmation(notification);
 
-            _workoutTemplateRepository.Received(1).UpdateTemplateWeight(DefaultParentTemplateExerciseIdentifier, 100 * DeloadPercentage);
+            workoutTemplateRepository.Received(1).UpdateTemplateWeight(DefaultParentTemplateExerciseIdentifier, 100 * DeloadPercentage);
             notification.IsRead.Should().BeTrue();
         }
     }

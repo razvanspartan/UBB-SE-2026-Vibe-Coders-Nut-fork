@@ -13,7 +13,7 @@ namespace VibeCoders.Tests.Unit.Domain
         private const int CurrentWorkoutCount = 25;
         private const int NegativeWorkoutCount = -1;
 
-        private readonly TotalWorkoutsMilestoneEvaluator systemUnderTest = new();
+        private readonly TotalWorkoutsMilestoneEvaluator systemUnderTest = new ();
 
         private static readonly IReadOnlyList<WorkoutMilestone> ExpectedEarnedMilestones =
         [

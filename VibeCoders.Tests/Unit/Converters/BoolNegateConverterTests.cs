@@ -10,7 +10,7 @@ namespace VibeCoders.Tests.Unit.Converters
         private static readonly Type BooleanTargetType = typeof(bool);
         private const string DefaultLanguageCode = "en-US";
 
-        private readonly BoolNegateConverter booleanNegateConverter = new();
+        private readonly BoolNegateConverter booleanNegateConverter = new ();
 
         [Fact]
         public void Convert_WhenValueIsTrue_ReturnsFalse()

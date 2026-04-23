@@ -22,11 +22,9 @@ namespace VibeCoders.Tests.Unit.Services
             this.evaluationEngine = new EvaluationEngine(this.mockAchievementRepository);
         }
 
-
         [Fact]
         public void Evaluate_Should_ReturnEmptyList_When_AllAchievementsAreAlreadyUnlocked()
         {
-           
             var showcase = new List<AchievementShowcaseItem>
             {
                 new AchievementShowcaseItem { AchievementId = 1, Title = "3-Day Streak", IsUnlocked = true },
@@ -46,7 +44,6 @@ namespace VibeCoders.Tests.Unit.Services
         [Fact]
         public void Evaluate_Should_HandleEmptyShowcase_Gracefully()
         {
-           
             this.mockAchievementRepository.GetAchievementShowcaseForClient(this.clientId)
                 .Returns(new List<AchievementShowcaseItem>());
 
@@ -54,8 +51,6 @@ namespace VibeCoders.Tests.Unit.Services
 
             result.Should().BeEmpty();
         }
-
-       
 
         [Fact]
         public void BuildRankShowcase_Should_ReturnLevel1_When_NoAchievementsUnlocked()
@@ -70,7 +65,6 @@ namespace VibeCoders.Tests.Unit.Services
 
             var result = this.evaluationEngine.BuildRankShowcase(this.clientId);
 
-            
             result.DisplayLevel.Should().Be(1);
             result.UnlockedAchievementsDisplay.Should().Be("0 achievements unlocked");
             result.HasNextRank.Should().BeTrue();
@@ -79,7 +73,6 @@ namespace VibeCoders.Tests.Unit.Services
         [Fact]
         public void BuildRankShowcase_Should_UseSingularForm_When_OnlyOneAchievementUnlocked()
         {
-           
             var showcase = new List<AchievementShowcaseItem>
             {
                 new AchievementShowcaseItem { Title = "First Step", IsUnlocked = true },
@@ -91,14 +84,12 @@ namespace VibeCoders.Tests.Unit.Services
 
             var result = this.evaluationEngine.BuildRankShowcase(this.clientId);
 
-            
             result.UnlockedAchievementsDisplay.Should().Be("1 achievement unlocked");
         }
 
         [Fact]
         public void BuildRankShowcase_Should_CalculateProgressCorrectly()
         {
-            
             var showcase = new List<AchievementShowcaseItem>();
             for (int i = 0; i < 9; i++)
             {
@@ -108,15 +99,11 @@ namespace VibeCoders.Tests.Unit.Services
             this.mockAchievementRepository.GetAchievementShowcaseForClient(this.clientId)
                 .Returns(showcase);
 
-         
             var result = this.evaluationEngine.BuildRankShowcase(this.clientId);
 
-           
             result.Should().NotBeNull();
             result.ProgressPercent.Should().BeGreaterThan(0);
             result.NextRankInfo.Should().Contain("more achievement");
         }
-
-        
     }
 }

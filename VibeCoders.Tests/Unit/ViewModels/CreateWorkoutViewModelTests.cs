@@ -18,7 +18,7 @@ namespace VibeCoders.Tests.Unit.ViewModels
         public CreateWorkoutViewModelTests()
         {
             this.trainerServiceMock = Substitute.For<ITrainerService>();
-            this.trainerServiceMock.GetAllExerciseNames().Returns(new List<string> { "Squat", "Bench" }); 
+            this.trainerServiceMock.GetAllExerciseNames().Returns(new List<string> { "Squat", "Bench" });
             this.systemUnderTest = new CreateWorkoutViewModel(this.trainerServiceMock);
         }
 
@@ -39,13 +39,14 @@ namespace VibeCoders.Tests.Unit.ViewModels
         [InlineData("NewExerciseReps", 12.0)]
         public void Properties_WhenSet_RaisePropertyChanged(string propertyName, object newValue)
         {
-
             var raisedEvents = new List<string>();
             this.systemUnderTest.PropertyChanged += (sender, args) =>
             {
-                if (args.PropertyName != null) raisedEvents.Add(args.PropertyName);
+                if (args.PropertyName != null)
+                {
+                    raisedEvents.Add(args.PropertyName);
+                }
             };
-
 
             switch (propertyName)
             {
@@ -62,7 +63,6 @@ namespace VibeCoders.Tests.Unit.ViewModels
                     this.systemUnderTest.NewExerciseReps = (double)newValue;
                     break;
             }
-
 
             raisedEvents.Should().Contain(propertyName);
         }
@@ -120,7 +120,7 @@ namespace VibeCoders.Tests.Unit.ViewModels
         [InlineData("", 1)]
         [InlineData(null, 1)]
         [InlineData("Valid", 0)]
-        public void SaveWorkoutCommand_WhenInvalidState_DoesNotSave(string workoutName, int exerciseCount)
+        public void SaveWorkoutCommand_WhenInvalidState_DoesNotSave(string? workoutName, int exerciseCount)
         {
             this.systemUnderTest.WorkoutName = workoutName;
             if (exerciseCount > 0)

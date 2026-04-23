@@ -1,8 +1,8 @@
-﻿using FluentAssertions;
-using NSubstitute;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using FluentAssertions;
+using NSubstitute;
 using VibeCoders.Models;
 using VibeCoders.Services;
 using VibeCoders.Services.Interfaces;
@@ -30,7 +30,7 @@ public class WorkoutLogsViewModelTests
         int clientIdentifier = 1;
         var sampleWorkoutLogs = new List<WorkoutLog>
         {
-            new WorkoutLog { Id = 10, WorkoutName = "Morning Run", Date = DateTime.Now, Exercises = new() }
+            new WorkoutLog { Id = 10, WorkoutName = "Morning Run", Date = DateTime.Now, Exercises = new () }
         };
         this.mockClientService.GetWorkoutHistoryForClient(clientIdentifier).Returns(sampleWorkoutLogs);
 
@@ -58,7 +58,7 @@ public class WorkoutLogsViewModelTests
     [Fact]
     public void ToggleEditMode_Should_SwitchStateCorrectly()
     {
-        var workoutLog = new WorkoutLog { Id = 1, Exercises = new() };
+        var workoutLog = new WorkoutLog { Id = 1, Exercises = new () };
         var workoutLogItemViewModel = new WorkoutLogItemViewModel(workoutLog, this.mockClientService);
 
         this.workoutLogsViewModel.ToggleEditModeCommand.Execute(workoutLogItemViewModel);
@@ -113,7 +113,7 @@ public class WorkoutLogsViewModelTests
     [Fact]
     public void ToLoggedExercise_Should_MapViewModelData_BackToModel()
     {
-        var loggedExercise = new LoggedExercise { ExerciseName = "Squat", Sets = new() };
+        var loggedExercise = new LoggedExercise { ExerciseName = "Squat", Sets = new () };
         var workoutLogExerciseSummary = new WorkoutLogExerciseSummary(loggedExercise);
         workoutLogExerciseSummary.Sets.Add(new WorkoutLogSetEditorViewModel { Reps = 10, Weight = 100.5 });
 
@@ -129,7 +129,7 @@ public class WorkoutLogsViewModelTests
     [Fact]
     public void SaveEditedLog_Should_DoNothing_When_ItemIsNotInEditMode()
     {
-        var workoutLog = new WorkoutLog { Id = 1, Exercises = new() };
+        var workoutLog = new WorkoutLog { Id = 1, Exercises = new () };
         var workoutLogItemViewModel = new WorkoutLogItemViewModel(workoutLog, this.mockClientService);
         this.workoutLogsViewModel.SaveEditedLogCommand.Execute(workoutLogItemViewModel);
         this.mockClientService.DidNotReceive().UpdateWorkoutLog(Arg.Any<WorkoutLog>());
@@ -153,7 +153,7 @@ public class WorkoutLogsViewModelTests
             ExerciseName = "Pushups",
             AdjustmentNote = adjustmentNote ?? string.Empty,
             PerformanceRatio = 0.8f,
-            Sets = new()
+            Sets = new ()
         };
 
         var workoutLogExerciseSummary = new WorkoutLogExerciseSummary(loggedExercise);

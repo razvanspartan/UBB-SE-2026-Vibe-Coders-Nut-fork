@@ -18,7 +18,7 @@ public static class WorkoutTemplateFactory
             Name = "Squat",
             TargetSets = 3,
             TargetReps = 10,
-            MuscleGroup = MuscleGroup.LEGS 
+            MuscleGroup = MuscleGroup.LEGS
         });
 
         template.AddExercise(new TemplateExercise

@@ -9,8 +9,8 @@ namespace VibeCoders.Tests.Unit.ViewModels
 {
     public class AchievementsViewModelTests
     {
-        private readonly IClientService _clientService;
-        private readonly AchievementsViewModel _achievementsViewModel;
+        private readonly IClientService clientService;
+        private readonly AchievementsViewModel achievementsViewModel;
 
         private const int ValidClientId = 1;
         private const int ExistingAchievementId = 99;
@@ -26,14 +26,14 @@ namespace VibeCoders.Tests.Unit.ViewModels
         private const string SecondAchievementIcon = "&#xE72E;";
         private const string DatabaseErrorMessage = "Database error";
 
-        private readonly List<Achievement> _mockAchievements;
+        private readonly List<Achievement> mockAchievements;
 
         public AchievementsViewModelTests()
         {
-            _clientService = Substitute.For<IClientService>();
-            _achievementsViewModel = new AchievementsViewModel(_clientService);
+            clientService = Substitute.For<IClientService>();
+            achievementsViewModel = new AchievementsViewModel(clientService);
 
-            _mockAchievements = new List<Achievement>
+            mockAchievements = new List<Achievement>
             {
                 new Achievement
                 {
@@ -59,14 +59,14 @@ namespace VibeCoders.Tests.Unit.ViewModels
         [Fact]
         public void LoadAchievementsCommand_ValidClientId_PopulatesAchievementsAndUpdatesLoadingState()
         {
-            _clientService.GetAchievements(ValidClientId).Returns(_mockAchievements);
+            clientService.GetAchievements(ValidClientId).Returns(mockAchievements);
 
-            _achievementsViewModel.LoadAchievementsCommand.Execute(ValidClientId);
+            achievementsViewModel.LoadAchievementsCommand.Execute(ValidClientId);
 
-            _achievementsViewModel.IsLoading.Should().BeFalse();
-            _achievementsViewModel.Achievements.Should().HaveCount(_mockAchievements.Count);
+            achievementsViewModel.IsLoading.Should().BeFalse();
+            achievementsViewModel.Achievements.Should().HaveCount(mockAchievements.Count);
 
-            var firstAchievement = _achievementsViewModel.Achievements.First();
+            var firstAchievement = achievementsViewModel.Achievements.First();
             firstAchievement.AchievementId.Should().Be(FirstAchievementId);
             firstAchievement.Name.Should().Be(FirstAchievementName);
             firstAchievement.Description.Should().Be(FirstAchievementDescription);
@@ -74,7 +74,7 @@ namespace VibeCoders.Tests.Unit.ViewModels
             firstAchievement.IsUnlocked.Should().BeTrue();
             firstAchievement.Icon.Should().Be(FirstAchievementIcon);
 
-            var secondAchievement = _achievementsViewModel.Achievements.Last();
+            var secondAchievement = achievementsViewModel.Achievements.Last();
             secondAchievement.AchievementId.Should().Be(SecondAchievementId);
             secondAchievement.Name.Should().Be(SecondAchievementName);
             secondAchievement.Description.Should().Be(SecondAchievementDescription);
@@ -86,17 +86,17 @@ namespace VibeCoders.Tests.Unit.ViewModels
         [Fact]
         public void LoadAchievementsCommand_RepositoryThrowsException_ClearsAchievementsAndSetsLoadingToFalse()
         {
-            _achievementsViewModel.Achievements.Add(new Achievement { AchievementId = ExistingAchievementId });
+            achievementsViewModel.Achievements.Add(new Achievement { AchievementId = ExistingAchievementId });
 
-            _clientService.When(x => x.GetAchievements(ValidClientId))
+            clientService.When(x => x.GetAchievements(ValidClientId))
                 .Do(x => { throw new Exception(DatabaseErrorMessage); });
 
-            var exception = Record.Exception(() => _achievementsViewModel.LoadAchievementsCommand.Execute(ValidClientId));
+            var exception = Record.Exception(() => achievementsViewModel.LoadAchievementsCommand.Execute(ValidClientId));
 
             exception.Should().NotBeNull();
             exception.Should().BeOfType<Exception>();
-            _achievementsViewModel.Achievements.Should().BeEmpty();
-            _achievementsViewModel.IsLoading.Should().BeFalse();
+            achievementsViewModel.Achievements.Should().BeEmpty();
+            achievementsViewModel.IsLoading.Should().BeFalse();
         }
     }
 }

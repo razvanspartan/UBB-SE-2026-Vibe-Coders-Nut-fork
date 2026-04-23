@@ -12,7 +12,7 @@ namespace VibeCoders.Tests.Unit.Converters
         private const double FullyVisibleOpacity = 1.0;
         private const double ReducedOpacity = 0.5;
 
-        private readonly BoolToOpacityConverter booleanToOpacityConverter = new();
+        private readonly BoolToOpacityConverter booleanToOpacityConverter = new ();
 
         [Fact]
         public void Convert_WhenValueIsTrue_ReturnsFullyVisibleOpacity()

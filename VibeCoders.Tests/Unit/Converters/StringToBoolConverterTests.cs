@@ -12,7 +12,7 @@ namespace VibeCoders.Tests.Unit.Converters
         private const string NonEmptyStringValue = "content";
         private const string EmptyStringValue = "";
 
-        private readonly StringToBoolConverter stringToBooleanConverter = new();
+        private readonly StringToBoolConverter stringToBooleanConverter = new ();
 
         [Fact]
         public void Convert_WhenValueIsNonEmptyString_ReturnsTrue()

@@ -14,7 +14,7 @@ namespace VibeCoders.Tests.Unit.ViewModels
         private const int DefaultClientId = 1;
         private const int WorkoutLogId = 10;
         private const int ActiveNutritionPlanId = 5;
-        private static readonly DateTime LatestWorkoutDate = new(2023, 1, 1, 10, 0, 0);
+        private static readonly DateTime LatestWorkoutDate = new (2023, 1, 1, 10, 0, 0);
 
         private readonly IClientService clientServiceMock;
         private readonly ClientProfileViewModel systemUnderTest;

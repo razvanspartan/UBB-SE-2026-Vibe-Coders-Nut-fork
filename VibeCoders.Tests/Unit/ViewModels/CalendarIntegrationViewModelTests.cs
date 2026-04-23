@@ -32,13 +32,13 @@ namespace VibeCoders.Tests.Unit.ViewModels
         {
             this.systemUnderTest.SelectedDays.Should().HaveCount(7);
 
-            this.systemUnderTest.SelectedDays[0].IsSelected.Should().BeFalse(); 
-            this.systemUnderTest.SelectedDays[1].IsSelected.Should().BeTrue();  
-            this.systemUnderTest.SelectedDays[2].IsSelected.Should().BeTrue();  
-            this.systemUnderTest.SelectedDays[3].IsSelected.Should().BeTrue();  
-            this.systemUnderTest.SelectedDays[4].IsSelected.Should().BeTrue();  
-            this.systemUnderTest.SelectedDays[5].IsSelected.Should().BeTrue();  
-            this.systemUnderTest.SelectedDays[6].IsSelected.Should().BeFalse(); 
+            this.systemUnderTest.SelectedDays[0].IsSelected.Should().BeFalse();
+            this.systemUnderTest.SelectedDays[1].IsSelected.Should().BeTrue();
+            this.systemUnderTest.SelectedDays[2].IsSelected.Should().BeTrue();
+            this.systemUnderTest.SelectedDays[3].IsSelected.Should().BeTrue();
+            this.systemUnderTest.SelectedDays[4].IsSelected.Should().BeTrue();
+            this.systemUnderTest.SelectedDays[5].IsSelected.Should().BeTrue();
+            this.systemUnderTest.SelectedDays[6].IsSelected.Should().BeFalse();
         }
 
         [Fact]
@@ -75,9 +75,9 @@ namespace VibeCoders.Tests.Unit.ViewModels
         [Fact]
         public void GetSelectedDaysOfWeek_ReturnsCorrectIndexes()
         {
-            this.systemUnderTest.SelectedDays[0].IsSelected = true;  
-            this.systemUnderTest.SelectedDays[1].IsSelected = false; 
-            this.systemUnderTest.SelectedDays[2].IsSelected = true;  
+            this.systemUnderTest.SelectedDays[0].IsSelected = true;
+            this.systemUnderTest.SelectedDays[1].IsSelected = false;
+            this.systemUnderTest.SelectedDays[2].IsSelected = true;
 
             var result = this.systemUnderTest.GetSelectedDaysOfWeek();
 
@@ -224,7 +224,7 @@ namespace VibeCoders.Tests.Unit.ViewModels
         [Fact]
         public void ToggleDaySelection_TogglesSelectionCorrectly()
         {
-            bool initialState = this.systemUnderTest.SelectedDays[1].IsSelected; 
+            bool initialState = this.systemUnderTest.SelectedDays[1].IsSelected;
 
             this.systemUnderTest.ToggleDaySelection(1);
 

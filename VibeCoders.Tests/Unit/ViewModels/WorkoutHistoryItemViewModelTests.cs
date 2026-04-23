@@ -38,7 +38,7 @@ public class WorkoutHistoryItemViewModelTests
     [Fact]
     public void Constructor_Should_HandleEmptyWorkoutName_WithFallback()
     {
-        var workoutHistoryRow = this.CreateWorkoutHistoryRow(workoutName: "");
+        var workoutHistoryRow = this.CreateWorkoutHistoryRow(workoutName: string.Empty);
 
         var workoutHistoryItemViewModel = new WorkoutHistoryItemViewModel(this.mockWorkoutAnalyticsStore, this.clientIdentifier, workoutHistoryRow);
 
@@ -132,7 +132,6 @@ public class WorkoutHistoryItemViewModelTests
         await Task.Delay(100);
 
         workoutHistoryItemViewModel.ExerciseSetGroups.Should().BeEmpty();
-        workoutHistoryItemViewModel.IsLoadingDetail.Should().BeFalse(); 
+        workoutHistoryItemViewModel.IsLoadingDetail.Should().BeFalse();
     }
-
 }

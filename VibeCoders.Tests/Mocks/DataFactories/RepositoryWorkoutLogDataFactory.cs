@@ -25,7 +25,7 @@ public sealed class RepositoryWorkoutLogDataFactory
         command.Parameters.AddWithValue("@clientId", clientId);
         command.Parameters.AddWithValue("@date", workoutDate.ToString("o"));
         command.Parameters.AddWithValue("@totalDuration", totalDuration is null ? DBNull.Value : totalDuration);
-                command.Parameters.AddWithValue("@type", CustomWorkoutType);
+        command.Parameters.AddWithValue("@type", CustomWorkoutType);
 
         command.ExecuteNonQuery();
     }

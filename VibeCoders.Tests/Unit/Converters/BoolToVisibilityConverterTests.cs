@@ -11,7 +11,7 @@ namespace VibeCoders.Tests.Unit.Converters
         private const string DefaultLanguageCode = "en-US";
         private const string InvertVisibilityParameterValue = "Invert";
 
-        private readonly BoolToVisibilityConverter booleanToVisibilityConverter = new();
+        private readonly BoolToVisibilityConverter booleanToVisibilityConverter = new ();
 
         [Fact]
         public void Convert_WhenValueIsTrue_ReturnsVisible()

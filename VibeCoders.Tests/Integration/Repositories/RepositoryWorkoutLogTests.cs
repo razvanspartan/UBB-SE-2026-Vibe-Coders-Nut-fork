@@ -34,7 +34,7 @@ public sealed class RepositoryWorkoutLogTests : IDisposable
     private const int ExpectedExerciseCount = 1;
     private const int ExpectedSetCount = 1;
 
-    private static readonly DateTime WorkoutDate = new(2026, 4, 23, 10, 0, 0);
+    private static readonly DateTime WorkoutDate = new (2026, 4, 23, 10, 0, 0);
 
     private readonly SqliteConnection connection;
     private readonly string connectionString;

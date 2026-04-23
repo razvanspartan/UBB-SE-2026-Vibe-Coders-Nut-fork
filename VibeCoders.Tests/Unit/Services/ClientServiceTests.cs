@@ -208,7 +208,7 @@ namespace VibeCoders.Tests.Unit.Services
             var payload = new NutritionSyncPayload();
             var handlerMock = Substitute.For<HttpMessageHandler>();
             var client = new HttpClient(handlerMock) { BaseAddress = new Uri(NutritionSyncEndpointUrl) };
-            
+
             this.httpClientFactory.CreateClient().Returns(client);
 
             var result = await this.systemUnderTest.SyncNutritionAsync(payload);
@@ -222,13 +222,13 @@ namespace VibeCoders.Tests.Unit.Services
             moderateWorkoutLog.TotalCaloriesBurned = DefaultCaloriesBurned;
             moderateWorkoutLog.IntensityTag = HighIntensityTag;
 
-            var history = new List<WorkoutLog> 
+            var history = new List<WorkoutLog>
             {
                 moderateWorkoutLog
             };
             this.workoutLogRepository.GetWorkoutHistory(clientId).Returns(history);
-            
-            var clients = new List<Client> 
+
+            var clients = new List<Client>
             {
                 new Client { Id = clientId, Weight = DefaultClientWeightInKilograms, Height = DefaultClientHeightInMeters }
             };
@@ -248,7 +248,7 @@ namespace VibeCoders.Tests.Unit.Services
             var moderateWorkoutLog = WorkoutLogFactory.CreateModerateIntensityWorkoutLog(clientId);
             moderateWorkoutLog.TotalCaloriesBurned = SnapshotCaloriesBurned;
             moderateWorkoutLog.WorkoutName = LegDayWorkoutName;
-            
+
             var history = new List<WorkoutLog> { moderateWorkoutLog };
             this.workoutLogRepository.GetWorkoutHistory(clientId).Returns(history);
 

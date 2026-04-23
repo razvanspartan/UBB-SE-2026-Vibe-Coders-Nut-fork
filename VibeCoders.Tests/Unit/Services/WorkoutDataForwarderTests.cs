@@ -16,7 +16,7 @@ namespace VibeCoders.Tests.Unit.Services
         private readonly int mockIdToReturn = 100;
         private readonly int caloriesBurnedLowIntensity = 150;
         private readonly int caloriesBurnedHighIntensity = 700;
-        private readonly int caloriesBurnedModerateIntensity = 350; 
+        private readonly int caloriesBurnedModerateIntensity = 350;
         private readonly float averageMetabolicEquivalentLowIntensity = 2.5f;
         private readonly float averageMetabolicEquivalentModerateIntensity = 5.5f;
         private readonly float averageMetabolicEquivalentHighIntensity = 8.75f;

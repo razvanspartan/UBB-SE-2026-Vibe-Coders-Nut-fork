@@ -2,10 +2,8 @@ namespace VibeCoders.Tests.Mocks.DataFactories.dbSchema;
 
 using Microsoft.Data.Sqlite;
 
-
 public class TestDatabaseSchema
 {
-    
     public static string CreateInMemoryConnectionString()
     {
         return "Data Source=:memory:";
@@ -27,7 +25,7 @@ public class TestDatabaseSchema
         using var command = new SqliteCommand(schemaSql, connection);
         command.ExecuteNonQuery();
     }
-    
+
     public static SqliteConnection CreateInMemoryDatabase()
     {
         var connection = new SqliteConnection(CreateInMemoryConnectionString());
@@ -35,7 +33,7 @@ public class TestDatabaseSchema
         CreateSchema(connection);
         return connection;
     }
-   
+
     public static void SeedTestData(SqliteConnection connection)
     {
         string seedSql = @"

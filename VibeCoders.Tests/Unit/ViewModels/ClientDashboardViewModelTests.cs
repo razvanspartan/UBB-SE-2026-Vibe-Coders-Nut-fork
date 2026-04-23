@@ -49,11 +49,11 @@ namespace VibeCoders.Tests.Unit.ViewModels
             var summary = new DashboardSummary { TotalWorkouts = 10, TotalActiveTimeLastSevenDays = TimeSpan.FromHours(2), PreferredWorkoutName = "Push" };
             var buckets = new List<ConsistencyWeekBucket> { new ConsistencyWeekBucket { WeekStart = DateOnly.FromDateTime(DateTime.Today), WorkoutCount = 3 } };
             var historyPage = new WorkoutHistoryPageResult { TotalCount = 10, Items = new List<WorkoutHistoryRow> { new WorkoutHistoryRow { Id = 1, LogDate = DateTime.Today, WorkoutName = "Pull" } } };
-            
+
             this.storeMock.GetDashboardSummaryAsync(1, Arg.Any<CancellationToken>()).Returns(Task.FromResult(summary));
             this.storeMock.GetConsistencyLastFourWeeksAsync(1, Arg.Any<CancellationToken>()).Returns(Task.FromResult<IReadOnlyList<ConsistencyWeekBucket>>(buckets));
             this.storeMock.GetWorkoutHistoryPageAsync(1, 0, ClientDashboardViewModel.DefaultPageSize, Arg.Any<CancellationToken>()).Returns(Task.FromResult(historyPage));
-            
+
             this.achievementsMock.GetAchievementShowcaseForClient(1).Returns(new List<AchievementShowcaseItem>
             {
                 new AchievementShowcaseItem { IsUnlocked = true, AchievementId = 1 }
@@ -86,11 +86,11 @@ namespace VibeCoders.Tests.Unit.ViewModels
         {
             var historyPage1 = new WorkoutHistoryPageResult { TotalCount = 10, Items = new List<WorkoutHistoryRow>() };
             this.storeMock.GetWorkoutHistoryPageAsync(1, 0, ClientDashboardViewModel.DefaultPageSize, Arg.Any<CancellationToken>()).Returns(Task.FromResult(historyPage1));
-            
+
             var summary = new DashboardSummary();
             this.storeMock.GetDashboardSummaryAsync(1, Arg.Any<CancellationToken>()).Returns(Task.FromResult(summary));
             this.storeMock.GetConsistencyLastFourWeeksAsync(1, Arg.Any<CancellationToken>()).Returns(Task.FromResult<IReadOnlyList<ConsistencyWeekBucket>>(new List<ConsistencyWeekBucket>()));
-            
+
             await this.systemUnderTest.LoadInitialAsync();
 
             this.systemUnderTest.CanGoNext.Should().BeTrue();
@@ -111,10 +111,10 @@ namespace VibeCoders.Tests.Unit.ViewModels
         {
             var historyPage = new WorkoutHistoryPageResult { TotalCount = 10, Items = new List<WorkoutHistoryRow>() };
             this.storeMock.GetWorkoutHistoryPageAsync(1, Arg.Any<int>(), ClientDashboardViewModel.DefaultPageSize, Arg.Any<CancellationToken>()).Returns(Task.FromResult(historyPage));
-            
+
             this.storeMock.GetDashboardSummaryAsync(1, Arg.Any<CancellationToken>()).Returns(Task.FromResult(new DashboardSummary()));
             this.storeMock.GetConsistencyLastFourWeeksAsync(1, Arg.Any<CancellationToken>()).Returns(Task.FromResult<IReadOnlyList<ConsistencyWeekBucket>>(new List<ConsistencyWeekBucket>()));
-            
+
             await this.systemUnderTest.LoadInitialAsync();
             await this.systemUnderTest.NextPageCommand.ExecuteAsync(null);
 
@@ -164,14 +164,14 @@ namespace VibeCoders.Tests.Unit.ViewModels
 
             this.systemUnderTest.RecentAchievements.Should().HaveCount(1);
         }
-        
+
         [Fact]
         public async Task RefreshRequestedEvent_TriggersLoadAllAsync()
         {
             this.storeMock.GetDashboardSummaryAsync(1, Arg.Any<CancellationToken>()).Returns(Task.FromResult(new DashboardSummary()));
             this.storeMock.GetConsistencyLastFourWeeksAsync(1, Arg.Any<CancellationToken>()).Returns(Task.FromResult<IReadOnlyList<ConsistencyWeekBucket>>(new List<ConsistencyWeekBucket>()));
             this.storeMock.GetWorkoutHistoryPageAsync(1, 0, ClientDashboardViewModel.DefaultPageSize, Arg.Any<CancellationToken>()).Returns(Task.FromResult(new WorkoutHistoryPageResult()));
-            
+
             this.refreshBusMock.RefreshRequested += Raise.EventWith(this, EventArgs.Empty);
 
             await Task.Delay(100);

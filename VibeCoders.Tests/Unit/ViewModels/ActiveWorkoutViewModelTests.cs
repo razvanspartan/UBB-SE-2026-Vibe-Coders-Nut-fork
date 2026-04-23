@@ -31,7 +31,7 @@ namespace VibeCoders.Tests.Unit.ViewModels
             this.clientServiceMock = Substitute.For<IClientService>();
             this.navigationMock = Substitute.For<INavigationService>();
             this.workoutState = new WorkoutUiState();
-            
+
             this.activeWorkoutViewModel = new ActiveWorkoutViewModel(
                 this.clientServiceMock,
                 this.navigationMock,
