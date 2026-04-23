@@ -2,14 +2,13 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using VibeCoders.Models;
-using VibeCoders.Repositories;
-using VibeCoders.Repositories.Interfaces;
+using VibeCoders.Services.Interfaces;
 
 namespace VibeCoders.ViewModels;
 
 public sealed partial class AchievementsViewModel : ObservableObject
 {
-    private readonly IRepositoryAchievements achievementsRepository;
+    private readonly IClientService clientService;
 
     [ObservableProperty]
     public partial ObservableCollection<Achievement> Achievements { get; set; }
@@ -17,9 +16,9 @@ public sealed partial class AchievementsViewModel : ObservableObject
     [ObservableProperty]
     public partial bool IsLoading { get; set; }
 
-    public AchievementsViewModel(IRepositoryAchievements achievementsRepository)
+    public AchievementsViewModel(IClientService clientService)
     {
-        this.achievementsRepository = achievementsRepository;
+        this.clientService = clientService;
         this.Achievements = new ObservableCollection<Achievement>();
     }
 
@@ -30,17 +29,9 @@ public sealed partial class AchievementsViewModel : ObservableObject
         try
         {
             this.Achievements.Clear();
-            foreach (var a in this.achievementsRepository.GetAchievementShowcaseForClient(clientId))
+            foreach (var achievement in this.clientService.GetAchievements(clientId))
             {
-                this.Achievements.Add(new Achievement
-                {
-                    AchievementId = a.AchievementId,
-                    Name = a.Title,
-                    Description = a.Description,
-                    Criteria = a.Criteria,
-                    IsUnlocked = a.IsUnlocked,
-                    Icon = a.IsUnlocked ? "&#xE73E;" : "&#xE72E;"
-                });
+                this.Achievements.Add(achievement);
             }
         }
         finally
