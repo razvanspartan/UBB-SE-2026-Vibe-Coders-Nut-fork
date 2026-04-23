@@ -5,8 +5,9 @@ using VibeCoders.Domain;
 using VibeCoders.Models;
 using VibeCoders.Repositories;
 using VibeCoders.Repositories.Interfaces;
+using VibeCoders.Services.Interfaces;
 
-public sealed class EvaluationEngine
+public sealed class EvaluationEngine : IEvaluationEngine
 {
     private readonly IReadOnlyList<VibeCoders.Domain.IMilestoneCheck> checks;
     private readonly IRepositoryAchievements achievementRepository;
