@@ -10,10 +10,11 @@ namespace VibeCoders.ViewModels
     using Microsoft.UI.Xaml;
     using VibeCoders.Models;
     using VibeCoders.Services;
+    using VibeCoders.Services.Interfaces;
 
     public sealed partial class TrainerDashboardViewModel : ObservableObject
     {
-        private readonly TrainerService trainerService;
+        private readonly ITrainerService trainerService;
         private readonly INavigationService navigationService;
 
         private Client? selectedClient;
@@ -27,7 +28,7 @@ namespace VibeCoders.ViewModels
         private DateTimeOffset planEndDate = DateTimeOffset.Now.AddDays(30);
         private string assignmentStatus = string.Empty;
 
-        public TrainerDashboardViewModel(TrainerService trainerService, INavigationService navigationService)
+        public TrainerDashboardViewModel(ITrainerService trainerService, INavigationService navigationService)
         {
             this.trainerService = trainerService;
             this.navigationService = navigationService;

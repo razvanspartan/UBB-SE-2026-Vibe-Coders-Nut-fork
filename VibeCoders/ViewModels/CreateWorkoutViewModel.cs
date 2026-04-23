@@ -5,6 +5,7 @@ using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
 using VibeCoders.Models;
 using VibeCoders.Services;
+using VibeCoders.Services.Interfaces;
 
 namespace VibeCoders.ViewModels
 {
@@ -66,13 +67,13 @@ namespace VibeCoders.ViewModels
         public ICommand RemoveExerciseCommand { get; }
         public ICommand SaveWorkoutCommand { get; }
 
-        private readonly TrainerService trainerService;
+        private readonly ITrainerService trainerService;
 
         public int ClientId { get; set; }
 
         public event Action? WorkoutSaved;
 
-        public CreateWorkoutViewModel(TrainerService trainerService)
+        public CreateWorkoutViewModel(ITrainerService trainerService)
         {
             this.trainerService = trainerService;
 

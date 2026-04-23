@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using VibeCoders.Models;
 using VibeCoders.Services;
+using VibeCoders.Services.Interfaces;
 
 namespace VibeCoders.ViewModels;
 
@@ -13,11 +14,11 @@ namespace VibeCoders.ViewModels;
 /// </summary>
 public sealed partial class RankShowcaseViewModel : ObservableObject
 {
-    private readonly EvaluationEngine evaluationEngine;
+    private readonly IEvaluationEngine evaluationEngine;
     private readonly IUserSession session;
 
     public RankShowcaseViewModel(
-        EvaluationEngine evaluationEngine,
+        IEvaluationEngine evaluationEngine,
         IUserSession session)
     {
         this.evaluationEngine = evaluationEngine;

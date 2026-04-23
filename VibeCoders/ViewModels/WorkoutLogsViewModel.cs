@@ -10,13 +10,14 @@ namespace VibeCoders.ViewModels
     using VibeCoders.Models;
     using VibeCoders.Repositories;
     using VibeCoders.Services;
+    using VibeCoders.Services.Interfaces;
 
     public sealed partial class WorkoutLogsViewModel : ObservableObject
     {
         private readonly INavigationService navigation;
-        private readonly ClientService clientService;
+        private readonly IClientService clientService;
 
-        public WorkoutLogsViewModel(INavigationService navigation, ClientService clientService)
+        public WorkoutLogsViewModel(INavigationService navigation, IClientService clientService)
         {
             this.navigation = navigation;
             this.clientService = clientService;
@@ -120,7 +121,7 @@ namespace VibeCoders.ViewModels
     public sealed partial class WorkoutLogItemViewModel : ObservableObject
     {
         private readonly WorkoutLog log;
-        private readonly ClientService clientService;
+        private readonly IClientService clientService;
 
         public int Id { get; }
 
@@ -142,7 +143,7 @@ namespace VibeCoders.ViewModels
         [ObservableProperty]
         public partial bool IsEditMode { get; set; }
 
-        public WorkoutLogItemViewModel(WorkoutLog log, ClientService clientService)
+        public WorkoutLogItemViewModel(WorkoutLog log, IClientService clientService)
         {
             this.log = log;
             this.clientService = clientService;

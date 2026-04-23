@@ -4,12 +4,13 @@ using VibeCoders.Domain;
 using VibeCoders.Models;
 using VibeCoders.Models.Integration;
 using VibeCoders.Repositories.Interfaces;
+using VibeCoders.Services.Interfaces;
 
-public class ClientService
+public class ClientService : IClientService
 {
-    private readonly ProgressionService progressionService;
+    private readonly IProgressionService progressionService;
     private readonly IHttpClientFactory httpClientFactory;
-    private readonly EvaluationEngine evaluationEngine;
+    private readonly IEvaluationEngine evaluationEngine;
     private readonly IAchievementUnlockedBus achievementBus;
     private readonly NutritionSyncOptions nutritionSync;
     private readonly IRepositoryWorkoutLog workoutLogRepository;
@@ -21,9 +22,9 @@ public class ClientService
 
     public ClientService(
         IRepositoryWorkoutLog workoutLogRepository,
-        ProgressionService progressionService,
+        IProgressionService progressionService,
         IHttpClientFactory httpClientFactory,
-        EvaluationEngine evaluationEngine,
+        IEvaluationEngine evaluationEngine,
         IAchievementUnlockedBus achievementBus,
         NutritionSyncOptions nutritionSync,
         IRepositoryTrainer trainerRepository,
@@ -405,6 +406,30 @@ public class ClientService
         catch
         {
             return new Dictionary<string, double>();
+        }
+    }
+
+    public List<Achievement> GetAchievements(int clientId)
+    {
+        try
+        {
+            return this.achievementsRepository
+                .GetAchievementShowcaseForClient(clientId)
+                .Select(achievement => new Achievement
+                {
+                    AchievementId = achievement.AchievementId,
+                    Name = achievement.Title,
+                    Description = achievement.Description,
+                    Criteria = achievement.Criteria,
+                    IsUnlocked = achievement.IsUnlocked,
+                    Icon = achievement.IsUnlocked ? "&#xE73E;" : "&#xE72E;"
+                })
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error loading achievements: {ex.Message}");
+            return new List<Achievement>();
         }
     }
 
