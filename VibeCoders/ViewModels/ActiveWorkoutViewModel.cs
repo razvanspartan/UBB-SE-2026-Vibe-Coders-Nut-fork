@@ -11,6 +11,8 @@ namespace VibeCoders.ViewModels
 
     public partial class ActiveWorkoutViewModel : ObservableObject
     {
+        private const int DefaultRestTimeSeconds = 90;
+        private const int RestTimerIntervalMilliseconds = 1000;
         private readonly IClientService clientService;
         private readonly INavigationService navigation;
         private readonly WorkoutUiState workoutUiState;
@@ -36,14 +38,14 @@ namespace VibeCoders.ViewModels
         }
 
         [RelayCommand]
-        private void SetRestTime(string? timeStr)
+        private void SetRestTime(string? timeText)
         {
-            if (string.IsNullOrWhiteSpace(timeStr))
+            if (string.IsNullOrWhiteSpace(timeText))
             {
                 return;
             }
 
-            if (int.TryParse(timeStr, out int seconds))
+            if (int.TryParse(timeText, out int seconds))
             {
                 if (seconds < 0)
                 {
@@ -59,7 +61,7 @@ namespace VibeCoders.ViewModels
             }
         }
 
-        public void StartRestTimer(int seconds = 90)
+        public void StartRestTimer(int seconds = DefaultRestTimeSeconds)
         {
             if (seconds <= 0)
             {
@@ -69,8 +71,8 @@ namespace VibeCoders.ViewModels
                 return;
             }
 
-            var dq = DispatcherQueue.GetForCurrentThread();
-            if (dq is null)
+            var dispatcherQueue = DispatcherQueue.GetForCurrentThread();
+            if (dispatcherQueue is null)
             {
                 return;
             }
@@ -79,11 +81,11 @@ namespace VibeCoders.ViewModels
             this.IsResting = true;
 
             this.restTimer?.Stop();
-            this.restTimer = new System.Timers.Timer(1000);
+            this.restTimer = new System.Timers.Timer(RestTimerIntervalMilliseconds);
 
             this.restTimer.Elapsed += (_, _) =>
             {
-                dq.TryEnqueue(() =>
+                dispatcherQueue.TryEnqueue(() =>
                 {
                     if (this.RestTimeRemaining > 0)
                     {

@@ -28,6 +28,14 @@ namespace VibeCoders.ViewModels
 
     public partial class CalendarIntegrationViewModel : ObservableObject
     {
+        private const int DefaultDurationWeeks = 4;
+        private const int DayCount = 7;
+        private const int WorkoutLoadTimeoutMilliseconds = 1500;
+        private const int MinimumDurationWeeks = 1;
+        private const int MaximumDurationWeeks = 52;
+        private static readonly string[] DefaultDayNames = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+        private static readonly bool[] DefaultDaySelections = { false, true, true, true, true, true, false };
+
         private readonly ICalendarWorkoutCatalogService workoutCatalogService;
         private readonly ICalendarExportService calendarExportService;
         private readonly IUserSession userSession;
@@ -39,7 +47,7 @@ namespace VibeCoders.ViewModels
         public partial WorkoutTemplate? SelectedWorkout { get; set; }
 
         [ObservableProperty]
-        public partial int DurationWeeks { get; set; } = 4;
+        public partial int DurationWeeks { get; set; } = DefaultDurationWeeks;
 
         [ObservableProperty]
         public partial ObservableCollection<DaySelectionItem> SelectedDays { get; set; } = new ();
@@ -81,13 +89,10 @@ namespace VibeCoders.ViewModels
 
         private void InitializeDaySelection()
         {
-            var dayNames = new[] { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
-            var defaultSelections = new[] { false, true, true, true, true, true, false };
-
             SelectedDays.Clear();
-            for (int i = 0; i < 7; i++)
+            for (int dayIndex = 0; dayIndex < DayCount; dayIndex++)
             {
-                SelectedDays.Add(new DaySelectionItem(i, dayNames[i], defaultSelections[i]));
+                SelectedDays.Add(new DaySelectionItem(dayIndex, DefaultDayNames[dayIndex], DefaultDaySelections[dayIndex]));
             }
         }
 
@@ -99,7 +104,7 @@ namespace VibeCoders.ViewModels
 
                 var clientId = (int)this.userSession.CurrentClientId;
                 var workouts = await this.workoutCatalogService
-                    .GetAvailableWorkoutsAsync(clientId, TimeSpan.FromMilliseconds(1500));
+                    .GetAvailableWorkoutsAsync(clientId, TimeSpan.FromMilliseconds(WorkoutLoadTimeoutMilliseconds));
                 SetAvailableWorkouts(workouts);
             }
             catch (Exception ex)
@@ -142,9 +147,9 @@ namespace VibeCoders.ViewModels
         {
             var selectedDayIndexes = new List<int>();
 
-            for (int selectedDayIndex = 0; selectedDayIndex < SelectedDays.Count; selectedDayIndex++)
+            for (int dayIndex = 0; dayIndex < SelectedDays.Count; dayIndex++)
             {
-                var selectedDayItem = SelectedDays[selectedDayIndex];
+                var selectedDayItem = SelectedDays[dayIndex];
                 if (selectedDayItem.IsSelected)
                 {
                     selectedDayIndexes.Add(selectedDayItem.DayOfWeekIndex);
@@ -161,7 +166,7 @@ namespace VibeCoders.ViewModels
                 return "Please select a workout from the dropdown.";
             }
 
-            if (DurationWeeks < 1 || DurationWeeks > 52)
+            if (DurationWeeks < MinimumDurationWeeks || DurationWeeks > MaximumDurationWeeks)
             {
                 return "Duration must be between 1 and 52 weeks.";
             }
@@ -247,9 +252,9 @@ namespace VibeCoders.ViewModels
 
         public void ToggleDaySelection(int dayOfWeek)
         {
-            for (int selectedDayIndex = 0; selectedDayIndex < SelectedDays.Count; selectedDayIndex++)
+            for (int dayIndex = 0; dayIndex < SelectedDays.Count; dayIndex++)
             {
-                DaySelectionItem daySelectionItem = SelectedDays[selectedDayIndex];
+                DaySelectionItem daySelectionItem = SelectedDays[dayIndex];
                 if (daySelectionItem.DayOfWeekIndex == dayOfWeek)
                 {
                     daySelectionItem.IsSelected = !daySelectionItem.IsSelected;
