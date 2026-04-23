@@ -129,4 +129,37 @@ public class TestDataHelper
         command.Parameters.AddWithValue("@achievementId", achievementId);
         return Convert.ToInt32(command.ExecuteScalar());
     }
+
+    public void InsertNotification(int clientId, string title, string message, string type, int relatedId, DateTime dateCreated, bool isRead)
+    {
+        using var command = new SqliteCommand(
+            @"INSERT INTO NOTIFICATION (client_id, title, message, type, related_id, date_created, is_read)
+              VALUES (@clientId, @title, @message, @type, @relatedId, @dateCreated, @isRead)",
+            this.connection);
+        command.Parameters.AddWithValue("@clientId", clientId);
+        command.Parameters.AddWithValue("@title", title);
+        command.Parameters.AddWithValue("@message", message);
+        command.Parameters.AddWithValue("@type", type);
+        command.Parameters.AddWithValue("@relatedId", relatedId);
+        command.Parameters.AddWithValue("@dateCreated", dateCreated.ToString("o"));
+        command.Parameters.AddWithValue("@isRead", isRead ? DatabaseBooleanTrue : DatabaseBooleanFalse);
+        command.ExecuteNonQuery();
+    }
+
+    public int GetNotificationCount(int clientId)
+    {
+        using var command = new SqliteCommand(
+            "SELECT COUNT(*) FROM NOTIFICATION WHERE client_id = @clientId",
+            this.connection);
+        command.Parameters.AddWithValue("@clientId", clientId);
+        return Convert.ToInt32(command.ExecuteScalar());
+    }
+
+    public int GetTotalNotificationCount()
+    {
+        using var command = new SqliteCommand(
+            "SELECT COUNT(*) FROM NOTIFICATION",
+            this.connection);
+        return Convert.ToInt32(command.ExecuteScalar());
+    }
 }
