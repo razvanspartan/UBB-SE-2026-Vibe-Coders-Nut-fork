@@ -13,6 +13,7 @@ namespace VibeCoders.Tests.Unit.Services
 		private const int ClientId = 7;
 		private const int FallbackWorkoutCount = 4;
 		private const int ExercisesPerFallbackWorkout = 3;
+		private static readonly TimeSpan RepositoryResponseTimeout = TimeSpan.FromSeconds(1);
 		private static readonly TimeSpan ShortTimeout = TimeSpan.FromMilliseconds(1);
 
 		private readonly IRepositoryWorkoutTemplate workoutTemplateRepositoryMock;
@@ -34,7 +35,7 @@ namespace VibeCoders.Tests.Unit.Services
 
 			this.workoutTemplateRepositoryMock.GetAvailableWorkouts(ClientId).Returns(expectedWorkouts);
 
-			var availableWorkouts = await this.systemUnderTest.GetAvailableWorkoutsAsync(ClientId, ShortTimeout);
+			var availableWorkouts = await this.systemUnderTest.GetAvailableWorkoutsAsync(ClientId, RepositoryResponseTimeout);
 
 			availableWorkouts.Should().BeSameAs(expectedWorkouts);
 		}
