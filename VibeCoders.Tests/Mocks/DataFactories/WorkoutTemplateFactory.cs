@@ -7,7 +7,6 @@ public static class WorkoutTemplateFactory
 {
     public static WorkoutTemplate CreateFullBodyTemplate()
     {
-        
         var template = new WorkoutTemplate
         {
             Id = 1,
