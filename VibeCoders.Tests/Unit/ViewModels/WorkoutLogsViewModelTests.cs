@@ -125,4 +125,39 @@ public class WorkoutLogsViewModelTests
         mappedLoggedExercise.Sets[0].ActualReps.Should().Be(10);
         mappedLoggedExercise.Sets[0].ActualWeight.Should().Be(100.5);
     }
+
+    [Fact]
+    public void SaveEditedLog_Should_DoNothing_When_ItemIsNotInEditMode()
+    {
+        var workoutLog = new WorkoutLog { Id = 1, Exercises = new() };
+        var workoutLogItemViewModel = new WorkoutLogItemViewModel(workoutLog, this.mockClientService);
+        this.workoutLogsViewModel.SaveEditedLogCommand.Execute(workoutLogItemViewModel);
+        this.mockClientService.DidNotReceive().UpdateWorkoutLog(Arg.Any<WorkoutLog>());
+    }
+
+    [Fact]
+    public void StartWorkout_Should_NavigateToActiveWorkout()
+    {
+        this.workoutLogsViewModel.StartWorkoutCommand.Execute(99);
+
+        this.mockNavigationService.Received(1).NavigateToActiveWorkout(99);
+    }
+
+    [Theory]
+    [InlineData("Feeling weak", "Feeling weak")]
+    [InlineData(null, "Performance: 80% of target reps achieved.")]
+    public void ExerciseSummary_Tooltip_Should_HandleAdjustmentNotes(string? adjustmentNote, string expectedTooltip)
+    {
+        var loggedExercise = new LoggedExercise
+        {
+            ExerciseName = "Pushups",
+            AdjustmentNote = adjustmentNote ?? string.Empty,
+            PerformanceRatio = 0.8f,
+            Sets = new()
+        };
+
+        var workoutLogExerciseSummary = new WorkoutLogExerciseSummary(loggedExercise);
+
+        workoutLogExerciseSummary.TooltipText.Should().Be(expectedTooltip);
+    }
 }

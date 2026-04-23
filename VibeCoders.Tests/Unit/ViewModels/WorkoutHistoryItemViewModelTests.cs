@@ -120,4 +120,19 @@ public class WorkoutHistoryItemViewModelTests
         workoutHistoryItemViewModel.ExerciseCalories[0].CaloriesBurned.Should().Be(45);
     }
 
+    [Fact]
+    public async Task LoadDetailAsync_Should_ClearCollections_When_DetailIsNull()
+    {
+        var workoutHistoryRow = this.CreateWorkoutHistoryRow();
+        var workoutHistoryItemViewModel = new WorkoutHistoryItemViewModel(this.mockWorkoutAnalyticsStore, this.clientIdentifier, workoutHistoryRow);
+        this.mockWorkoutAnalyticsStore.GetWorkoutSessionDetailAsync(this.clientIdentifier, workoutHistoryItemViewModel.WorkoutLogId, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<WorkoutSessionDetail?>(null));
+
+        workoutHistoryItemViewModel.IsExpanded = true;
+        await Task.Delay(100);
+
+        workoutHistoryItemViewModel.ExerciseSetGroups.Should().BeEmpty();
+        workoutHistoryItemViewModel.IsLoadingDetail.Should().BeFalse(); 
+    }
+
 }
