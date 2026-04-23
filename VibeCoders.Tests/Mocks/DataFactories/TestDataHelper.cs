@@ -174,6 +174,34 @@ public class TestDataHelper
         command.ExecuteNonQuery();
     }
 
+    public void InsertWorkoutTemplate(int templateId, int clientId, string name, string type)
+    {
+        using var command = new SqliteCommand(
+            "INSERT INTO WORKOUT_TEMPLATE (workout_template_id, client_id, name, type) VALUES (@templateId, @clientId, @name, @type)",
+            this.connection);
+        command.Parameters.AddWithValue("@templateId", templateId);
+        command.Parameters.AddWithValue("@clientId", clientId);
+        command.Parameters.AddWithValue("@name", name);
+        command.Parameters.AddWithValue("@type", type);
+        command.ExecuteNonQuery();
+    }
+
+    public void InsertTemplateExercise(int exerciseId, int templateId, string name, string muscleGroup, int targetSets, int targetReps, double targetWeight)
+    {
+        using var command = new SqliteCommand(
+            @"INSERT INTO TEMPLATE_EXERCISE (id, workout_template_id, name, muscle_group, target_sets, target_reps, target_weight)
+              VALUES (@exerciseId, @templateId, @name, @muscleGroup, @targetSets, @targetReps, @targetWeight)",
+            this.connection);
+        command.Parameters.AddWithValue("@exerciseId", exerciseId);
+        command.Parameters.AddWithValue("@templateId", templateId);
+        command.Parameters.AddWithValue("@name", name);
+        command.Parameters.AddWithValue("@muscleGroup", muscleGroup);
+        command.Parameters.AddWithValue("@targetSets", targetSets);
+        command.Parameters.AddWithValue("@targetReps", targetReps);
+        command.Parameters.AddWithValue("@targetWeight", targetWeight);
+        command.ExecuteNonQuery();
+    }
+
     public int InsertWorkoutLog(int clientId, int workoutId, DateOnly date, string? duration, int calories, string intensity)
     {
         using var command = new SqliteCommand(
