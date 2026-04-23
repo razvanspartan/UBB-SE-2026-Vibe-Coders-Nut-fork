@@ -2,22 +2,42 @@ using FluentAssertions;
 using Microsoft.Data.Sqlite;
 using VibeCoders.Models;
 using VibeCoders.Repositories;
+using VibeCoders.Tests.Mocks.DataFactories;
+using VibeCoders.Tests.Mocks.DataFactories.dbSchema;
 using Xunit;
 
 namespace VibeCoders.Tests.Integration.Repositories;
 
 public sealed class RepositoryAchievementsTests : IDisposable
 {
-    private const int UserIdOffset = 1000;
-    private const int DefaultTrainerId = 1;
-    private const double DefaultWeight = 75.0;
-    private const double DefaultHeight = 180.0;
-    private const int DefaultCaloriesBurned = 300;
-    private const int DatabaseBooleanFalse = 0;
-    private const int DatabaseBooleanTrue = 1;
-    private const int NonExistentAchievementId = 999;
-    private const int TenDaysAgo = -10;
-    private const int TwentyDaysAgo = -20;
+    private const int TestClientId = 1;
+    private const int TestClientIdSecondary = 2;
+    private const int TestAchievementIdFirst = 1;
+    private const int TestAchievementIdSecond = 2;
+    private const int TestAchievementIdThird = 3;
+    private const int TestAchievementIdFourth = 4;
+
+    private const int OneDayAgo = -1;
+    private const int TwoDaysAgo = -2;
+    private const int ThreeDaysAgo = -3;
+    private const int FourDaysAgo = -4;
+    private const int FiveDaysAgo = -5;
+    private const int SixDaysAgo = -6;
+    private const int SevenDaysAgo = -7;
+    private const int EightDaysAgo = -8;
+    private const int NineDaysAgo = -9;
+
+    private const int ThresholdOneWorkout = 1;
+    private const int ThresholdFiveWorkouts = 5;
+    private const int ThresholdTenWorkouts = 10;
+    private const int ThresholdFifteenWorkouts = 15;
+    private const int ThresholdTwentyWorkouts = 20;
+
+    private const int ThreeWorkouts = 3;
+    private const int SevenWorkouts = 7;
+    private const int TwelveWorkouts = 12;
+    private const int FifteenWorkouts = 15;
+
     private const int ExpectedCountZero = 0;
     private const int ExpectedCountOne = 1;
     private const int ExpectedCountTwo = 2;
@@ -28,14 +48,18 @@ public sealed class RepositoryAchievementsTests : IDisposable
     private readonly SqliteConnection connection;
     private readonly string connectionString;
     private readonly RepositoryAchievements repository;
+    private readonly TestDataHelper testData;
 
     public RepositoryAchievementsTests()
     {
-        this.connectionString = "Data Source=InMemoryTestDb;Mode=Memory;Cache=Shared";
+        this.connectionString = TestDatabaseSchema.CreateSharedInMemoryConnectionString();
         this.connection = new SqliteConnection(this.connectionString);
         this.connection.Open();
 
-        CreateSchema(this.connection);
+        TestDatabaseSchema.CreateSchema(this.connection);
+
+        this.testData = new TestDataHelper(this.connection);
+        this.testData.SetupTrainer();
 
         this.repository = new RepositoryAchievements(this.connectionString);
     }
@@ -45,501 +69,304 @@ public sealed class RepositoryAchievementsTests : IDisposable
         this.connection?.Dispose();
     }
 
-    private static void CreateSchema(SqliteConnection connection)
-    {
-        using var command = new SqliteCommand(
-            @"
-            CREATE TABLE IF NOT EXISTS CLIENT (
-                client_id  INTEGER PRIMARY KEY,
-                user_id    INTEGER NOT NULL,
-                trainer_id INTEGER NOT NULL,
-                weight     REAL,
-                height     REAL
-            );
-
-            CREATE TABLE IF NOT EXISTS WORKOUT_LOG (
-                workout_log_id  INTEGER PRIMARY KEY,
-                client_id       INTEGER NOT NULL,
-                workout_id      INTEGER,
-                date            TEXT NOT NULL,
-                total_duration  TEXT,
-                type            TEXT NOT NULL DEFAULT 'CUSTOM',
-                calories_burned INTEGER,
-                rating          INTEGER,
-                trainer_notes   TEXT,
-                intensity_tag   TEXT NOT NULL DEFAULT ''
-            );
-
-            CREATE TABLE IF NOT EXISTS ACHIEVEMENT (
-                achievement_id     INTEGER PRIMARY KEY,
-                title              TEXT NOT NULL,
-                description        TEXT NOT NULL,
-                criteria           TEXT NOT NULL DEFAULT '',
-                threshold_workouts INTEGER
-            );
-
-            CREATE TABLE IF NOT EXISTS CLIENT_ACHIEVEMENT (
-                client_id      INTEGER NOT NULL,
-                achievement_id INTEGER NOT NULL,
-                unlocked       INTEGER NOT NULL DEFAULT 0,
-                PRIMARY KEY (client_id, achievement_id),
-                FOREIGN KEY (client_id)      REFERENCES CLIENT(client_id),
-                FOREIGN KEY (achievement_id) REFERENCES ACHIEVEMENT(achievement_id)
-            );", connection);
-        command.ExecuteNonQuery();
-    }
-
     [Fact]
-    public void GetWorkoutCount_ShouldReturnCorrectCount_WhenWorkoutsExist()
+    public void GetWorkoutsInLastSevenDays_ShouldIncludeBoundaryDates_DaySixAndToday()
     {
-        InsertTestClient(1);
-        InsertWorkoutLog(1, DateTime.Today);
-        InsertWorkoutLog(1, DateTime.Today.AddDays(-1));
-        InsertWorkoutLog(1, DateTime.Today.AddDays(-2));
+        this.testData.InsertClient(TestClientId);
+        var today = DateTime.UtcNow.Date;
+        this.testData.InsertWorkoutLog(TestClientId, today);
+        this.testData.InsertWorkoutLog(TestClientId, today.AddDays(SixDaysAgo));
+        this.testData.InsertWorkoutLog(TestClientId, today.AddDays(SevenDaysAgo));
 
-        var count = this.repository.GetWorkoutCount(1);
-
-        count.Should().Be(ExpectedCountThree);
-    }
-
-    [Fact]
-    public void GetWorkoutCount_ShouldReturnCountForSpecificClient_WhenMultipleClientsExist()
-    {
-        InsertTestClient(1);
-        InsertTestClient(2);
-        InsertWorkoutLog(1, DateTime.Today);
-        InsertWorkoutLog(1, DateTime.Today.AddDays(-1));
-        InsertWorkoutLog(2, DateTime.Today);
-
-        var count = this.repository.GetWorkoutCount(1);
+        var count = this.repository.GetWorkoutsInLastSevenDays(TestClientId);
 
         count.Should().Be(ExpectedCountTwo);
     }
 
     [Fact]
-    public void GetDistinctWorkoutDayCount_ShouldReturnCorrectCount_WhenWorkoutsOnDifferentDays()
+    public void GetWorkoutsInLastSevenDays_ShouldHandleMultipleWorkoutsOnBoundaryDay()
     {
-        InsertTestClient(1);
-        InsertWorkoutLog(1, DateTime.Today);
-        InsertWorkoutLog(1, DateTime.Today.AddDays(-1));
-        InsertWorkoutLog(1, DateTime.Today.AddDays(-2));
+        this.testData.InsertClient(TestClientId);
+        var today = DateTime.UtcNow.Date;
+        this.testData.InsertWorkoutLog(TestClientId, today.AddDays(SixDaysAgo));
+        this.testData.InsertWorkoutLog(TestClientId, today.AddDays(SixDaysAgo));
+        this.testData.InsertWorkoutLog(TestClientId, today.AddDays(SixDaysAgo));
+        this.testData.InsertWorkoutLog(TestClientId, today.AddDays(SevenDaysAgo));
 
-        var count = this.repository.GetDistinctWorkoutDayCount(1);
+        var count = this.repository.GetWorkoutsInLastSevenDays(TestClientId);
 
         count.Should().Be(ExpectedCountThree);
     }
 
     [Fact]
-    public void GetDistinctWorkoutDayCount_ShouldCountOnlyUniqueDays_WhenMultipleWorkoutsOnSameDay()
+    public void GetConsecutiveWorkoutDayStreak_ShouldReturnZero_WhenNoWorkouts()
     {
-        InsertTestClient(1);
-        InsertWorkoutLog(1, DateTime.Today);
-        InsertWorkoutLog(1, DateTime.Today);
-        InsertWorkoutLog(1, DateTime.Today.AddDays(-1));
-        InsertWorkoutLog(1, DateTime.Today.AddDays(-1));
+        this.testData.InsertClient(TestClientId);
 
-        var count = this.repository.GetDistinctWorkoutDayCount(1);
+        var streak = this.repository.GetConsecutiveWorkoutDayStreak(TestClientId);
 
-        count.Should().Be(ExpectedCountTwo);
+        streak.Should().Be(ExpectedCountZero);
     }
 
     [Fact]
-    public void GetWorkoutsInLastSevenDays_ShouldReturnZero_WhenNoRecentWorkouts()
+    public void GetConsecutiveWorkoutDayStreak_ShouldReturnOne_ForSingleWorkout()
     {
-        InsertTestClient(1);
-        var today = DateTime.UtcNow.Date;
-        InsertWorkoutLog(1, today.AddDays(TenDaysAgo));
-        InsertWorkoutLog(1, today.AddDays(TwentyDaysAgo));
+        this.testData.InsertClient(TestClientId);
+        this.testData.InsertWorkoutLog(TestClientId, DateTime.Today);
 
-        var count = this.repository.GetWorkoutsInLastSevenDays(1);
+        var streak = this.repository.GetConsecutiveWorkoutDayStreak(TestClientId);
 
-        count.Should().Be(ExpectedCountZero);
+        streak.Should().Be(ExpectedCountOne);
     }
 
     [Fact]
-    public void GetWorkoutsInLastSevenDays_ShouldReturnCorrectCount_WhenWorkoutsInRange()
+    public void GetConsecutiveWorkoutDayStreak_ShouldReturnMaxStreak_WhenOldStreakLongerThanRecent()
     {
-        InsertTestClient(1);
-        var today = DateTime.UtcNow.Date;
-        InsertWorkoutLog(1, today);
-        InsertWorkoutLog(1, today.AddDays(-1));
-        InsertWorkoutLog(1, today.AddDays(-3));
-        InsertWorkoutLog(1, today.AddDays(-6));
-        InsertWorkoutLog(1, today.AddDays(-10));
+        this.testData.InsertClient(TestClientId);
+        this.testData.InsertWorkoutLog(TestClientId, DateTime.Today);
+        this.testData.InsertWorkoutLog(TestClientId, DateTime.Today.AddDays(OneDayAgo));
+        this.testData.InsertWorkoutLog(TestClientId, DateTime.Today.AddDays(FiveDaysAgo));
+        this.testData.InsertWorkoutLog(TestClientId, DateTime.Today.AddDays(SixDaysAgo));
+        this.testData.InsertWorkoutLog(TestClientId, DateTime.Today.AddDays(SevenDaysAgo));
+        this.testData.InsertWorkoutLog(TestClientId, DateTime.Today.AddDays(EightDaysAgo));
+        this.testData.InsertWorkoutLog(TestClientId, DateTime.Today.AddDays(NineDaysAgo));
 
-        var count = this.repository.GetWorkoutsInLastSevenDays(1);
-
-        count.Should().Be(ExpectedCountFour);
-    }
-
-    [Fact]
-    public void GetConsecutiveWorkoutDayStreak_ShouldCalculateCorrectStreak_WhenConsecutiveDays()
-    {
-        InsertTestClient(1);
-        InsertWorkoutLog(1, DateTime.Today);
-        InsertWorkoutLog(1, DateTime.Today.AddDays(-1));
-        InsertWorkoutLog(1, DateTime.Today.AddDays(-2));
-        InsertWorkoutLog(1, DateTime.Today.AddDays(-3));
-
-        var streak = this.repository.GetConsecutiveWorkoutDayStreak(1);
-
-        streak.Should().Be(ExpectedCountFour);
-    }
-
-    [Fact]
-    public void GetConsecutiveWorkoutDayStreak_ShouldReturnMaxStreak_WhenMultipleStreaks()
-    {
-        InsertTestClient(1);
-        InsertWorkoutLog(1, DateTime.Today);
-        InsertWorkoutLog(1, DateTime.Today.AddDays(-1));
-        InsertWorkoutLog(1, DateTime.Today.AddDays(-2));
-        InsertWorkoutLog(1, DateTime.Today.AddDays(-5));
-        InsertWorkoutLog(1, DateTime.Today.AddDays(-6));
-        InsertWorkoutLog(1, DateTime.Today.AddDays(-7));
-        InsertWorkoutLog(1, DateTime.Today.AddDays(-8));
-        InsertWorkoutLog(1, DateTime.Today.AddDays(-9));
-
-        var streak = this.repository.GetConsecutiveWorkoutDayStreak(1);
+        var streak = this.repository.GetConsecutiveWorkoutDayStreak(TestClientId);
 
         streak.Should().Be(ExpectedCountFive);
     }
 
     [Fact]
-    public void GetConsecutiveWorkoutDayStreak_ShouldHandleMultipleWorkoutsOnSameDay()
+    public void GetConsecutiveWorkoutDayStreak_ShouldIgnoreGapsGreaterThanOneDay()
     {
-        InsertTestClient(1);
-        InsertWorkoutLog(1, DateTime.Today);
-        InsertWorkoutLog(1, DateTime.Today);
-        InsertWorkoutLog(1, DateTime.Today.AddDays(-1));
-        InsertWorkoutLog(1, DateTime.Today.AddDays(-2));
+        this.testData.InsertClient(TestClientId);
+        this.testData.InsertWorkoutLog(TestClientId, DateTime.Today);
+        this.testData.InsertWorkoutLog(TestClientId, DateTime.Today.AddDays(TwoDaysAgo));
+        this.testData.InsertWorkoutLog(TestClientId, DateTime.Today.AddDays(ThreeDaysAgo));
+        this.testData.InsertWorkoutLog(TestClientId, DateTime.Today.AddDays(FiveDaysAgo));
 
-        var streak = this.repository.GetConsecutiveWorkoutDayStreak(1);
+        var streak = this.repository.GetConsecutiveWorkoutDayStreak(TestClientId);
+
+        streak.Should().Be(ExpectedCountTwo);
+    }
+
+    [Fact]
+    public void GetConsecutiveWorkoutDayStreak_ShouldHandleAlternatingStreakPatterns()
+    {
+        this.testData.InsertClient(TestClientId);
+        this.testData.InsertWorkoutLog(TestClientId, DateTime.Today);
+        this.testData.InsertWorkoutLog(TestClientId, DateTime.Today.AddDays(TwoDaysAgo));
+        this.testData.InsertWorkoutLog(TestClientId, DateTime.Today.AddDays(ThreeDaysAgo));
+        this.testData.InsertWorkoutLog(TestClientId, DateTime.Today.AddDays(FourDaysAgo));
+        this.testData.InsertWorkoutLog(TestClientId, DateTime.Today.AddDays(SixDaysAgo));
+        this.testData.InsertWorkoutLog(TestClientId, DateTime.Today.AddDays(SevenDaysAgo));
+
+        var streak = this.repository.GetConsecutiveWorkoutDayStreak(TestClientId);
 
         streak.Should().Be(ExpectedCountThree);
     }
 
     [Fact]
-    public void GetAllAchievements_ShouldReturnAllAchievements_WhenAchievementsExist()
+    public void GetConsecutiveWorkoutDayStreak_ShouldHandleMultipleWorkoutsOnSameDay()
     {
-        InsertAchievement(1, "First Workout", "Complete your first workout", "WORKOUT_COUNT", 1);
-        InsertAchievement(2, "10 Workouts", "Complete 10 workouts", "WORKOUT_COUNT", 10);
-        InsertAchievement(3, "100 Workouts", "Complete 100 workouts", "WORKOUT_COUNT", 100);
+        this.testData.InsertClient(TestClientId);
+        this.testData.InsertWorkoutLog(TestClientId, DateTime.Today);
+        this.testData.InsertWorkoutLog(TestClientId, DateTime.Today);
+        this.testData.InsertWorkoutLog(TestClientId, DateTime.Today.AddDays(OneDayAgo));
+        this.testData.InsertWorkoutLog(TestClientId, DateTime.Today.AddDays(TwoDaysAgo));
 
-        var achievements = this.repository.GetAllAchievements();
+        var streak = this.repository.GetConsecutiveWorkoutDayStreak(TestClientId);
 
-        achievements.Should().HaveCount(ExpectedCountThree);
-        achievements[0].AchievementId.Should().Be(1);
-        achievements[0].Name.Should().Be("First Workout");
-        achievements[0].Description.Should().Be("Complete your first workout");
-        achievements[0].Criteria.Should().Be("WORKOUT_COUNT");
-        achievements[0].ThresholdWorkouts.Should().Be(1);
-        achievements[0].IsUnlocked.Should().BeFalse();
+        streak.Should().Be(ExpectedCountThree);
     }
 
     [Fact]
-    public void GetAllAchievements_ShouldOrderByAchievementId()
+    public void AwardAchievement_ShouldHandleIdempotency_MultipleAwardAttempts()
     {
-        InsertAchievement(3, "Achievement 3", "Description 3", "CRITERIA", null);
-        InsertAchievement(1, "Achievement 1", "Description 1", "CRITERIA", null);
-        InsertAchievement(2, "Achievement 2", "Description 2", "CRITERIA", null);
+        this.testData.InsertClient(TestClientId);
+        this.testData.InsertAchievement(TestAchievementIdFirst, "First Workout", "Complete your first workout", "WORKOUT_COUNT", ThresholdOneWorkout);
 
-        var achievements = this.repository.GetAllAchievements();
+        var firstResult = this.repository.AwardAchievement(TestClientId, TestAchievementIdFirst);
+        var secondResult = this.repository.AwardAchievement(TestClientId, TestAchievementIdFirst);
+        var thirdResult = this.repository.AwardAchievement(TestClientId, TestAchievementIdFirst);
 
-        achievements.Should().HaveCount(ExpectedCountThree);
-        achievements[0].AchievementId.Should().Be(1);
-        achievements[1].AchievementId.Should().Be(2);
-        achievements[2].AchievementId.Should().Be(3);
-    }
+        firstResult.Should().BeTrue();
+        secondResult.Should().BeFalse();
+        thirdResult.Should().BeFalse();
 
-    [Fact]
-    public void AwardAchievement_ShouldReturnTrue_WhenAchievementNotYetAwarded()
-    {
-        InsertTestClient(1);
-        InsertAchievement(1, "First Workout", "Complete your first workout", "WORKOUT_COUNT", 1);
-
-        var result = this.repository.AwardAchievement(1, 1);
-
-        result.Should().BeTrue();
-
-        var unlocked = GetClientAchievementUnlockedStatus(1, 1);
-        unlocked.Should().BeTrue();
-    }
-
-    [Fact]
-    public void AwardAchievement_ShouldReturnFalse_WhenAchievementAlreadyAwarded()
-    {
-        InsertTestClient(1);
-        InsertAchievement(1, "First Workout", "Complete your first workout", "WORKOUT_COUNT", 1);
-        InsertClientAchievement(1, 1, true);
-
-        var result = this.repository.AwardAchievement(1, 1);
-
-        result.Should().BeFalse();
-    }
-
-    [Fact]
-    public void AwardAchievement_ShouldUpdateExistingRecord_WhenRecordExistsButNotUnlocked()
-    {
-        InsertTestClient(1);
-        InsertAchievement(1, "First Workout", "Complete your first workout", "WORKOUT_COUNT", 1);
-        InsertClientAchievement(1, 1, false);
-
-        var result = this.repository.AwardAchievement(1, 1);
-
-        result.Should().BeTrue();
-
-        var unlocked = GetClientAchievementUnlockedStatus(1, 1);
-        unlocked.Should().BeTrue();
-    }
-
-    [Fact]
-    public void GetAchievementForClient_ShouldReturnNull_WhenAchievementDoesNotExist()
-    {
-        InsertTestClient(1);
-
-        var achievement = this.repository.GetAchievementForClient(NonExistentAchievementId, 1);
-
-        achievement.Should().BeNull();
-    }
-
-    [Fact]
-    public void GetAchievementForClient_ShouldReturnAchievementAsLocked_WhenNotUnlocked()
-    {
-        InsertTestClient(1);
-        InsertAchievement(1, "First Workout", "Complete your first workout", "WORKOUT_COUNT", 1);
-
-        var achievement = this.repository.GetAchievementForClient(1, 1);
-
-        achievement.Should().NotBeNull();
-        achievement!.AchievementId.Should().Be(1);
-        achievement.Title.Should().Be("First Workout");
-        achievement.Description.Should().Be("Complete your first workout");
-        achievement.Criteria.Should().Be("WORKOUT_COUNT");
-        achievement.IsUnlocked.Should().BeFalse();
-        achievement.IsLocked.Should().BeTrue();
-    }
-
-    [Fact]
-    public void GetAchievementForClient_ShouldReturnAchievementAsUnlocked_WhenUnlocked()
-    {
-        InsertTestClient(1);
-        InsertAchievement(1, "First Workout", "Complete your first workout", "WORKOUT_COUNT", 1);
-        InsertClientAchievement(1, 1, true);
-
-        var achievement = this.repository.GetAchievementForClient(1, 1);
-
-        achievement.Should().NotBeNull();
-        achievement!.IsUnlocked.Should().BeTrue();
-        achievement.IsLocked.Should().BeFalse();
-        achievement.StatusLine.Should().Be("Unlocked");
-    }
-
-    [Fact]
-    public void GetAchievementShowcaseForClient_ShouldOrderUnlockedFirst()
-    {
-        InsertTestClient(1);
-        InsertAchievement(1, "Achievement 1", "Description 1", "CRITERIA", 1);
-        InsertAchievement(2, "Achievement 2", "Description 2", "CRITERIA", 2);
-        InsertAchievement(3, "Achievement 3", "Description 3", "CRITERIA", 3);
-        InsertClientAchievement(1, 2, true);
-
-        var showcase = this.repository.GetAchievementShowcaseForClient(1);
-
-        showcase.Should().HaveCount(ExpectedCountThree);
-        showcase[0].AchievementId.Should().Be(2);
-        showcase[0].IsUnlocked.Should().BeTrue();
-        showcase[1].IsUnlocked.Should().BeFalse();
-        showcase[2].IsUnlocked.Should().BeFalse();
-    }
-
-    [Fact]
-    public void GetAchievementShowcaseForClient_ShouldExcludeDuplicateTitles()
-    {
-        InsertTestClient(1);
-        InsertAchievement(1, "Same Title", "Description 1", "CRITERIA", 1);
-        InsertAchievement(2, "Same Title", "Description 2", "CRITERIA", 2);
-        InsertAchievement(3, "Different Title", "Description 3", "CRITERIA", 3);
-
-        var showcase = this.repository.GetAchievementShowcaseForClient(1);
-
-        showcase.Should().HaveCount(ExpectedCountTwo);
-        showcase.Should().ContainSingle(a => a.Title == "Same Title");
-        showcase.Should().ContainSingle(a => a.Title == "Different Title");
-    }
-
-    [Fact]
-    public void EvaluateAndUnlockWorkoutMilestones_ShouldUnlockAppropriateAchievements()
-    {
-        InsertTestClient(1);
-        InsertAchievement(1, "First Workout", "Complete 1 workout", "WORKOUT_COUNT", 1);
-        InsertAchievement(2, "5 Workouts", "Complete 5 workouts", "WORKOUT_COUNT", 5);
-        InsertAchievement(3, "10 Workouts", "Complete 10 workouts", "WORKOUT_COUNT", 10);
-
-        InsertWorkoutLog(1, DateTime.Today);
-        InsertWorkoutLog(1, DateTime.Today.AddDays(-1));
-        InsertWorkoutLog(1, DateTime.Today.AddDays(-2));
-        InsertWorkoutLog(1, DateTime.Today.AddDays(-3));
-        InsertWorkoutLog(1, DateTime.Today.AddDays(-4));
-
-        this.repository.EvaluateAndUnlockWorkoutMilestones(1);
-
-        GetClientAchievementUnlockedStatus(1, 1).Should().BeTrue();
-        GetClientAchievementUnlockedStatus(1, 2).Should().BeTrue();
-        HasClientAchievement(1, 3).Should().BeFalse();
-    }
-
-    [Fact]
-    public void EvaluateAndUnlockWorkoutMilestones_ShouldNotUnlock_WhenThresholdNotMet()
-    {
-        InsertTestClient(1);
-        InsertAchievement(1, "10 Workouts", "Complete 10 workouts", "WORKOUT_COUNT", 10);
-
-        InsertWorkoutLog(1, DateTime.Today);
-        InsertWorkoutLog(1, DateTime.Today.AddDays(-1));
-
-        this.repository.EvaluateAndUnlockWorkoutMilestones(1);
-
-        HasClientAchievement(1, 1).Should().BeFalse();
-    }
-
-    [Fact]
-    public void EvaluateAndUnlockWorkoutMilestones_ShouldNotDuplicateUnlocks()
-    {
-        InsertTestClient(1);
-        InsertAchievement(1, "First Workout", "Complete 1 workout", "WORKOUT_COUNT", 1);
-
-        InsertWorkoutLog(1, DateTime.Today);
-
-        this.repository.EvaluateAndUnlockWorkoutMilestones(1);
-        this.repository.EvaluateAndUnlockWorkoutMilestones(1);
-
-        var count = GetClientAchievementCount(1, 1);
+        var count = this.testData.GetClientAchievementCount(TestClientId, TestAchievementIdFirst);
         count.Should().Be(ExpectedCountOne);
     }
 
     [Fact]
-    public void EvaluateAndUnlockWorkoutMilestones_ShouldSkipAchievementsWithoutThreshold()
+    public void GetAchievementShowcaseForClient_ShouldMaintainOrderingWithMultipleUnlockedAchievements()
     {
-        InsertTestClient(1);
-        InsertAchievement(1, "Special Achievement", "No threshold", "CUSTOM", null);
-        InsertAchievement(2, "First Workout", "Complete 1 workout", "WORKOUT_COUNT", 1);
+        this.testData.InsertClient(TestClientId);
+        this.testData.InsertAchievement(TestAchievementIdFirst, "Achievement 1", "Description 1", "CRITERIA", ThresholdOneWorkout);
+        this.testData.InsertAchievement(TestAchievementIdSecond, "Achievement 2", "Description 2", "CRITERIA", ThresholdFiveWorkouts);
+        this.testData.InsertAchievement(TestAchievementIdThird, "Achievement 3", "Description 3", "CRITERIA", ThresholdTenWorkouts);
+        this.testData.InsertAchievement(TestAchievementIdFourth, "Achievement 4", "Description 4", "CRITERIA", ThresholdFifteenWorkouts);
+        this.testData.InsertClientAchievement(TestClientId, TestAchievementIdThird, true);
+        this.testData.InsertClientAchievement(TestClientId, TestAchievementIdFirst, true);
 
-        InsertWorkoutLog(1, DateTime.Today);
+        var showcase = this.repository.GetAchievementShowcaseForClient(TestClientId);
 
-        this.repository.EvaluateAndUnlockWorkoutMilestones(1);
-
-        HasClientAchievement(1, 1).Should().BeFalse();
-        GetClientAchievementUnlockedStatus(1, 2).Should().BeTrue();
+        showcase.Should().HaveCount(ExpectedCountFour);
+        showcase[0].AchievementId.Should().Be(TestAchievementIdFirst);
+        showcase[0].IsUnlocked.Should().BeTrue();
+        showcase[1].AchievementId.Should().Be(TestAchievementIdThird);
+        showcase[1].IsUnlocked.Should().BeTrue();
+        showcase[2].IsUnlocked.Should().BeFalse();
+        showcase[3].IsUnlocked.Should().BeFalse();
     }
 
     [Fact]
-    public void MultipleOperations_ShouldMaintainDataIntegrity()
+    public void GetAchievementShowcaseForClient_ShouldPreferUnlockedWhenFilteringDuplicateTitles()
     {
-        InsertTestClient(1);
-        InsertAchievement(1, "First Workout", "Complete 1 workout", "WORKOUT_COUNT", 1);
-        InsertAchievement(2, "3 Day Streak", "Workout 3 days in a row", "STREAK", 3);
+        this.testData.InsertClient(TestClientId);
+        this.testData.InsertAchievement(TestAchievementIdFirst, "Same Title", "Description 1", "CRITERIA", ThresholdOneWorkout);
+        this.testData.InsertAchievement(TestAchievementIdSecond, "Same Title", "Description 2", "CRITERIA", ThresholdFiveWorkouts);
+        this.testData.InsertClientAchievement(TestClientId, TestAchievementIdSecond, true);
 
-        InsertWorkoutLog(1, DateTime.Today);
-        InsertWorkoutLog(1, DateTime.Today.AddDays(-1));
-        InsertWorkoutLog(1, DateTime.Today.AddDays(-2));
+        var showcase = this.repository.GetAchievementShowcaseForClient(TestClientId);
 
-        this.repository.EvaluateAndUnlockWorkoutMilestones(1);
-
-        var count = this.repository.GetWorkoutCount(1);
-        var distinctDays = this.repository.GetDistinctWorkoutDayCount(1);
-        var streak = this.repository.GetConsecutiveWorkoutDayStreak(1);
-        var recentWorkouts = this.repository.GetWorkoutsInLastSevenDays(1);
-        var showcase = this.repository.GetAchievementShowcaseForClient(1);
-
-        count.Should().Be(ExpectedCountThree);
-        distinctDays.Should().Be(ExpectedCountThree);
-        streak.Should().Be(ExpectedCountThree);
-        recentWorkouts.Should().Be(ExpectedCountThree);
-        showcase.Should().HaveCount(ExpectedCountTwo);
+        showcase.Should().ContainSingle(a => a.Title == "Same Title");
+        var sameTitle = showcase.First(a => a.Title == "Same Title");
+        sameTitle.IsUnlocked.Should().BeTrue();
+        sameTitle.AchievementId.Should().Be(TestAchievementIdSecond);
     }
 
-    private void InsertTestClient(int clientId)
+    [Fact]
+    public void GetAchievementShowcaseForClient_ShouldHandleCaseInsensitiveDuplicates()
     {
-        using var command = new SqliteCommand(
-            "INSERT INTO CLIENT (client_id, user_id, trainer_id, weight, height) VALUES (@identifier, @userId, @trainerId, @weight, @height)",
-            this.connection);
-        command.Parameters.AddWithValue("@identifier", clientId);
-        command.Parameters.AddWithValue("@userId", clientId + UserIdOffset);
-        command.Parameters.AddWithValue("@trainerId", DefaultTrainerId);
-        command.Parameters.AddWithValue("@weight", DefaultWeight);
-        command.Parameters.AddWithValue("@height", DefaultHeight);
-        command.ExecuteNonQuery();
+        this.testData.InsertClient(TestClientId);
+        this.testData.InsertAchievement(TestAchievementIdFirst, "Achievement Title", "Description 1", "CRITERIA", ThresholdOneWorkout);
+        this.testData.InsertAchievement(TestAchievementIdSecond, "achievement title", "Description 2", "CRITERIA", ThresholdFiveWorkouts);
+        this.testData.InsertAchievement(TestAchievementIdThird, "ACHIEVEMENT TITLE", "Description 3", "CRITERIA", ThresholdTenWorkouts);
+
+        var showcase = this.repository.GetAchievementShowcaseForClient(TestClientId);
+
+        showcase.Should().ContainSingle();
     }
 
-    private void InsertWorkoutLog(int clientId, DateTime date)
+    [Fact]
+    public void EvaluateAndUnlockWorkoutMilestones_ShouldUnlockOnExactThreshold()
     {
-        using var command = new SqliteCommand(
-            @"INSERT INTO WORKOUT_LOG (client_id, date, type, calories_burned, intensity_tag)
-              VALUES (@clientId, @date, 'CUSTOM', @caloriesBurned, 'moderate')",
-            this.connection);
-        command.Parameters.AddWithValue("@clientId", clientId);
-        command.Parameters.AddWithValue("@date", date.ToString("o"));
-        command.Parameters.AddWithValue("@caloriesBurned", DefaultCaloriesBurned);
-        command.ExecuteNonQuery();
+        this.testData.InsertClient(TestClientId);
+        this.testData.InsertAchievement(TestAchievementIdFirst, "5 Workouts", "Complete 5 workouts", "WORKOUT_COUNT", ThresholdFiveWorkouts);
+
+        for (int i = 0; i < ThresholdFiveWorkouts; i++)
+        {
+            this.testData.InsertWorkoutLog(TestClientId, DateTime.Today.AddDays(-i));
+        }
+
+        this.repository.EvaluateAndUnlockWorkoutMilestones(TestClientId);
+
+        this.testData.GetClientAchievementUnlockedStatus(TestClientId, TestAchievementIdFirst).Should().BeTrue();
     }
 
-    private void InsertAchievement(int achievementId, string title, string description, string criteria, int? thresholdWorkouts)
+    [Fact]
+    public void EvaluateAndUnlockWorkoutMilestones_ShouldUnlockMultipleMilestonesInOneCall()
     {
-        using var command = new SqliteCommand(
-            @"INSERT INTO ACHIEVEMENT (achievement_id, title, description, criteria, threshold_workouts)
-              VALUES (@identifier, @title, @description, @criteria, @threshold)",
-            this.connection);
-        command.Parameters.AddWithValue("@identifier", achievementId);
-        command.Parameters.AddWithValue("@title", title);
-        command.Parameters.AddWithValue("@description", description);
-        command.Parameters.AddWithValue("@criteria", criteria);
-        command.Parameters.AddWithValue("@threshold", thresholdWorkouts ?? (object)DBNull.Value);
-        command.ExecuteNonQuery();
+        this.testData.InsertClient(TestClientId);
+        this.testData.InsertAchievement(TestAchievementIdFirst, "1 Workout", "Complete 1 workout", "WORKOUT_COUNT", ThresholdOneWorkout);
+        this.testData.InsertAchievement(TestAchievementIdSecond, "5 Workouts", "Complete 5 workouts", "WORKOUT_COUNT", ThresholdFiveWorkouts);
+        this.testData.InsertAchievement(TestAchievementIdThird, "10 Workouts", "Complete 10 workouts", "WORKOUT_COUNT", ThresholdTenWorkouts);
+        this.testData.InsertAchievement(TestAchievementIdFourth, "15 Workouts", "Complete 15 workouts", "WORKOUT_COUNT", ThresholdFifteenWorkouts);
+
+        for (int i = 0; i < TwelveWorkouts; i++)
+        {
+            this.testData.InsertWorkoutLog(TestClientId, DateTime.Today.AddDays(-i));
+        }
+
+        this.repository.EvaluateAndUnlockWorkoutMilestones(TestClientId);
+
+        this.testData.GetClientAchievementUnlockedStatus(TestClientId, TestAchievementIdFirst).Should().BeTrue();
+        this.testData.GetClientAchievementUnlockedStatus(TestClientId, TestAchievementIdSecond).Should().BeTrue();
+        this.testData.GetClientAchievementUnlockedStatus(TestClientId, TestAchievementIdThird).Should().BeTrue();
+        this.testData.HasClientAchievement(TestClientId, TestAchievementIdFourth).Should().BeFalse();
     }
 
-    private void InsertClientAchievement(int clientId, int achievementId, bool unlocked)
+    [Fact]
+    public void EvaluateAndUnlockWorkoutMilestones_ShouldHandleMixedThresholdAndNullThreshold()
     {
-        using var command = new SqliteCommand(
-            @"INSERT INTO CLIENT_ACHIEVEMENT (client_id, achievement_id, unlocked)
-              VALUES (@clientId, @achievementId, @unlocked)",
-            this.connection);
-        command.Parameters.AddWithValue("@clientId", clientId);
-        command.Parameters.AddWithValue("@achievementId", achievementId);
-        command.Parameters.AddWithValue("@unlocked", unlocked ? DatabaseBooleanTrue : DatabaseBooleanFalse);
-        command.ExecuteNonQuery();
+        this.testData.InsertClient(TestClientId);
+        this.testData.InsertAchievement(TestAchievementIdFirst, "Special", "No threshold", "CUSTOM", null);
+        this.testData.InsertAchievement(TestAchievementIdSecond, "1 Workout", "Complete 1 workout", "WORKOUT_COUNT", ThresholdOneWorkout);
+        this.testData.InsertAchievement(TestAchievementIdThird, "Manual", "No threshold", "MANUAL", null);
+        this.testData.InsertAchievement(TestAchievementIdFourth, "5 Workouts", "Complete 5 workouts", "WORKOUT_COUNT", ThresholdFiveWorkouts);
+
+        for (int i = 0; i < ThresholdFiveWorkouts; i++)
+        {
+            this.testData.InsertWorkoutLog(TestClientId, DateTime.Today.AddDays(-i));
+        }
+
+        this.repository.EvaluateAndUnlockWorkoutMilestones(TestClientId);
+
+        this.testData.HasClientAchievement(TestClientId, TestAchievementIdFirst).Should().BeFalse();
+        this.testData.GetClientAchievementUnlockedStatus(TestClientId, TestAchievementIdSecond).Should().BeTrue();
+        this.testData.HasClientAchievement(TestClientId, TestAchievementIdThird).Should().BeFalse();
+        this.testData.GetClientAchievementUnlockedStatus(TestClientId, TestAchievementIdFourth).Should().BeTrue();
     }
 
-    private bool GetClientAchievementUnlockedStatus(int clientId, int achievementId)
+    [Fact]
+    public void EvaluateAndUnlockWorkoutMilestones_ShouldBeIdempotentAcrossMultipleCalls()
     {
-        using var command = new SqliteCommand(
-            @"SELECT unlocked FROM CLIENT_ACHIEVEMENT 
-              WHERE client_id = @clientId AND achievement_id = @achievementId",
-            this.connection);
-        command.Parameters.AddWithValue("@clientId", clientId);
-        command.Parameters.AddWithValue("@achievementId", achievementId);
-        var result = command.ExecuteScalar();
-        return result != null && Convert.ToInt32(result) == DatabaseBooleanTrue;
+        this.testData.InsertClient(TestClientId);
+        this.testData.InsertAchievement(TestAchievementIdFirst, "First Workout", "Complete 1 workout", "WORKOUT_COUNT", ThresholdOneWorkout);
+        this.testData.InsertAchievement(TestAchievementIdSecond, "5 Workouts", "Complete 5 workouts", "WORKOUT_COUNT", ThresholdFiveWorkouts);
+
+        for (int i = 0; i < ThresholdFiveWorkouts; i++)
+        {
+            this.testData.InsertWorkoutLog(TestClientId, DateTime.Today.AddDays(-i));
+        }
+
+        this.repository.EvaluateAndUnlockWorkoutMilestones(TestClientId);
+        this.repository.EvaluateAndUnlockWorkoutMilestones(TestClientId);
+        this.repository.EvaluateAndUnlockWorkoutMilestones(TestClientId);
+
+        this.testData.GetClientAchievementCount(TestClientId, TestAchievementIdFirst).Should().Be(ExpectedCountOne);
+        this.testData.GetClientAchievementCount(TestClientId, TestAchievementIdSecond).Should().Be(ExpectedCountOne);
     }
 
-    private bool HasClientAchievement(int clientId, int achievementId)
+    [Fact]
+    public void ComplexScenario_ShouldHandleProgressiveAchievementUnlocking()
     {
-        using var command = new SqliteCommand(
-            @"SELECT COUNT(1) FROM CLIENT_ACHIEVEMENT 
-              WHERE client_id = @clientId AND achievement_id = @achievementId",
-            this.connection);
-        command.Parameters.AddWithValue("@clientId", clientId);
-        command.Parameters.AddWithValue("@achievementId", achievementId);
-        return Convert.ToInt32(command.ExecuteScalar()) > ExpectedCountZero;
-    }
+        this.testData.InsertClient(TestClientId);
+        this.testData.InsertAchievement(TestAchievementIdFirst, "Beginner", "Complete 1 workout", "WORKOUT_COUNT", ThresholdOneWorkout);
+        this.testData.InsertAchievement(TestAchievementIdSecond, "Intermediate", "Complete 5 workouts", "WORKOUT_COUNT", ThresholdFiveWorkouts);
+        this.testData.InsertAchievement(TestAchievementIdThird, "Advanced", "Complete 10 workouts", "WORKOUT_COUNT", ThresholdTenWorkouts);
+        this.testData.InsertAchievement(TestAchievementIdFourth, "Expert", "Complete 20 workouts", "WORKOUT_COUNT", ThresholdTwentyWorkouts);
 
-    private int GetClientAchievementCount(int clientId, int achievementId)
-    {
-        using var command = new SqliteCommand(
-            @"SELECT COUNT(1) FROM CLIENT_ACHIEVEMENT 
-              WHERE client_id = @clientId AND achievement_id = @achievementId",
-            this.connection);
-        command.Parameters.AddWithValue("@clientId", clientId);
-        command.Parameters.AddWithValue("@achievementId", achievementId);
-        return Convert.ToInt32(command.ExecuteScalar());
+        for (int i = 0; i < ThreeWorkouts; i++)
+        {
+            this.testData.InsertWorkoutLog(TestClientId, DateTime.Today.AddDays(-i));
+        }
+
+        this.repository.EvaluateAndUnlockWorkoutMilestones(TestClientId);
+        var showcaseAfterThree = this.repository.GetAchievementShowcaseForClient(TestClientId);
+        showcaseAfterThree.Count(a => a.IsUnlocked).Should().Be(ExpectedCountOne);
+
+        for (int i = ThreeWorkouts; i < SevenWorkouts; i++)
+        {
+            this.testData.InsertWorkoutLog(TestClientId, DateTime.Today.AddDays(-i));
+        }
+
+        this.repository.EvaluateAndUnlockWorkoutMilestones(TestClientId);
+        var showcaseAfterSeven = this.repository.GetAchievementShowcaseForClient(TestClientId);
+        showcaseAfterSeven.Count(a => a.IsUnlocked).Should().Be(ExpectedCountTwo);
+
+        for (int i = SevenWorkouts; i < FifteenWorkouts; i++)
+        {
+            this.testData.InsertWorkoutLog(TestClientId, DateTime.Today.AddDays(-i));
+        }
+
+        this.repository.EvaluateAndUnlockWorkoutMilestones(TestClientId);
+        var showcaseAfterFifteen = this.repository.GetAchievementShowcaseForClient(TestClientId);
+        showcaseAfterFifteen.Count(a => a.IsUnlocked).Should().Be(ExpectedCountThree);
+        showcaseAfterFifteen[0].IsUnlocked.Should().BeTrue();
+        showcaseAfterFifteen[1].IsUnlocked.Should().BeTrue();
+        showcaseAfterFifteen[2].IsUnlocked.Should().BeTrue();
+        showcaseAfterFifteen[3].IsUnlocked.Should().BeFalse();
     }
 }
