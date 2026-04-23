@@ -5,8 +5,8 @@
       <DataCollector friendlyName="XPlat Code Coverage">
         <Configuration>
           <Format>cobertura</Format>
-          <Exclude>[Microsoft.*]*,[System.*]*,[*.Migrations]*,[*]*Tests*,[*]*XamlTypeInfo*,[*]*_XamlTypeInfo*,[Microsoft.Windows.ApplicationModel*]*</Exclude>
-            <ExcludeByFile>**/obj/**/*.cs,**/Migrations/*.cs,**/*.g.cs,**/*.i.cs,**/*.g.i.cs,**/Views/**/*.xaml,**/Views/**/*.xaml.cs,**/MainWindow.xaml,**/MainWindow.xaml.cs,**/App.xaml,**/App.xaml.cs</ExcludeByFile>
+          <Exclude>[Microsoft.*]*,[System.*]*,[*.Migrations]*,[*]*Tests*,[*]*XamlTypeInfo*,[*]*_XamlTypeInfo*,[Microsoft.Windows.ApplicationModel*]*,[Microsoft.Windows.ApplicationModel.DynamicDependency.BootstrapCS]AutoInitialize,[Microsoft.Windows.ApplicationModel.WindowsAppRuntime.Common]AutoInitialize</Exclude>
+            <ExcludeByFile>**/obj/**/*.cs,**/Migrations/*.cs,**/*.g.cs,**/*.i.cs,**/*.g.i.cs,**/Views/**/*.xaml,**/Views/**/*.xaml.cs,**/MainWindow.xaml,**/MainWindow.xaml.cs,**/App.xaml,**/App.xaml.cs,**/Repositories/DatabaseDataInitializer.cs,**/Repositories/DatabasePaths.cs,**/Repositories/SqlDataStorage.Schema.cs,**/Repositories/Mapping/WorkoutTypeRepositoryMapping.cs,**/Models/AchievementShowcaseItem.cs,**/Models/Analytics/WorkoutSessionDetail.cs,**/Models/Client.cs,**/Models/Notification.cs,**/Models/WorkoutTemplate.cs,**/Services/Interfaces/IAchievementUnlockedBus.cs,**/Services/AchievementUnlockedBus.cs,**/Services/AnalyticsDashboardRefreshBus.cs</ExcludeByFile>
           <ExcludeByAttribute>GeneratedCodeAttribute,CompilerGeneratedAttribute</ExcludeByAttribute>
         </Configuration>
       </DataCollector>
