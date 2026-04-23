@@ -162,4 +162,52 @@ public class TestDataHelper
             this.connection);
         return Convert.ToInt32(command.ExecuteScalar());
     }
+
+    public void InsertWorkoutTemplate(int templateId, int clientId, string name)
+    {
+        using var command = new SqliteCommand(
+            "INSERT INTO WORKOUT_TEMPLATE (workout_template_id, client_id, name, type) VALUES (@templateId, @clientId, @name, 'CUSTOM')",
+            this.connection);
+        command.Parameters.AddWithValue("@templateId", templateId);
+        command.Parameters.AddWithValue("@clientId", clientId);
+        command.Parameters.AddWithValue("@name", name);
+        command.ExecuteNonQuery();
+    }
+
+    public int InsertWorkoutLog(int clientId, int workoutId, DateOnly date, string? duration, int calories, string intensity)
+    {
+        using var command = new SqliteCommand(
+            @"INSERT INTO WORKOUT_LOG (client_id, workout_id, date, total_duration, calories_burned, intensity_tag, type)
+              VALUES (@clientId, @workoutId, @date, @duration, @calories, @intensity, 'CUSTOM');
+              SELECT last_insert_rowid();",
+            this.connection);
+        command.Parameters.AddWithValue("@clientId", clientId);
+        command.Parameters.AddWithValue("@workoutId", workoutId);
+        command.Parameters.AddWithValue("@date", date.ToString("o"));
+        command.Parameters.AddWithValue("@duration", duration ?? (object)DBNull.Value);
+        command.Parameters.AddWithValue("@calories", calories);
+        command.Parameters.AddWithValue("@intensity", intensity);
+        return Convert.ToInt32(command.ExecuteScalar());
+    }
+
+    public void InsertWorkoutLogSet(int logId, string exerciseName, int setIndex, int? reps, double? weight,
+        int? targetReps, double? targetWeight, double performanceRatio, bool isSystemAdjusted, string? adjustmentNote)
+    {
+        using var command = new SqliteCommand(
+            @"INSERT INTO WORKOUT_LOG_SETS 
+              (workout_log_id, exercise_name, sets, reps, weight, target_reps, target_weight, performance_ratio, is_system_adjusted, adjustment_note)
+              VALUES (@logId, @exerciseName, @setIndex, @reps, @weight, @targetReps, @targetWeight, @performanceRatio, @isSystemAdjusted, @adjustmentNote)",
+            this.connection);
+        command.Parameters.AddWithValue("@logId", logId);
+        command.Parameters.AddWithValue("@exerciseName", exerciseName);
+        command.Parameters.AddWithValue("@setIndex", setIndex);
+        command.Parameters.AddWithValue("@reps", reps ?? (object)DBNull.Value);
+        command.Parameters.AddWithValue("@weight", weight ?? (object)DBNull.Value);
+        command.Parameters.AddWithValue("@targetReps", targetReps ?? (object)DBNull.Value);
+        command.Parameters.AddWithValue("@targetWeight", targetWeight ?? (object)DBNull.Value);
+        command.Parameters.AddWithValue("@performanceRatio", performanceRatio);
+        command.Parameters.AddWithValue("@isSystemAdjusted", isSystemAdjusted ? DatabaseBooleanTrue : DatabaseBooleanFalse);
+        command.Parameters.AddWithValue("@adjustmentNote", adjustmentNote ?? (object)DBNull.Value);
+        command.ExecuteNonQuery();
+    }
 }
