@@ -17,80 +17,79 @@ namespace VibeCoders.Tests.Unit.ViewModels;
 
 public class WorkoutHistoryItemViewModelTests
 {
-    private readonly IWorkoutAnalyticsStore mockStore;
-    private readonly long clientId = 123;
+    private readonly IWorkoutAnalyticsStore mockWorkoutAnalyticsStore;
+    private readonly long clientIdentifier = 123;
 
     public WorkoutHistoryItemViewModelTests()
     {
-        this.mockStore = Substitute.For<IWorkoutAnalyticsStore>();
+        this.mockWorkoutAnalyticsStore = Substitute.For<IWorkoutAnalyticsStore>();
     }
 
-    private WorkoutHistoryRow CreateRow(string name = "Full Body", string tag = "Moderate") => new WorkoutHistoryRow
+    private WorkoutHistoryRow CreateWorkoutHistoryRow(string workoutName = "Full Body", string intensityTag = "Moderate") => new WorkoutHistoryRow
     {
         Id = 1,
-        WorkoutName = name,
+        WorkoutName = workoutName,
         LogDate = new DateTime(2026, 4, 23),
         DurationSeconds = 3600,
         TotalCaloriesBurned = 500,
-        IntensityTag = tag
+        IntensityTag = intensityTag
     };
 
     [Fact]
     public void Constructor_Should_HandleEmptyWorkoutName_WithFallback()
     {
-       
-        var row = this.CreateRow(name: "");
+        var workoutHistoryRow = this.CreateWorkoutHistoryRow(workoutName: "");
 
-        var viewModel = new WorkoutHistoryItemViewModel(this.mockStore, this.clientId, row);
+        var workoutHistoryItemViewModel = new WorkoutHistoryItemViewModel(this.mockWorkoutAnalyticsStore, this.clientIdentifier, workoutHistoryRow);
 
-        viewModel.Title.Should().Be("Workout");
+        workoutHistoryItemViewModel.Title.Should().Be("Workout");
     }
-    
+
     [Theory]
     [InlineData("Light")]
     [InlineData("Moderate")]
     [InlineData("Intense")]
     [InlineData("Unknown")]
-    public void IntensityTag_Should_MatchRowData(string expectedTag)
+    public void IntensityTag_Should_MatchRowData(string expectedIntensityTag)
     {
-        var row = this.CreateRow(tag: expectedTag);
+        var workoutHistoryRow = this.CreateWorkoutHistoryRow(intensityTag: expectedIntensityTag);
 
-        var viewModel = new WorkoutHistoryItemViewModel(this.mockStore, this.clientId, row);
+        var workoutHistoryItemViewModel = new WorkoutHistoryItemViewModel(this.mockWorkoutAnalyticsStore, this.clientIdentifier, workoutHistoryRow);
 
-        viewModel.IntensityTag.Should().Be(expectedTag);
+        workoutHistoryItemViewModel.IntensityTag.Should().Be(expectedIntensityTag);
     }
 
     [Fact]
     public async Task OnIsExpandedChanged_Should_OnlyLoadDataOnce_WhenExpandedMultipleTimes()
     {
-        var row = this.CreateRow();
-        var viewModel = new WorkoutHistoryItemViewModel(this.mockStore, this.clientId, row);
+        var workoutHistoryRow = this.CreateWorkoutHistoryRow();
+        var workoutHistoryItemViewModel = new WorkoutHistoryItemViewModel(this.mockWorkoutAnalyticsStore, this.clientIdentifier, workoutHistoryRow);
 
-        var emptyDetail = new WorkoutSessionDetail
+        var emptyWorkoutSessionDetail = new WorkoutSessionDetail
         {
             Sets = Array.Empty<WorkoutSetRow>(),
             ExerciseCalories = Array.Empty<ExerciseCalorieInfo>()
         };
 
-        this.mockStore.GetWorkoutSessionDetailAsync(this.clientId, viewModel.WorkoutLogId, Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<WorkoutSessionDetail?>(emptyDetail));
+        this.mockWorkoutAnalyticsStore.GetWorkoutSessionDetailAsync(this.clientIdentifier, workoutHistoryItemViewModel.WorkoutLogId, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<WorkoutSessionDetail?>(emptyWorkoutSessionDetail));
 
-        viewModel.IsExpanded = true;
-        viewModel.IsExpanded = false;
-        viewModel.IsExpanded = true;
+        workoutHistoryItemViewModel.IsExpanded = true;
+        workoutHistoryItemViewModel.IsExpanded = false;
+        workoutHistoryItemViewModel.IsExpanded = true;
 
         await Task.Delay(100);
 
-        await this.mockStore.Received(1).GetWorkoutSessionDetailAsync(this.clientId, viewModel.WorkoutLogId, Arg.Any<CancellationToken>());
+        await this.mockWorkoutAnalyticsStore.Received(1).GetWorkoutSessionDetailAsync(this.clientIdentifier, workoutHistoryItemViewModel.WorkoutLogId, Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task LoadDetailAsync_Should_GroupSetsByExerciseName_And_MaintainOrder()
     {
-        var row = this.CreateRow();
-        var viewModel = new WorkoutHistoryItemViewModel(this.mockStore, this.clientId, row);
+        var workoutHistoryRow = this.CreateWorkoutHistoryRow();
+        var workoutHistoryItemViewModel = new WorkoutHistoryItemViewModel(this.mockWorkoutAnalyticsStore, this.clientIdentifier, workoutHistoryRow);
 
-        var detail = new WorkoutSessionDetail
+        var workoutSessionDetail = new WorkoutSessionDetail
         {
             Sets = new List<WorkoutSetRow>
             {
@@ -104,19 +103,21 @@ public class WorkoutHistoryItemViewModelTests
             }
         };
 
-        this.mockStore.GetWorkoutSessionDetailAsync(this.clientId, viewModel.WorkoutLogId, Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<WorkoutSessionDetail?>(detail));
+        this.mockWorkoutAnalyticsStore.GetWorkoutSessionDetailAsync(this.clientIdentifier, workoutHistoryItemViewModel.WorkoutLogId, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<WorkoutSessionDetail?>(workoutSessionDetail));
 
-        viewModel.IsExpanded = true;
+        workoutHistoryItemViewModel.IsExpanded = true;
         await Task.Delay(100);
 
-        viewModel.ExerciseSetGroups.Should().HaveCount(2);
+        workoutHistoryItemViewModel.ExerciseSetGroups.Should().HaveCount(2);
 
-        var squatGroup = viewModel.ExerciseSetGroups.First(g => g.ExerciseName == "Squat");
-        squatGroup.Sets.Should().HaveCount(2);
-        squatGroup.Sets[0].RepsDisplay.Should().Be("10");
+        var exerciseGroup = workoutHistoryItemViewModel.ExerciseSetGroups.First(group => group.ExerciseName == "Squat");
+        exerciseGroup.Sets.Should().HaveCount(2);
 
-        viewModel.ExerciseCalories.Should().HaveCount(1);
-        viewModel.ExerciseCalories[0].CaloriesBurned.Should().Be(45);
+        exerciseGroup.Sets[0].RepsDisplay.Should().Be("10");
+
+        workoutHistoryItemViewModel.ExerciseCalories.Should().HaveCount(1);
+        workoutHistoryItemViewModel.ExerciseCalories[0].CaloriesBurned.Should().Be(45);
     }
+
 }

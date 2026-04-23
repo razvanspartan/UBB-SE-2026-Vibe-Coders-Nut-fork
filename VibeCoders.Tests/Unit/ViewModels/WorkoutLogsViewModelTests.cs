@@ -13,34 +13,33 @@ namespace VibeCoders.Tests.Unit.ViewModels;
 
 public class WorkoutLogsViewModelTests
 {
-    private readonly INavigationService mockNavigation;
+    private readonly INavigationService mockNavigationService;
     private readonly IClientService mockClientService;
-    private readonly WorkoutLogsViewModel viewModel;
+    private readonly WorkoutLogsViewModel workoutLogsViewModel;
 
     public WorkoutLogsViewModelTests()
     {
-        this.mockNavigation = Substitute.For<INavigationService>();
+        this.mockNavigationService = Substitute.For<INavigationService>();
         this.mockClientService = Substitute.For<IClientService>();
-        this.viewModel = new WorkoutLogsViewModel(this.mockNavigation, this.mockClientService);
+        this.workoutLogsViewModel = new WorkoutLogsViewModel(this.mockNavigationService, this.mockClientService);
     }
-
 
     [Fact]
     public void LoadLogs_Should_PopulateLogs_When_ServiceReturnsData()
     {
-        int clientId = 1;
-        var fakeLogs = new List<WorkoutLog>
+        int clientIdentifier = 1;
+        var sampleWorkoutLogs = new List<WorkoutLog>
         {
             new WorkoutLog { Id = 10, WorkoutName = "Morning Run", Date = DateTime.Now, Exercises = new() }
         };
-        this.mockClientService.GetWorkoutHistoryForClient(clientId).Returns(fakeLogs);
+        this.mockClientService.GetWorkoutHistoryForClient(clientIdentifier).Returns(sampleWorkoutLogs);
 
-        this.viewModel.LoadLogsCommand.Execute(clientId);
+        this.workoutLogsViewModel.LoadLogsCommand.Execute(clientIdentifier);
 
-        this.viewModel.Logs.Should().HaveCount(1);
-        this.viewModel.Logs[0].WorkoutName.Should().Be("Morning Run");
-        this.viewModel.ShowEmptyState.Should().BeFalse();
-        this.viewModel.IsLoading.Should().BeFalse();
+        this.workoutLogsViewModel.Logs.Should().HaveCount(1);
+        this.workoutLogsViewModel.Logs[0].WorkoutName.Should().Be("Morning Run");
+        this.workoutLogsViewModel.ShowEmptyState.Should().BeFalse();
+        this.workoutLogsViewModel.IsLoading.Should().BeFalse();
     }
 
     [Fact]
@@ -49,33 +48,33 @@ public class WorkoutLogsViewModelTests
         this.mockClientService.GetWorkoutHistoryForClient(Arg.Any<int>())
             .Returns(_ => throw new Exception("Database Timeout"));
 
-        this.viewModel.LoadLogsCommand.Execute(1);
+        this.workoutLogsViewModel.LoadLogsCommand.Execute(1);
 
-        this.viewModel.ErrorMessage.Should().Contain("Database Timeout");
-        this.viewModel.ShowEmptyState.Should().BeTrue();
-        this.viewModel.Logs.Should().BeEmpty();
+        this.workoutLogsViewModel.ErrorMessage.Should().Contain("Database Timeout");
+        this.workoutLogsViewModel.ShowEmptyState.Should().BeTrue();
+        this.workoutLogsViewModel.Logs.Should().BeEmpty();
     }
 
     [Fact]
     public void ToggleEditMode_Should_SwitchStateCorrectly()
     {
-        var log = new WorkoutLog { Id = 1, Exercises = new() };
-        var itemVm = new WorkoutLogItemViewModel(log, this.mockClientService);
+        var workoutLog = new WorkoutLog { Id = 1, Exercises = new() };
+        var workoutLogItemViewModel = new WorkoutLogItemViewModel(workoutLog, this.mockClientService);
 
-        this.viewModel.ToggleEditModeCommand.Execute(itemVm);
-        bool firstState = itemVm.IsEditMode;
+        this.workoutLogsViewModel.ToggleEditModeCommand.Execute(workoutLogItemViewModel);
+        bool isFirstEditState = workoutLogItemViewModel.IsEditMode;
 
-        this.viewModel.ToggleEditModeCommand.Execute(itemVm);
-        bool secondState = itemVm.IsEditMode;
+        this.workoutLogsViewModel.ToggleEditModeCommand.Execute(workoutLogItemViewModel);
+        bool isSecondEditState = workoutLogItemViewModel.IsEditMode;
 
-        firstState.Should().BeTrue();
-        secondState.Should().BeFalse();
+        isFirstEditState.Should().BeTrue();
+        isSecondEditState.Should().BeFalse();
     }
 
     [Fact]
     public void CancelEditMode_Should_RevertChanges_ToOriginalLogData()
     {
-        var log = new WorkoutLog
+        var workoutLog = new WorkoutLog
         {
             Id = 1,
             Exercises = new List<LoggedExercise>
@@ -87,44 +86,43 @@ public class WorkoutLogsViewModelTests
                 }
             }
         };
-        var itemVm = new WorkoutLogItemViewModel(log, this.mockClientService);
+        var workoutLogItemViewModel = new WorkoutLogItemViewModel(workoutLog, this.mockClientService);
 
-        itemVm.EnterEditMode();
-        itemVm.Exercises[0].Sets[0].Reps = 20;
+        workoutLogItemViewModel.EnterEditMode();
+        workoutLogItemViewModel.Exercises[0].Sets[0].Reps = 20;
 
-        itemVm.CancelEditMode();
+        workoutLogItemViewModel.CancelEditMode();
 
-        itemVm.Exercises[0].Sets[0].Reps.Should().Be(10);
-        itemVm.IsEditMode.Should().BeFalse();
+        workoutLogItemViewModel.Exercises[0].Sets[0].Reps.Should().Be(10);
+        workoutLogItemViewModel.IsEditMode.Should().BeFalse();
     }
-
 
     [Theory]
     [InlineData(15.0, 15)]
-    [InlineData(15.6, 16)] 
+    [InlineData(15.6, 16)]
     [InlineData(double.NaN, null)]
-    public void WorkoutLogSetEditor_RepsInput_Should_MapCorrectIntValues(double input, int? expectedReps)
+    public void WorkoutLogSetEditor_RepsInput_Should_MapCorrectIntValues(double userInput, int? expectedRepetitions)
     {
-        var editor = new WorkoutLogSetEditorViewModel { SetNumber = 1 };
+        var workoutLogSetEditorViewModel = new WorkoutLogSetEditorViewModel { SetNumber = 1 };
 
-        editor.RepsInput = input;
+        workoutLogSetEditorViewModel.RepsInput = userInput;
 
-        editor.Reps.Should().Be(expectedReps);
+        workoutLogSetEditorViewModel.Reps.Should().Be(expectedRepetitions);
     }
 
     [Fact]
     public void ToLoggedExercise_Should_MapViewModelData_BackToModel()
     {
-        var exercise = new LoggedExercise { ExerciseName = "Squat", Sets = new() };
-        var summary = new WorkoutLogExerciseSummary(exercise);
-        summary.Sets.Add(new WorkoutLogSetEditorViewModel { Reps = 10, Weight = 100.5 });
+        var loggedExercise = new LoggedExercise { ExerciseName = "Squat", Sets = new() };
+        var workoutLogExerciseSummary = new WorkoutLogExerciseSummary(loggedExercise);
+        workoutLogExerciseSummary.Sets.Add(new WorkoutLogSetEditorViewModel { Reps = 10, Weight = 100.5 });
 
-        var result = summary.ToLoggedExercise(99);
+        var mappedLoggedExercise = workoutLogExerciseSummary.ToLoggedExercise(99);
 
-        result.WorkoutLogId.Should().Be(99);
-        result.ExerciseName.Should().Be("Squat");
-        result.Sets.Should().HaveCount(1);
-        result.Sets[0].ActualReps.Should().Be(10);
-        result.Sets[0].ActualWeight.Should().Be(100.5);
+        mappedLoggedExercise.WorkoutLogId.Should().Be(99);
+        mappedLoggedExercise.ExerciseName.Should().Be("Squat");
+        mappedLoggedExercise.Sets.Should().HaveCount(1);
+        mappedLoggedExercise.Sets[0].ActualReps.Should().Be(10);
+        mappedLoggedExercise.Sets[0].ActualWeight.Should().Be(100.5);
     }
 }
