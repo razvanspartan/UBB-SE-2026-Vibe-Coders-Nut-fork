@@ -13,12 +13,18 @@ namespace VibeCoders.Tests.Unit.Services
         private const int ValidClientIdentifier = 1;
         private const int InvalidClientIdentifier = 0;
         private const double DefaultClientWeightInKilograms = 80;
+        private const double DefaultClientHeightInMeters = 1.8;
+        private const int DefaultCaloriesBurned = 500;
+        private const int SnapshotCaloriesBurned = 300;
+        private const int DefaultPlanIdentifier = 1;
         private const string NutritionSyncEndpointUrl = "http://localhost/sync";
         private const string SquatExerciseName = "Squat";
-        private const float SquatMetabolicEquivalent = 5.0f;  // Changed from double to float
+        private const float SquatMetabolicEquivalent = 5.0f;
         private const int SixtyMinutesInSeconds = 60;
         private const string EmptyDurationDisplay = "00:00";
         private const int FirstSetIndex = 1;
+        private const string HighIntensityTag = "High";
+        private const string LegDayWorkoutName = "Leg Day";
 
         private readonly IRepositoryWorkoutLog _workoutLogRepository;
         private readonly ProgressionService _progressionService;
@@ -177,6 +183,76 @@ namespace VibeCoders.Tests.Unit.Services
             var result = _systemUnderTest.ModifyWorkout(log);
 
             result.Should().BeTrue();
+        }
+
+        [Fact]
+        public void ModifyWorkout_RepositoryThrowsException_ReturnsFalse()
+        {
+            var log = new WorkoutLog { Id = ValidClientIdentifier };
+            _workoutLogRepository.When(x => x.SaveWorkoutLog(log)).Do(x => { throw new Exception("Database error"); });
+
+            var result = _systemUnderTest.ModifyWorkout(log);
+
+            result.Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task SyncNutritionAsync_ValidPayload_ReturnsTrue()
+        {
+            var payload = new NutritionSyncPayload();
+            var handlerMock = Substitute.For<HttpMessageHandler>();
+            var client = new HttpClient(handlerMock) { BaseAddress = new Uri(NutritionSyncEndpointUrl) };
+            
+            _httpClientFactory.CreateClient().Returns(client);
+
+            var result = await _systemUnderTest.SyncNutritionAsync(payload);
+        }
+
+        [Fact]
+        public void BuildNutritionSyncPayload_ValidClientId_ReturnsExpectedPayload()
+        {
+            var clientId = ValidClientIdentifier;
+            var history = new List<WorkoutLog> 
+            {
+                new WorkoutLog { TotalCaloriesBurned = DefaultCaloriesBurned, IntensityTag = HighIntensityTag }
+            };
+            _workoutLogRepository.GetWorkoutHistory(clientId).Returns(history);
+            
+            var clients = new List<Client> 
+            {
+                new Client { Id = clientId, Weight = DefaultClientWeightInKilograms, Height = DefaultClientHeightInMeters }
+            };
+            _trainerRepository.GetTrainerClients(Arg.Any<int>()).Returns(clients);
+
+            var result = _systemUnderTest.BuildNutritionSyncPayload(clientId);
+
+            result.TotalCalories.Should().Be(DefaultCaloriesBurned);
+            result.WorkoutDifficulty.Should().Be(HighIntensityTag);
+            result.UserBmi.Should().BeGreaterThan(0);
+        }
+
+        [Fact]
+        public void BuildClientProfileSnapshot_ValidClientIdWithWorkouts_ReturnsPopulatedSnapshot()
+        {
+            var clientId = ValidClientIdentifier;
+            var history = new List<WorkoutLog>
+            {
+                new WorkoutLog { TotalCaloriesBurned = SnapshotCaloriesBurned, WorkoutName = LegDayWorkoutName, Date = DateTime.Now, Exercises = new List<LoggedExercise> { new LoggedExercise() } }
+            };
+            _workoutLogRepository.GetWorkoutHistory(clientId).Returns(history);
+
+            var plan = new NutritionPlan { PlanId = DefaultPlanIdentifier, StartDate = DateTime.Today.AddDays(-1), EndDate = DateTime.Today.AddDays(1) };
+            _nutritionRepository.GetNutritionPlansForClient(clientId).Returns(new List<NutritionPlan> { plan });
+
+            var meals = new List<Meal> { new Meal() };
+            _nutritionRepository.GetMealsForPlan(DefaultPlanIdentifier).Returns(meals);
+
+            var result = _systemUnderTest.BuildClientProfileSnapshot(clientId);
+
+            result.CaloriesSummary.Should().Contain(SnapshotCaloriesBurned.ToString());
+            result.LatestSessionHint.Should().Contain(LegDayWorkoutName);
+            result.LoggedExercises.Should().HaveCount(1);
+            result.Meals.Should().HaveCount(1);
         }
 
         [Fact]
